@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+aiogram
+sqlalchemy[asyncio]
+alembic
+pydantic
+pydantic-settings
+python-dotenv
+aiosqlite
+groq
+pillow
+pytesseract
+python-multipart
+aiofiles

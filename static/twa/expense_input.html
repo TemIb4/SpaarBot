@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaarBot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #f7f7f7);
+            color: var(--tg-theme-text-color, #1e1e1e);
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--tg-theme-secondary-bg-color, white);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, white);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--tg-theme-secondary-bg-color, white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--tg-theme-text-color, #1e1e1e);
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--tg-theme-hint-color, #ddd);
+            border-radius: 12px;
+            font-size: 16px;
+            background: var(--tg-theme-bg-color, white);
+            color: var(--tg-theme-text-color, #1e1e1e);
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #2481cc);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: var(--tg-theme-button-color, #4CAF50);
+            color: var(--tg-theme-button-text-color, white);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:active {
+            opacity: 0.8;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .success {
+            background: #4CAF50;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--tg-theme-secondary-bg-color, white);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 SpaarBot</h1>
+            <p>Dein intelligenter Finanzassistent</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('add')">➕ Hinzufügen</button>
+            <button class="tab" onclick="switchTab('stats')">📊 Statistik</button>
+        </div>
+
+        <!-- Tab: Ausgabe hinzufügen -->
+        <div id="tab-add" class="tab-content active">
+            <div id="success-message" class="success">
+                ✅ Ausgabe erfolgreich gespeichert!
+            </div>
+
+            <div class="card">
+                <form id="expense-form">
+                    <div class="input-group">
+                        <label for="amount">💶 Betrag (€)</label>
+                        <input type="number" id="amount" placeholder="15.50" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="description">📝 Beschreibung</label>
+                        <input type="text" id="description" placeholder="z.B. Kaffee bei Starbucks" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="category">🏷️ Kategorie</label>
+                        <select id="category" required>
+                            <option value="" disabled selected>Wählen Sie eine Kategorie</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="submit-btn">
+                        ✓ Speichern
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab: Statistik -->
+        <div id="tab-stats" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value" id="total-expenses">€0</div>
+                    <div class="label">Gesamt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="transactions-count">0</div>
+                    <div class="label">Transaktionen</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 12px;">Letzte Ausgaben</h3>
+                <div id="transactions-list">
+                    <p style="color: var(--tg-theme-hint-color, #999); text-align: center;">
+                        Noch keine Transaktionen
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let currentUser = null;
+
+        // Initialize Telegram WebApp
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        Telegram.WebApp.setHeaderColor('secondary_bg_color');
+
+        // Get user from Telegram
+        currentUser = Telegram.WebApp.initDataUnsafe.user;
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            if (tabName === 'stats') {
+                loadStatistics();
+            }
+        }
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/twa/data/categories`);
+                const categories = await response.json();
+
+                const select = document.getElementById('category');
+                select.innerHTML = '<option value="" disabled selected>Wählen Sie eine Kategorie</option>';
+
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = `${cat.icon} ${cat.name}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Failed to load categories:", error);
+            }
+        }
+
+        // Submit expense
+        document.getElementById('expense-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const amount = document.getElementById('amount').value;
+            const description = document.getElementById('description').value;
+            const category_id = document.getElementById('category').value;
+
+            if (!currentUser) {
+                Telegram.WebApp.showAlert('Fehler: Benutzer nicht gefunden');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Speichern...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/twa/expense/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegram_id: currentUser.id,
+                        amount: parseFloat(amount),
+                        description: description,
+                        category_id: parseInt(category_id)
+                    })
+                });
+
+                if (response.ok) {
+                    // Show success
+                    document.getElementById('success-message').classList.add('show');
+                    setTimeout(() => {
+                        document.getElementById('success-message').classList.remove('show');
+                    }, 3000);
+
+                    // Reset form
+                    document.getElementById('expense-form').reset();
+
+                    // Haptic feedback
+                    Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                } else {
+                    throw new Error('Failed to save');
+                }
+            } catch (error) {
+                Telegram.WebApp.showAlert(`Fehler beim Speichern: ${error.message}`);
+                Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✓ Speichern';
+            }
+        });
+
+        // Load statistics
+        async function loadStatistics() {
+            if (!currentUser) return;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/api/v1/transactions/?telegram_id=${currentUser.id}&limit=10`
+                );
+                const transactions = await response.json();
+
+                // Update stats
+                const total = transactions.reduce((sum, t) => t.transaction_type === 'expense' ? sum + t.amount : sum, 0);
+                document.getElementById('total-expenses').textContent = `€${total.toFixed(2)}`;
+                document.getElementById('transactions-count').textContent = transactions.length;
+
+                // Show transactions list
+                const listEl = document.getElementById('transactions-list');
+                if (transactions.length === 0) {
+                    listEl.innerHTML = '<p style="color: var(--tg-theme-hint-color, #999); text-align: center;">Noch keine Transaktionen</p>';
+                } else {
+                    listEl.innerHTML = transactions.map(t => `
+                        <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">${t.description || 'Keine Beschreibung'}</div>
+                                <div style="font-size: 12px; color: var(--tg-theme-hint-color, #999);">
+                                    ${new Date(t.transaction_date).toLocaleDateString('de-DE')}
+                                </div>
+                            </div>
+                            <div style="font-size: 18px; font-weight: 700; color: #f44336;">
+                                €${t.amount.toFixed(2)}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load statistics:', error);
+            }
+        }
+
+        // Initialize
+        loadCategories();
+    </script>
+</body>
+</html>
