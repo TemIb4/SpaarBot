@@ -1,233 +1,139 @@
-/**
- * AI Chat Page with Optimized Animations
- */
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { api } from '@/lib/api'
-import { useTelegram } from '@/hooks/useTelegram'
-import { usePageVisited } from '@/hooks/usePageVisited' // ✅ Добавили
-import { Card } from '@/components/ui/Card'
-import { AnimatedBackground } from '@/components/layout/AnimatedBackground'
+import { Send, Sparkles, TrendingUp, Lightbulb } from 'lucide-react'
+import { premiumDesign } from '../config/premiumDesign'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-}
-
-export const AIChat: React.FC = () => {
-  const { user } = useTelegram()
-  const { shouldAnimate } = usePageVisited() // ✅ Добавили
-  const [messages, setMessages] = useState<Message[]>([
+const AIChat = () => {
+  const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
     {
       role: 'assistant',
-      content: 'Hallo! 👋 Ich bin dein AI-Finanzassistent. Wie kann ich dir heute helfen?',
-      timestamp: new Date(),
-    },
+      content: 'Hi! Ich bin dein AI Finanz-Assistent. Wie kann ich dir heute helfen?'
+    }
   ])
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // ✅ Настройки анимации
-  const animationVariants = {
-    hidden: { opacity: 0, y: shouldAnimate ? 20 : 0 },
-    visible: { opacity: 1, y: 0 },
-  }
-  const animationDuration = shouldAnimate ? 0.2 : 0
+  const handleSend = () => {
+    if (!message.trim()) return
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const handleSend = async () => {
-    if (!input.trim() || isLoading || !user?.id) return
-
-    const userMessage: Message = {
-      role: 'user',
-      content: input,
-      timestamp: new Date(),
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
-
-    try {
-      const response = await api.post('/ai/chat', {
-        telegram_id: user.id,
-        message: input,
-      })
-
-      const aiMessage: Message = {
+    setMessages([...messages, { role: 'user', content: message }])
+    
+    // Mock AI response
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
         role: 'assistant',
-        content: response.data.response || 'Entschuldigung, ich konnte keine Antwort generieren.',
-        timestamp: new Date(),
-      }
+        content: 'Das ist eine Test-Antwort. AI Integration kommt bald! 🤖'
+      }])
+    }, 1000)
 
-      setMessages(prev => [...prev, aiMessage])
-    } catch (error) {
-      console.error('AI Chat error:', error)
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: '❌ Fehler. Bitte versuche es erneut oder frage anders.',
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, errorMessage])
-    } finally {
-      setIsLoading(false)
-    }
+    setMessage('')
   }
 
-  const quickQuestions = [
-    '💡 Spar-Tipps',
-    '📊 Ausgaben-Analyse',
-    '🎯 Budget erstellen',
-    '📈 Finanzplan',
+  const suggestions = [
+    { icon: TrendingUp, text: 'Wo kann ich sparen?' },
+    { icon: Lightbulb, text: 'Budget-Tipps' },
+    { icon: Sparkles, text: 'Finanz-Analyse' },
   ]
 
   return (
-    <div className="flex flex-col h-screen pb-24 relative">
-      <AnimatedBackground />
-
-      {/* Header */}
+    <div className="min-h-[calc(100vh-10rem)] py-8">
       <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={animationVariants}
-        transition={{ duration: animationDuration }}
-        className="relative p-6 shadow-lg z-10"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="max-w-4xl mx-auto"
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-lg"
-            style={{ backgroundColor: 'var(--color-card)' }}
-          >
-            🤖
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-              AI Assistent
-            </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-              Powered by Groq AI
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 relative">
-        {messages.map((message, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <Card
-              padding="md"
-              className="max-w-[80%] shadow-md"
-              style={{
-                background: message.role === 'user'
-                  ? `linear-gradient(135deg, var(--color-primary), var(--color-accent))`
-                  : 'var(--color-card)',
-                color: 'var(--color-text)',
-              }}
-            >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              <p
-                className="text-xs mt-2"
-                style={{
-                  color: message.role === 'user'
-                    ? 'rgba(255, 255, 255, 0.7)'
-                    : 'var(--color-text-secondary)'
-                }}
-              >
-                {message.timestamp.toLocaleTimeString('de-DE', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            </Card>
-          </motion.div>
-        ))}
-
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start"
-          >
-            <Card padding="md" style={{ backgroundColor: 'var(--color-card)' }}>
-              <div className="flex gap-2">
-                <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'var(--color-accent)', animationDelay: '0ms' }}></span>
-                <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'var(--color-accent)', animationDelay: '150ms' }}></span>
-                <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'var(--color-accent)', animationDelay: '300ms' }}></span>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Quick Questions */}
-      {messages.length === 1 && (
-        <div className="px-4 pb-2 relative">
-          <p className="text-xs font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-            💬 Schnellfragen:
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">AI Assistent</h1>
+          <p className="text-neutral-400">
+            Frag mich alles über deine Finanzen
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {quickQuestions.map((question) => (
-              <button
-                key={question}
-                onClick={() => setInput(question)}
-                className="px-4 py-2 rounded-full text-sm whitespace-nowrap hover:shadow-lg transition-all"
-                style={{
-                  backgroundColor: 'var(--color-card)',
-                  color: 'var(--color-text)',
-                  border: '2px solid var(--color-border)',
-                }}
+        </div>
+
+        {/* Messages */}
+        <div 
+          className="rounded-3xl p-6 mb-6 min-h-[400px] max-h-[500px] overflow-y-auto"
+          style={{
+            background: premiumDesign.colors.neutral[900],
+            border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+          }}
+        >
+          <div className="space-y-4">
+            {messages.map((msg, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {question}
-              </button>
+                <div
+                  className="max-w-[80%] p-4 rounded-2xl"
+                  style={{
+                    background: msg.role === 'user'
+                      ? premiumDesign.colors.gradients.primary
+                      : premiumDesign.glass.medium.background,
+                    border: msg.role === 'assistant' 
+                      ? premiumDesign.glass.medium.border 
+                      : 'none',
+                  }}
+                >
+                  <p className="text-white">{msg.content}</p>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
-      )}
 
-      {/* Input */}
-      <div className="p-4 relative" style={{ backgroundColor: 'var(--color-card)', borderTop: '2px solid var(--color-border)' }}>
-        <div className="flex gap-2">
+        {/* Suggestions */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {suggestions.map((suggestion, index) => (
+            <motion.button
+              key={index}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setMessage(suggestion.text)}
+              className="p-4 rounded-xl text-left"
+              style={{
+                background: premiumDesign.glass.light.background,
+                border: premiumDesign.glass.light.border,
+              }}
+            >
+              <suggestion.icon size={20} className="text-primary-400 mb-2" />
+              <p className="text-sm text-white font-medium">{suggestion.text}</p>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div 
+          className="flex items-center space-x-3 p-4 rounded-2xl"
+          style={{
+            background: premiumDesign.glass.medium.background,
+            border: premiumDesign.glass.medium.border,
+          }}
+        >
           <input
             type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Stelle eine Frage..."
-            className="flex-1 p-4 rounded-full focus:outline-none transition-all"
-            style={{
-              backgroundColor: 'var(--color-card-hover)',
-              color: 'var(--color-text)',
-              border: '2px solid var(--color-border)',
-            }}
-            disabled={isLoading}
+            placeholder="Schreib eine Nachricht..."
+            className="flex-1 bg-transparent text-white outline-none placeholder-neutral-500"
           />
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="w-14 h-14 rounded-full flex items-center justify-center hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-3 rounded-xl"
             style={{
-              background: `linear-gradient(135deg, var(--color-primary), var(--color-accent))`,
-              color: 'var(--color-text)',
+              background: premiumDesign.colors.gradients.primary,
             }}
           >
-            {isLoading ? '⏳' : '➤'}
-          </button>
+            <Send size={20} className="text-white" />
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
+
+export default AIChat

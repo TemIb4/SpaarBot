@@ -4,7 +4,48 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="813fed76-dea3-4e1e-a376-fb88749d1b72" name="Changes" comment="Stable" />
+    <list default="true" id="813fed76-dea3-4e1e-a376-fb88749d1b72" name="Changes" comment="Stable">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/alembic/versions/cf39f708050a_simplified_schema.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/v1/endpoints/ai.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/v1/endpoints/ai.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/v1/endpoints/transactions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/v1/endpoints/transactions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/db/crud.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db/crud.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/db/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas/ai.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/ai.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/groq_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/groq_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/charts/CategoryPieChart.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/charts/CategoryPieChart.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/charts/ExpenseChart.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/charts/ExpenseChart.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/charts/MonthlyComparisonChart.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/charts/MonthlyComparisonChart.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/charts/WeeklyTrendChart.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/charts/WeeklyTrendChart.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/layout/BottomNav.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/layout/BottomNav.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/modals/AddTransactionModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/modals/AddTransactionModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/settings/ThemeSelector.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/settings/ThemeSelector.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionItem.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionList.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/context/ThemeContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/contexts/ThemeContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/hooks/useTransactions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/hooks/useTransactions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/main.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AIChat.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AIChat.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Dashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Settings.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Stats.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Stats.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Subscriptions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Subscriptions.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/store/transactionStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/store/transactionStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/store/userStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/store/userStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/vite-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/vite-env.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tailwind.config.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -50,9 +91,11 @@
     &quot;Python.ыв.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Shell Script.create_project_structure.sh.executor&quot;: &quot;Run&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/arcer/PycharmProjects/SpaarBot&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
@@ -68,7 +111,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-4c141bd692a7-e2d783800521-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.26927.90" />
+        <option value="bundled-python-sdk-1f77c24022e5-d902c0275401-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.26830.99" />
       </set>
     </attachedChunks>
   </component>
@@ -88,8 +131,27 @@
       <option name="project" value="LOCAL" />
       <updated>1760913222219</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Stable">
+      <option name="closed" value="true" />
+      <created>1760913323086</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1760913323086</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Stable" />

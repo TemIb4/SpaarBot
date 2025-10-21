@@ -1,4 +1,5 @@
 """Application configuration"""
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
@@ -15,6 +16,12 @@ class Settings(BaseSettings):
     # API
     API_V1_PREFIX: str = "/api/v1"
     SECRET_KEY: str
+
+    # PayPal Configuration
+    PAYPAL_CLIENT_ID: str = os.getenv("PAYPAL_CLIENT_ID", "")
+    PAYPAL_CLIENT_SECRET: str = os.getenv("PAYPAL_CLIENT_SECRET", "")
+    PAYPAL_MODE: str = os.getenv("PAYPAL_MODE", "sandbox")  # 'sandbox' or 'live'
+    PAYPAL_WEBHOOK_ID: str = os.getenv("PAYPAL_WEBHOOK_ID", "")
 
     # AI
     GROQ_API_KEY: str

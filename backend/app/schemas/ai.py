@@ -1,14 +1,28 @@
-"""AI-related schemas"""
+"""
+AI Schemas
+"""
 from pydantic import BaseModel
-from typing import List, Optional
 
-class AIQueryRequest(BaseModel):
-    """Request for AI assistant"""
-    query: str
-    user_id: int
-    context: Optional[dict] = None
 
-class AIQueryResponse(BaseModel):
-    """Response from AI assistant"""
-    answer: str
-    suggestions: Optional[List[str]] = None
+class ChatRequest(BaseModel):
+    """Schema for AI chat request"""
+    telegram_id: int
+    message: str
+
+
+class ChatResponse(BaseModel):
+    """Schema for AI chat response"""
+    response: str
+
+
+class OCRRequest(BaseModel):
+    """Schema for OCR request"""
+    telegram_id: int
+    image_data: str  # Base64 encoded image
+
+
+class OCRResponse(BaseModel):
+    """Schema for OCR response"""
+    text: str
+    amount: float | None = None
+    description: str | None = None

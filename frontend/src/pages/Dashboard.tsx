@@ -1,324 +1,394 @@
-/**
- * Dashboard Page - Optimized animations
- */
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { useAuth } from '@/hooks/useAuth'
-import { useTransactions } from '@/hooks/useTransactions'
-import { useUIStore } from '@/store/uiStore'
-import { usePageVisited } from '@/hooks/usePageVisited'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { AddTransactionModal } from '@/components/modals/AddTransactionModal'
-import { AnimatedBackground } from '@/components/layout/AnimatedBackground'
-import { ExpenseChart } from '@/components/charts/ExpenseChart'
-import { CategoryPieChart } from '@/components/charts/CategoryPieChart'
-import { TransactionList } from '@/components/transactions/TransactionList'
-import { formatCurrency } from '@/utils/formatters'
+// src/pages/Dashboard.tsx
 
-const datePresets = [
-  { label: 'Woche', value: 'week', days: 7 },
-  { label: 'Monat', value: 'month', days: 30 },
-  { label: 'Jahr', value: 'year', days: 365 },
-]
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Plus, TrendingDown, TrendingUp, Eye, EyeOff,
+  ArrowUpRight, Sparkles
+} from 'lucide-react'
+import { premiumDesign } from '../config/premiumDesign'
+import { useUserStore } from '../store/userStore'
+import { useTransactionStore } from '../store/transactionStore'
+import { AddTransactionModal } from '../components/modals/AddTransactionModal'
+import { TransactionList } from '../components/transactions/TransactionList'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
+import { de } from 'date-fns/locale'
 
-export const Dashboard: React.FC = () => {
-  useAuth() // Переменная 'user' была удалена, так как не использовалась
-  const { transactions, categoryBreakdown, totalExpenses, totalIncome, isLoading } = useTransactions()
-  const { setDateRange } = useUIStore()
-  const { shouldAnimate } = usePageVisited()
+const Dashboard: React.FC = () => {
+  const { user, isPremium } = useUserStore()
+  const { transactions, loading, fetchTransactions } = useTransactionStore()
+  const [showBalance, setShowBalance] = useState(true)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month')
 
-  const [activePreset, setActivePreset] = useState<string>('month')
-  const [isAddingTransaction, setIsAddingTransaction] = useState(false)
+  useEffect(() => {
+    loadData()
+  }, [period])
 
-  const handlePresetChange = (presetValue: string, days: number) => {
-    const end = new Date()
-    const start = new Date()
-    start.setDate(end.getDate() - days)
+  const loadData = async () => {
+    const now = new Date()
+    let startDate: Date
+    let endDate: Date = now
 
-    setDateRange({
-      start: start.toISOString().split('T')[0],
-      end: end.toISOString().split('T')[0],
-    })
+    switch (period) {
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case 'month':
+        startDate = startOfMonth(now)
+        endDate = endOfMonth(now)
+        break
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1)
+        break
+      default:
+        startDate = startOfMonth(now)
+    }
 
-    setActivePreset(presetValue)
+    if (fetchTransactions) {
+      await fetchTransactions(format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'))
+    }
   }
+
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0)
 
   const balance = totalIncome - totalExpenses
-  const savingsRate = totalIncome > 0 ? ((balance / totalIncome) * 100).toFixed(1) : 0
 
-  const animationVariants = {
-    hidden: { opacity: 0, y: shouldAnimate ? 20 : 0 },
-    visible: { opacity: 1, y: 0 },
-  }
+  const expenseChange = 12.5
+  const incomeChange = 8.3
 
-  const animationDuration = shouldAnimate ? 0.2 : 0
+  const recentTransactions = transactions.slice(0, 5)
 
   return (
-    <div className="min-h-screen pb-24 relative">
-      <AnimatedBackground />
-
-      {/* Header */}
+    <div className="min-h-[calc(100vh-10rem)] py-8">
       <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={animationVariants}
-        transition={{ duration: animationDuration }}
-        className="relative p-6 pb-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="max-w-7xl mx-auto"
       >
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text)' }}>
-              SpaarBot
-            </h1>
-          </div>
-          <div className="text-right">
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-              Saldo
-            </p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-              {formatCurrency(balance)}
-            </p>
-            <p className="text-xs" style={{ color: balance >= 0 ? '#10b981' : '#ef4444' }}>
-              {balance >= 0 ? '▲' : '▼'} {savingsRate}% Sparquote
-            </p>
-          </div>
-        </div>
-
-        {/* Date Filter Tabs */}
-        <div className="flex gap-2 mt-4">
-          {datePresets.map((preset) => (
-            <button
-              key={preset.value}
-              onClick={() => handlePresetChange(preset.value, preset.days)}
-              className="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all"
-              style={{
-                backgroundColor: activePreset === preset.value ? 'var(--color-card-hover)' : 'var(--color-card)',
-                color: 'var(--color-text)',
-                border: `2px solid ${activePreset === preset.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
-              }}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Main Content */}
-      <div className="px-4 space-y-4 relative">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={animationVariants}
-            transition={{ duration: animationDuration, delay: shouldAnimate ? 0.05 : 0 }}
+        <div className="mb-8">
+          <motion.h1
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
+            className="text-3xl md:text-4xl font-bold text-white mb-2"
           >
-            <Card
-              padding="md"
-              className="shadow-lg"
-              style={{
-                background: `linear-gradient(135deg, var(--color-primary), var(--color-secondary))`,
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl shadow-lg"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                >
-                  📊
-                </div>
-                <div>
-                  <p className="text-xs opacity-90" style={{ color: 'var(--color-text)' }}>
-                    Ausgaben
-                  </p>
-                  <p className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
-                    {formatCurrency(totalExpenses)}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={animationVariants}
-            transition={{ duration: animationDuration, delay: shouldAnimate ? 0.1 : 0 }}
+            Willkommen zurück, {user?.first_name || 'User'}! 👋
+          </motion.h1>
+          <motion.p
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-neutral-400"
           >
-            <Card
-              padding="md"
-              className="shadow-lg"
-              style={{
-                background: `linear-gradient(135deg, var(--color-accent), var(--color-primary))`,
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl shadow-lg"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                >
-                  💰
-                </div>
-                <div>
-                  <p className="text-xs opacity-90" style={{ color: 'var(--color-text)' }}>
-                    Einnahmen
-                  </p>
-                  <p className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
-                    {formatCurrency(totalIncome)}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+            {format(new Date(), 'EEEE, d. MMMM yyyy', { locale: de })}
+          </motion.p>
         </div>
 
-        {/* Add Transaction Button */}
         <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={animationVariants}
-          transition={{ duration: animationDuration, delay: shouldAnimate ? 0.15 : 0 }}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="inline-flex p-1 rounded-2xl mb-8"
+          style={{
+            background: premiumDesign.glass.medium.background,
+            border: premiumDesign.glass.medium.border,
+          }}
         >
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={() => setIsAddingTransaction(true)}
-            className="py-4 text-lg font-semibold shadow-lg"
+          {(['week', 'month', 'year'] as const).map((p) => (
+            <motion.button
+              key={p}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setPeriod(p)}
+              className="px-6 py-2 rounded-xl font-semibold transition-all capitalize"
+              style={{
+                background: period === p
+                  ? premiumDesign.colors.gradients.primary
+                  : 'transparent',
+                color: period === p ? '#fff' : premiumDesign.colors.neutral[400],
+              }}
+            >
+              {p === 'week' ? 'Woche' : p === 'month' ? 'Monat' : 'Jahr'}
+            </motion.button>
+          ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="rounded-3xl p-8 mb-8 relative overflow-hidden"
+          style={{
+            background: premiumDesign.colors.neutral[900],
+            border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+          }}
+        >
+          {isPremium && (
+            <div
+              className="absolute top-6 right-6 px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1"
+              style={{
+                background: premiumDesign.colors.gradients.premium,
+                color: '#fff',
+              }}
+            >
+              <Sparkles size={12} />
+              <span>PREMIUM</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg text-neutral-400">Gesamtbilanz</h2>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowBalance(!showBalance)}
+              className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+            >
+              {showBalance ? (
+                <Eye size={20} className="text-neutral-400" />
+              ) : (
+                <EyeOff size={20} className="text-neutral-400" />
+              )}
+            </motion.button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {showBalance ? (
+              <motion.div
+                key="balance"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <div className="flex items-baseline space-x-3 mb-2">
+                  <span className="text-5xl md:text-6xl font-bold text-white">
+                    {balance.toFixed(2)}
+                  </span>
+                  <span className="text-3xl text-neutral-400">€</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {balance >= 0 ? (
+                    <>
+                      <TrendingUp size={16} className="text-success-500" />
+                      <span className="text-sm text-success-500">
+                        Positiver Saldo
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown size={16} className="text-danger-500" />
+                      <span className="text-sm text-danger-500">
+                        Negativer Saldo
+                      </span>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="hidden"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="text-5xl md:text-6xl font-bold text-neutral-700"
+              >
+                ••••••
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="rounded-3xl p-6"
             style={{
-              background: `linear-gradient(135deg, var(--color-primary), var(--color-accent))`,
-              color: 'var(--color-text)',
+              background: premiumDesign.colors.neutral[900],
+              border: `1px solid ${premiumDesign.colors.neutral[800]}`,
             }}
           >
-            ➕ Neue Ausgabe hinzufügen
-          </Button>
-        </motion.div>
-
-        {/* Quick Stats */}
-        {!isLoading && transactions.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={animationVariants}
-            transition={{ duration: animationDuration, delay: shouldAnimate ? 0.2 : 0 }}
-          >
-            <Card padding="md" style={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
-              <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
-                📊 Schnellübersicht
-              </h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'var(--color-card-hover)' }}>
-                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                    Ø pro Tag
-                  </p>
-                  <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>
-                    {formatCurrency(totalExpenses / 30)}
-                  </p>
-                </div>
-                <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'var(--color-card-hover)' }}>
-                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                    Transaktionen
-                  </p>
-                  <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>
-                    {transactions.length}
-                  </p>
-                </div>
-                <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'var(--color-card-hover)' }}>
-                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                    Kategorien
-                  </p>
-                  <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>
-                    {categoryBreakdown.length}
-                  </p>
-                </div>
+            <div className="flex items-center space-x-3 mb-4">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{
+                  background: `${premiumDesign.colors.accent[500]}20`,
+                  border: `1px solid ${premiumDesign.colors.accent[500]}40`,
+                }}
+              >
+                <TrendingDown size={24} className="text-accent-400" />
               </div>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Expense Trend Chart */}
-        {!isLoading && transactions.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={animationVariants}
-            transition={{ duration: animationDuration, delay: shouldAnimate ? 0.25 : 0 }}
-          >
-            <Card padding="md" style={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                📈 Ausgaben-Trend
-              </h3>
-              <ExpenseChart transactions={transactions} />
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Category Breakdown */}
-        {!isLoading && categoryBreakdown.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={animationVariants}
-            transition={{ duration: animationDuration, delay: shouldAnimate ? 0.3 : 0 }}
-          >
-            <Card padding="md" style={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                🥧 Top Kategorien
-              </h3>
-              <CategoryPieChart data={categoryBreakdown} />
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Recent Transactions */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={animationVariants}
-          transition={{ duration: animationDuration, delay: shouldAnimate ? 0.35 : 0 }}
-        >
-          <Card padding="md" style={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                📝 Letzte Transaktionen
-              </h3>
-              {transactions.length > 10 && (
-                <button
-                  className="text-sm hover:underline"
-                  style={{ color: 'var(--color-accent)' }}
-                >
-                  Alle ansehen
-                </button>
-              )}
+              <div>
+                <h3 className="text-sm text-neutral-400">Ausgaben</h3>
+                <p className="text-xs text-neutral-500 capitalize">
+                  {period === 'week' ? 'Diese Woche' : period === 'month' ? 'Dieser Monat' : 'Dieses Jahr'}
+                </p>
+              </div>
             </div>
 
-            {isLoading ? (
-              <div className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>
-                <div
-                  className="animate-spin w-8 h-8 border-4 border-t-transparent rounded-full mx-auto mb-2"
-                  style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }}
-                ></div>
-                Lädt...
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="text-4xl font-bold text-white mb-1">
+                  {totalExpenses.toFixed(2)} €
+                </div>
+                <div className="flex items-center space-x-2">
+                  {expenseChange > 0 ? (
+                    <>
+                      <ArrowUpRight size={14} className="text-danger-500" />
+                      <span className="text-sm text-danger-500">
+                        +{expenseChange}% vs. letzte Periode
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown size={14} className="text-success-500" />
+                      <span className="text-sm text-success-500">
+                        {expenseChange}% vs. letzte Periode
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
-            ) : transactions.length === 0 ? (
-              <div className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>
-                <p className="text-4xl mb-2">📭</p>
-                <p>Noch keine Transaktionen</p>
-                <p className="text-sm mt-1">Füge deine erste Ausgabe hinzu!</p>
-              </div>
-            ) : (
-              <TransactionList transactions={transactions.slice(0, 10)} />
-            )}
-          </Card>
-        </motion.div>
-      </div>
+            </div>
+          </motion.div>
 
-      {/* Modals */}
-      <AddTransactionModal
-        isOpen={isAddingTransaction}
-        onClose={() => setIsAddingTransaction(false)}
-      />
+          <motion.div
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="rounded-3xl p-6"
+            style={{
+              background: premiumDesign.colors.neutral[900],
+              border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+            }}
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{
+                  background: `${premiumDesign.colors.success[500]}20`,
+                  border: `1px solid ${premiumDesign.colors.success[500]}40`,
+                }}
+              >
+                <TrendingUp size={24} className="text-success-400" />
+              </div>
+              <div>
+                <h3 className="text-sm text-neutral-400">Einkommen</h3>
+                <p className="text-xs text-neutral-500 capitalize">
+                  {period === 'week' ? 'Diese Woche' : period === 'month' ? 'Dieser Monat' : 'Dieses Jahr'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="text-4xl font-bold text-white mb-1">
+                  {totalIncome.toFixed(2)} €
+                </div>
+                <div className="flex items-center space-x-2">
+                  {incomeChange > 0 ? (
+                    <>
+                      <ArrowUpRight size={14} className="text-success-500" />
+                      <span className="text-sm text-success-500">
+                        +{incomeChange}% vs. letzte Periode
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown size={14} className="text-danger-500" />
+                      <span className="text-sm text-danger-500">
+                        {incomeChange}% vs. letzte Periode
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="rounded-3xl p-6"
+          style={{
+            background: premiumDesign.colors.neutral[900],
+            border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+          }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">
+              Letzte Transaktionen
+            </h2>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 rounded-xl font-semibold text-white flex items-center space-x-2"
+              style={{
+                background: premiumDesign.colors.gradients.primary,
+                boxShadow: premiumDesign.effects.shadow.glow,
+              }}
+            >
+              <Plus size={18} />
+              <span>Hinzufügen</span>
+            </motion.button>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500" />
+            </div>
+          ) : recentTransactions.length === 0 ? (
+            <div className="text-center py-12">
+              <div
+                className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl"
+                style={{
+                  background: premiumDesign.glass.medium.background,
+                  border: premiumDesign.glass.medium.border,
+                }}
+              >
+                📊
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">
+                Keine Transaktionen
+              </h3>
+              <p className="text-neutral-400 mb-6">
+                Füge deine erste Transaktion hinzu
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowAddModal(true)}
+                className="px-6 py-3 rounded-xl font-semibold text-white"
+                style={{
+                  background: premiumDesign.colors.gradients.primary,
+                  boxShadow: premiumDesign.effects.shadow.glow,
+                }}
+              >
+                Erste Transaktion hinzufügen
+              </motion.button>
+            </div>
+          ) : (
+            <TransactionList transactions={recentTransactions} />
+          )}
+        </motion.div>
+
+        <AnimatePresence>
+          {showAddModal && (
+            <AddTransactionModal onClose={() => setShowAddModal(false)} />
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   )
 }
+
+export default Dashboard

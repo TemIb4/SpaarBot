@@ -11,12 +11,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from app.api.v1.endpoints import paypal
 
 from app.core.config import get_settings
 from app.db.database import init_db, get_db
 from app.bot.handlers import start
 from app.api.v1.endpoints import transactions, ai, auth, twa
-from app.api.v1.endpoints import ai
+from app.api.v1.endpoints import feedback
+from app.api.v1.endpoints import settings as settings_endpoint
 
 # Configure logging
 logging.basicConfig(
@@ -93,6 +95,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.include_router(
+    paypal.router,
+    prefix=f"{settings.API_V1_PREFIX}/paypal",
+    tags=["paypal"]
+)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -136,11 +144,13 @@ else:
     logger.warning(f"Frontend dist directory not found at {FRONTEND_DIR}")
 
 # Include API routers
+# Include routers
 app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["auth"])
 app.include_router(transactions.router, prefix=f"{settings.API_V1_PREFIX}/transactions", tags=["transactions"])
 app.include_router(ai.router, prefix=f"{settings.API_V1_PREFIX}/ai", tags=["ai"])
 app.include_router(twa.router, prefix=f"{settings.API_V1_PREFIX}/twa", tags=["twa"])
-app.include_router(ai.router, prefix="/api/v1/ai", tags=["ai"])
+app.include_router(feedback.router, prefix=f"{settings.API_V1_PREFIX}/feedback", tags=["feedback"])
+app.include_router(settings_endpoint.router, prefix=f"{settings.API_V1_PREFIX}/settings", tags=["settings"])
 
 @app.get("/")
 async def root():

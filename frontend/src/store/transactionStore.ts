@@ -1,47 +1,73 @@
-/**
- * Transaction store - Zustand
- */
 import { create } from 'zustand'
-import type { Transaction, Category, CategoryBreakdown } from '@/types'
+import type { Transaction } from '@/types'
 
-interface TransactionState {
+interface TransactionStore {
   transactions: Transaction[]
-  categories: Category[]
-  categoryBreakdown: CategoryBreakdown[]
-  isLoading: boolean
+  loading: boolean
   error: string | null
-
-  setTransactions: (transactions: Transaction[]) => void
-  addTransaction: (transaction: Transaction) => void
-  setCategories: (categories: Category[]) => void
-  setCategoryBreakdown: (breakdown: CategoryBreakdown[]) => void
-  setLoading: (loading: boolean) => void
-  setError: (error: string | null) => void
-  clearTransactions: () => void
+  
+  fetchTransactions: (startDate?: string, endDate?: string) => Promise<void>
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'created_at'>) => Promise<void>
+  deleteTransaction: (id: number) => Promise<void>
 }
 
-export const useTransactionStore = create<TransactionState>((set) => ({
+export const useTransactionStore = create<TransactionStore>((set) => ({
   transactions: [],
-  categories: [],
-  categoryBreakdown: [],
-  isLoading: false,
+  loading: false,
   error: null,
 
-  setTransactions: (transactions) => set({ transactions, error: null }),
+  fetchTransactions: async (_startDate?: string, _endDate?: string) => {  // ✅ Префикс _ для неиспользуемых параметров
+    set({ loading: true, error: null })
+    try {
+      // Mock data for now
+      const mockTransactions: Transaction[] = [
+        {
+          id: 1,
+          telegram_id: 123456789,
+          amount: 45.50,
+          description: 'Rewe Einkauf',
+          category: 'food',
+          type: 'expense',
+          date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: 2,
+          telegram_id: 123456789,
+          amount: 2500.00,
+          description: 'Gehalt',
+          category: 'salary',
+          type: 'income',
+          date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        },
+      ]
+      set({ transactions: mockTransactions, loading: false })
+    } catch (error) {
+      set({ error: 'Failed to fetch transactions', loading: false })
+    }
+  },
 
-  addTransaction: (transaction) =>
-    set((state) => ({
-      transactions: [transaction, ...state.transactions],
-    })),
+  addTransaction: async (_transaction: Omit<Transaction, 'id' | 'created_at'>) => {  // ✅ Префикс _
+    set({ loading: true, error: null })
+    try {
+      // TODO: API call here
+      // const response = await api.post('/transactions', transaction)
+      set({ loading: false })
+    } catch (error) {
+      set({ error: 'Failed to add transaction', loading: false })
+    }
+  },
 
-  setCategories: (categories) => set({ categories }),
-
-  setCategoryBreakdown: (categoryBreakdown) => set({ categoryBreakdown }),
-
-  setLoading: (isLoading) => set({ isLoading }),
-
-  setError: (error) => set({ error, isLoading: false }),
-
-  clearTransactions: () =>
-    set({ transactions: [], categoryBreakdown: [], error: null }),
+  deleteTransaction: async (id: number) => {
+    set({ loading: true, error: null })
+    try {
+      set((state) => ({
+        transactions: state.transactions.filter((t) => t.id !== id),
+        loading: false,
+      }))
+    } catch (error) {
+      set({ error: 'Failed to delete transaction', loading: false })
+    }
+  },
 }))

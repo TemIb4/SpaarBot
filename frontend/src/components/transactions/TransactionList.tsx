@@ -1,62 +1,125 @@
-/**
- * List of transactions with animations
- */
-import { motion, AnimatePresence } from 'framer-motion'
-import type { Transaction } from '@/types'
-import { TransactionItem } from './TransactionItem'
+import React from 'react'
+import { motion } from 'framer-motion'
+import { TrendingDown, TrendingUp, Calendar, Tag } from 'lucide-react'
+import { premiumDesign } from '../../config/premiumDesign'
+import { format } from 'date-fns'
+import { de } from 'date-fns/locale'
+
+interface Transaction {
+  id: number
+  type: 'expense' | 'income'
+  amount: number
+  description: string
+  category?: string | { id: number; name: string; icon: string; color: string }
+  date: string
+}
 
 interface TransactionListProps {
   transactions: Transaction[]
-  onTransactionClick?: (transaction: Transaction) => void
 }
 
-export const TransactionList: React.FC<TransactionListProps> = ({
-  transactions,
-  onTransactionClick,
-}) => {
-  if (transactions.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-          <svg
-            className="w-8 h-8 text-telegram-hint"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-telegram-text mb-1">
-          Keine Transaktionen
-        </h3>
-        <p className="text-telegram-hint">
-          Füge deine erste Ausgabe hinzu um zu starten
-        </p>
-      </div>
-    )
+export const TransactionList: React.FC<TransactionListProps> = ({ transactions }) => {
+  const getCategoryIcon = (category?: string | { icon: string }) => {
+    if (!category) return '📦'
+    if (typeof category === 'string') {
+      const icons: Record<string, string> = {
+        food: '🍔',
+        transport: '🚗',
+        shopping: '🛍️',
+        entertainment: '🎬',
+        health: '💊',
+        salary: '💰',
+        freelance: '💻',
+        investment: '📈',
+        gift: '🎁',
+        other: '📦',
+      }
+      return icons[category] || '📦'
+    }
+    return category.icon || '📦'
+  }
+
+  const getCategoryName = (category?: string | { name: string }) => {
+    if (!category) return 'Sonstiges'
+    if (typeof category === 'string') return category
+    return category.name
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-2"
-    >
-      <AnimatePresence mode="popLayout">
-        {transactions.map((transaction) => (
-          <TransactionItem
-            key={transaction.id}
-            transaction={transaction}
-            onClick={() => onTransactionClick?.(transaction)}
-          />
-        ))}
-      </AnimatePresence>
-    </motion.div>
+    <div className="space-y-3">
+      {transactions.map((transaction, index) => (
+        <motion.div
+          key={transaction.id}
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: index * 0.05 }}
+          className="rounded-2xl p-4"
+          style={{
+            background: premiumDesign.glass.light.background,
+            border: premiumDesign.glass.light.border,
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 flex-1">
+              {/* Category Icon */}
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                style={{
+                  background: transaction.type === 'expense'
+                    ? `${premiumDesign.colors.accent[500]}20`
+                    : `${premiumDesign.colors.success[500]}20`,
+                  border: transaction.type === 'expense'
+                    ? `1px solid ${premiumDesign.colors.accent[500]}40`
+                    : `1px solid ${premiumDesign.colors.success[500]}40`,
+                }}
+              >
+                {getCategoryIcon(transaction.category)}
+              </div>
+
+              {/* Details */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-white truncate mb-1">
+                  {transaction.description}
+                </h4>
+                <div className="flex items-center space-x-3 text-xs text-neutral-500">
+                  <span className="flex items-center space-x-1">
+                    <Tag size={12} />
+                    <span className="capitalize">{getCategoryName(transaction.category)}</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Calendar size={12} />
+                    <span>
+                      {format(new Date(transaction.date), 'dd. MMM', { locale: de })}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div className="text-right ml-4">
+              <div
+                className="text-lg font-bold flex items-center space-x-1"
+                style={{
+                  color: transaction.type === 'expense'
+                    ? premiumDesign.colors.accent[400]
+                    : premiumDesign.colors.success[400]
+                }}
+              >
+                {transaction.type === 'expense' ? (
+                  <TrendingDown size={16} />
+                ) : (
+                  <TrendingUp size={16} />
+                )}
+                <span>
+                  {transaction.type === 'expense' ? '-' : '+'}
+                  {transaction.amount.toFixed(2)} €
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
   )
 }

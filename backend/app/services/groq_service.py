@@ -1,177 +1,92 @@
 """
 Groq AI Service
 """
-import logging
-from typing import Optional
-from groq import Groq
+from groq import AsyncGroq
 from app.core.config import get_settings
+import logging
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
 class GroqService:
-    """Service for interacting with Groq AI API"""
+    """Groq AI service for chat completions"""
 
     def __init__(self):
-        """Initialize Groq client"""
-        if not settings.GROQ_API_KEY:
-            logger.warning("GROQ_API_KEY not set!")
-            self.client = None
-        else:
-            try:
-                self.client = Groq(api_key=settings.GROQ_API_KEY)
-                logger.info("Groq client initialized successfully")
-            except Exception as e:
-                logger.error(f"Failed to initialize Groq client: {e}")
-                self.client = None
+        self.client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+        self.model = "llama-3.1-70b-versatile"
+        logger.info("Groq client initialized successfully")
 
-    async def get_chat_response(
-        self,
-        user_message: str,
-        context: Optional[str] = None
-    ) -> str:
+    async def chat(self, messages: list, temperature: float = 0.7, max_tokens: int = 1024) -> str:
         """
-        Get chat response from Groq AI
+        Send chat request to Groq API
 
         Args:
-            user_message: User's message
-            context: Optional context about user's finances
+            messages: List of message dicts with 'role' and 'content'
+            temperature: Sampling temperature (0-2)
+            max_tokens: Maximum tokens in response
 
         Returns:
-            AI response string
+            AI response text
         """
-        if not self.client:
-            logger.error("Groq client not initialized")
-            return "Entschuldigung, der AI-Service ist momentan nicht verfügbar."
-
         try:
-            # Build messages
-            messages = [
-                {
-                    "role": "system",
-                    "content": """Du bist ein freundlicher Finanzassistent für SpaarBot. 
-Du hilfst Nutzern beim Geldmanagement, gibst Spar-Tipps und analysierst ihre Ausgaben.
-Antworte immer auf Deutsch, sei hilfreich und motivierend.
-Halte deine Antworten kurz und prägnant (max 3-4 Sätze)."""
-                }
-            ]
-
-            # Add context if provided
-            if context:
-                messages.append({
-                    "role": "system",
-                    "content": f"Kontext über den Nutzer: {context}"
-                })
-
-            # Add user message
-            messages.append({
-                "role": "user",
-                "content": user_message
-            })
-
-            logger.info(f"Sending request to Groq: {user_message[:50]}...")
-
-            # Call Groq API
-            chat_completion = self.client.chat.completions.create(
+            chat_completion = await self.client.chat.completions.create(
                 messages=messages,
-                model="llama-3.3-70b-versatile",
-                temperature=0.7,
-                max_tokens=500,
-                top_p=1,
-                stream=False
+                model=self.model,
+                temperature=temperature,
+                max_tokens=max_tokens,
             )
 
             response = chat_completion.choices[0].message.content
-            logger.info(f"Received response from Groq: {response[:50]}...")
-
             return response
 
         except Exception as e:
-            logger.error(f"Error getting Groq response: {e}", exc_info=True)
-            return f"Entschuldigung, es gab einen Fehler: {str(e)}"
-
-    async def categorize_transaction(self, description: str) -> str:
-        """
-        Categorize a transaction based on its description
-
-        Args:
-            description: Transaction description
-
-        Returns:
-            Category name (in German)
-        """
-        if not self.client:
-            logger.warning("Groq client not initialized, returning default category")
-            return "Sonstiges"
-
-        try:
-            messages = [
-                {
-                    "role": "system",
-                    "content": """Du bist ein Experte für Transaktionskategorisierung.
-Kategorisiere die Ausgabe in eine dieser Kategorien:
-- Lebensmittel
-- Transport
-- Wohnen
-- Unterhaltung
-- Gesundheit
-- Bildung
-- Shopping
-- Reisen
-- Sonstiges
-
-Antworte NUR mit dem Kategorienamen, nichts anderes."""
-                },
-                {
-                    "role": "user",
-                    "content": f"Kategorisiere diese Ausgabe: {description}"
-                }
-            ]
-
-            chat_completion = self.client.chat.completions.create(
-                messages=messages,
-                model="llama-3.3-70b-versatile",
-                temperature=0.3,
-                max_tokens=20,
-            )
-
-            category = chat_completion.choices[0].message.content.strip()
-            logger.info(f"Categorized '{description}' as '{category}'")
-
-            return category
-
-        except Exception as e:
-            logger.error(f"Error categorizing transaction: {e}")
-            return "Sonstiges"
+            logger.error(f"Groq API error: {e}")
+            raise Exception(f"AI service error: {str(e)}")
 
 
-# Global instance
-groq_service = GroqService()
+# ✅ СОЗДАЕМ ГЛОБАЛЬНЫЙ ЭКЗЕМПЛЯР
+groq_client = GroqService()
 
 
-async def get_ai_response(user_message: str, context: Optional[str] = None) -> str:
+# ✅ ДОБАВЬТЕ ЭТУ ФУНКЦИЮ:
+async def categorize_transaction(description: str, available_categories: list) -> dict:
     """
-    Convenience function to get AI response
-
-    Args:
-        user_message: User's message
-        context: Optional context
-
-    Returns:
-        AI response string
-    """
-    return await groq_service.get_chat_response(user_message, context)
-
-
-async def categorize_transaction(description: str) -> str:
-    """
-    Convenience function to categorize transaction
+    Automatically categorize transaction using AI
 
     Args:
         description: Transaction description
+        available_categories: List of available category names
 
     Returns:
-        Category name
+        dict with suggested category_name
     """
-    return await groq_service.categorize_transaction(description)
+    try:
+        categories_str = ", ".join(available_categories)
+
+        prompt = f"""Given this transaction description: "{description}"
+        
+Choose the most appropriate category from this list:
+{categories_str}
+
+Respond with ONLY the category name, nothing else."""
+
+        messages = [
+            {"role": "system", "content": "You are a financial categorization assistant. Respond with only the category name."},
+            {"role": "user", "content": prompt}
+        ]
+
+        response = await groq_client.chat(messages, temperature=0.3, max_tokens=50)
+        category_name = response.strip()
+
+        # Validate that response is in available categories
+        if category_name in available_categories:
+            return {"category_name": category_name}
+        else:
+            # Fallback to first category if AI returned invalid category
+            logger.warning(f"AI returned invalid category: {category_name}, using default")
+            return {"category_name": available_categories[0] if available_categories else "Sonstiges"}
+
+    except Exception as e:
+        logger.error(f"Categorization error: {e}")
+        return {"category_name": "Sonstiges"}

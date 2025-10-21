@@ -12,3 +12,6 @@ pillow
 pytesseract
 python-multipart
 aiofiles
+email_validator
+httpx
+pydantic[email]

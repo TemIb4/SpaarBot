@@ -1,84 +1,59 @@
-/**
- * Transactions hook
- */
-import { useQuery } from '@tanstack/react-query'
-import { useTelegram } from './useTelegram'
-import { useUIStore } from '@/store/uiStore'
-import { api } from '@/lib/api'
-import type { Transaction, Category } from '@/types' // ✅ Изменили путь
+import { useState } from 'react'
+import { api } from '../lib/api'
 
-interface CategoryBreakdown {
-  name: string
-  icon: string
-  color: string
-  total: number
+interface Transaction {
+  id: number
+  telegram_id: number
+  amount: number
+  description: string
+  category?: string
+  type: 'expense' | 'income'  // ✅ ИЗМЕНЕНО
+  date: string  // ✅ ИЗМЕНЕНО
+  created_at: string
 }
 
-export const useTransactions = () => {
-  const { user } = useTelegram()
-  const { dateRange } = useUIStore()
+export const useTransactions = (telegram_id: number) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
-    queryKey: ['transactions', user?.id, dateRange.start, dateRange.end],
-    queryFn: async () => {
-      if (!user?.id) return []
-
-      const params = new URLSearchParams({
-        telegram_id: user.id.toString(),
-        start_date: dateRange.start,
-        end_date: dateRange.end,
+  const fetchTransactions = async (startDate?: string, endDate?: string) => {
+    setLoading(true)
+    try {
+      const response = await api.get('/api/v1/transactions/', {
+        params: { telegram_id, start_date: startDate, end_date: endDate }
       })
+      setTransactions(response.data)
+    } catch (error) {
+      console.error('Error fetching transactions:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-      const response = await api.get(`/transactions/?${params}`)
-      return response.data
-    },
-    enabled: !!user?.id,
-    staleTime: 1000 * 60,
-  })
-
-  const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['categories', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return []
-      const response = await api.get(`/twa/data/categories?telegram_id=${user.id}`)
-      return response.data
-    },
-    enabled: !!user?.id,
-    staleTime: Infinity,
-  })
-
-  const { data: categoryBreakdown = [] } = useQuery<CategoryBreakdown[]>({
-    queryKey: ['category-breakdown', user?.id, dateRange.start, dateRange.end],
-    queryFn: async () => {
-      if (!user?.id) return []
-
-      const params = new URLSearchParams({
-        telegram_id: user.id.toString(),
-        start_date: dateRange.start,
-        end_date: dateRange.end,
-      })
-
-      const response = await api.get(`/transactions/analytics/by-category?${params}`)
-      return response.data
-    },
-    enabled: !!user?.id,
-    staleTime: 1000 * 60,
-  })
+  const addTransaction = async (data: Partial<Transaction>) => {
+    try {
+      await api.post('/api/v1/transactions/', data)
+      await fetchTransactions()
+    } catch (error) {
+      console.error('Error adding transaction:', error)
+      throw error
+    }
+  }
 
   const totalExpenses = transactions
-    .filter(t => t.transaction_type === 'expense')
+    .filter(t => t.type === 'expense')  // ✅ ИСПРАВЛЕНО
     .reduce((sum, t) => sum + t.amount, 0)
 
   const totalIncome = transactions
-    .filter(t => t.transaction_type === 'income')
+    .filter(t => t.type === 'income')  // ✅ ИСПРАВЛЕНО
     .reduce((sum, t) => sum + t.amount, 0)
 
   return {
     transactions,
-    categories,
-    categoryBreakdown,
+    loading,
+    fetchTransactions,
+    addTransaction,
     totalExpenses,
-    totalIncome,
-    isLoading,
+    totalIncome
   }
 }
