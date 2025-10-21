@@ -1,0 +1,122 @@
+{
+  "app_name": "SpaarBot",
+  "nav": {
+    "home": "Home",
+    "stats": "Stats",
+    "ai": "AI",
+    "subscriptions": "Subs",
+    "settings": "More"
+  },
+  "dashboard": {
+    "balance": "Balance",
+    "savings_rate": "Savings Rate",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "expenses": "Expenses",
+    "income": "Income",
+    "add_expense": "Add New Expense",
+    "quick_stats": "Quick Overview",
+    "avg_per_day": "Avg per day",
+    "transactions": "Transactions",
+    "categories": "Categories",
+    "expense_trend": "Expense Trend",
+    "top_categories": "Top Categories",
+    "recent_transactions": "Recent Transactions",
+    "no_transactions": "No transactions yet",
+    "add_first": "Add your first expense!"
+  },
+  "stats": {
+    "title": "Statistics",
+    "subtitle": "Detailed Financial Analysis",
+    "timeframe": "Select Timeframe",
+    "today": "Today",
+    "last_7": "Last 7 Days",
+    "last_15": "Last 15 Days",
+    "last_month": "Last Month",
+    "last_3_months": "Last 3 Months",
+    "last_6_months": "Last 6 Months",
+    "last_year": "Last Year",
+    "biggest_expense": "Biggest Expense",
+    "single_transaction": "Single transaction",
+    "expense_history": "Expense History",
+    "category_breakdown": "Category Breakdown",
+    "of_expenses": "of expenses",
+    "no_data": "No data yet",
+    "no_categories": "No categories yet"
+  },
+  "ai": {
+    "title": "AI Assistant",
+    "powered_by": "Powered by Groq AI",
+    "greeting": "Hello! 👋 I'm your AI financial assistant. How can I help you today?",
+    "placeholder": "Ask a question...",
+    "quick_questions": "💬 Quick Questions:",
+    "tips": "💡 Savings Tips",
+    "analysis": "📊 Expense Analysis",
+    "budget": "🎯 Create Budget",
+    "plan": "📈 Financial Plan"
+  },
+  "premium": {
+    "upgrade": "Unlock Premium",
+    "unlock_feature": "This feature is only available in Premium",
+    "upgrade_now": "Upgrade Now",
+    "features": {
+      "charts": "Advanced Charts",
+      "ai": "AI Assistant",
+      "subscriptions": "Subscription Tracking",
+      "export": "Data Export",
+      "unlimited": "Unlimited History"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "ui_mode": "Interface Mode",
+    "lite": "Lite (Simple)",
+    "pro": "Pro (Advanced)",
+    "tier": "Subscription",
+    "free": "Free",
+    "premium": "Premium",
+    "toggle_premium": "Toggle Premium",
+    "theme": "Theme",
+    "feedback": "Send Feedback",
+    "paypal": "Connect PayPal"
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "placeholder": "Your feedback...",
+    "submit": "Send Feedback",
+    "success": "Thank you! Your feedback has been sent.",
+    "error": "Error sending feedback."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "close": "Close"
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "subtitle": "Manage your recurring expenses",
+    "per_month": "Per Month",
+    "per_year": "Per Year",
+    "projected": "Projected",
+    "add_new": "Add New Subscription",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "in_days": "in {days} days",
+    "manage": "Manage",
+    "tip_title": "Savings Tip",
+    "tip_text": "You spend {amount} per month on subscriptions. Check regularly!",
+    "no_subscriptions": "No subscriptions",
+    "add_first": "Add your first subscription!",
+    "monthly": "Monthly",
+    "yearly": "Yearly"
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "app_name": "SpaarBot",
+  "nav": {
+    "home": "Home",
+    "stats": "Stats",
+    "ai": "AI",
+    "subscriptions": "Abos",
+    "settings": "Mehr"
+  },
+  "dashboard": {
+    "balance": "Saldo",
+    "savings_rate": "Sparquote",
+    "week": "Woche",
+    "month": "Monat",
+    "year": "Jahr",
+    "expenses": "Ausgaben",
+    "income": "Einnahmen",
+    "add_expense": "Neue Ausgabe hinzufügen",
+    "quick_stats": "Schnellübersicht",
+    "avg_per_day": "Ø pro Tag",
+    "transactions": "Transaktionen",
+    "categories": "Kategorien",
+    "expense_trend": "Ausgaben-Trend",
+    "top_categories": "Top Kategorien",
+    "recent_transactions": "Letzte Transaktionen",
+    "no_transactions": "Noch keine Transaktionen",
+    "add_first": "Füge deine erste Ausgabe hinzu!"
+  },
+  "stats": {
+    "title": "Statistiken",
+    "subtitle": "Detaillierte Finanzanalyse",
+    "timeframe": "Zeitraum wählen",
+    "today": "Heute",
+    "last_7": "Letzte 7 Tage",
+    "last_15": "Letzte 15 Tage",
+    "last_month": "Letzter Monat",
+    "last_3_months": "Letzte 3 Monate",
+    "last_6_months": "Letzte 6 Monate",
+    "last_year": "Letztes Jahr",
+    "biggest_expense": "Größte Ausgabe",
+    "single_transaction": "Einzeltransaktion",
+    "expense_history": "Ausgaben-Verlauf",
+    "category_breakdown": "Kategorien-Verteilung",
+    "of_expenses": "der Ausgaben",
+    "no_data": "Noch keine Daten",
+    "no_categories": "Noch keine Kategorien"
+  },
+  "ai": {
+    "title": "AI Assistent",
+    "powered_by": "Powered by Groq AI",
+    "greeting": "Hallo! 👋 Ich bin dein AI-Finanzassistent. Wie kann ich dir heute helfen?",
+    "placeholder": "Stelle eine Frage...",
+    "quick_questions": "💬 Schnellfragen:",
+    "tips": "💡 Spar-Tipps",
+    "analysis": "📊 Ausgaben-Analyse",
+    "budget": "🎯 Budget erstellen",
+    "plan": "📈 Finanzplan"
+  },
+  "premium": {
+    "upgrade": "Premium freischalten",
+    "unlock_feature": "Diese Funktion ist nur in Premium verfügbar",
+    "upgrade_now": "Jetzt upgraden",
+    "features": {
+      "charts": "Erweiterte Grafiken",
+      "ai": "KI-Assistent",
+      "subscriptions": "Abo-Tracking",
+      "export": "Daten-Export",
+      "unlimited": "Unbegrenzte Historie"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "ui_mode": "Oberflächenmodus",
+    "lite": "Lite (Einfach)",
+    "pro": "Pro (Erweitert)",
+    "tier": "Abonnement",
+    "free": "Kostenlos",
+    "premium": "Premium",
+    "toggle_premium": "Premium umschalten",
+    "theme": "Design",
+    "feedback": "Feedback senden",
+    "paypal": "PayPal verbinden"
+  },
+  "feedback": {
+    "title": "Feedback senden",
+    "name": "Name",
+    "email": "E-Mail",
+    "message": "Nachricht",
+    "placeholder": "Dein Feedback...",
+    "submit": "Feedback senden",
+    "success": "Vielen Dank! Dein Feedback wurde gesendet.",
+    "error": "Fehler beim Senden."
+  },
+  "common": {
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "close": "Schließen"
+  },
+  "subscriptions": {
+    "title": "Abonnements",
+    "subtitle": "Verwalte deine wiederkehrenden Ausgaben",
+    "per_month": "Pro Monat",
+    "per_year": "Pro Jahr",
+    "projected": "Hochgerechnet",
+    "add_new": "Neues Abo hinzufügen",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "in_days": "in {days} Tagen",
+    "manage": "Verwalten",
+    "tip_title": "Spar-Tipp",
+    "tip_text": "Du gibst {amount} pro Monat für Abos aus. Prüfe regelmäßig!",
+    "no_subscriptions": "Keine Abonnements",
+    "add_first": "Füge dein erstes Abo hinzu!",
+    "monthly": "Monatlich",
+    "yearly": "Jährlich"
+  }
+}
