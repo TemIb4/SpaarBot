@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+const timestamp = Date.now()
+
 export default defineConfig({
-  plugins: [
-    react() // ✅ Убрали babel плагины
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -13,28 +13,16 @@ export default defineConfig({
   },
   base: '/app/',
   build: {
-    target: 'es2015',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'charts': ['recharts'],
-          'motion': ['framer-motion'],
-        },
+        // CRITICAL: Add timestamp to EVERY file
+        entryFileNames: `assets/[name].[hash].${timestamp}.js`,
+        chunkFileNames: `assets/[name].[hash].${timestamp}.js`,
+        assetFileNames: `assets/[name].[hash].${timestamp}.[ext]`,
       },
     },
-    cssMinify: true,
-    cssCodeSplit: true,
-    reportCompressedSize: false,
-  },
-  server: {
-    port: 5173,
   },
 })

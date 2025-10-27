@@ -8,6 +8,7 @@ import { premiumDesign } from '../config/premiumDesign'
 import { api } from '../lib/api'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface Notification {
   id: number
@@ -23,6 +24,7 @@ interface Notification {
 }
 
 const Notifications: React.FC = () => {
+  const { t } = useLanguage()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
@@ -43,28 +45,28 @@ const Notifications: React.FC = () => {
         {
           id: 1,
           type: 'subscription',
-          title: 'Spotify Zahlung fällig',
-          message: 'Deine Spotify Premium Zahlung von 9,99€ wird morgen abgebucht.',
+          title: t('notifications.spotify_payment'),
+          message: t('notifications.spotify_payment_desc'),
           read: false,
           created_at: new Date().toISOString(),
           action: {
-            label: 'Abonnements anzeigen',
+            label: t('notifications.view_subscriptions'),
             url: '/subscriptions'
           }
         },
         {
           id: 2,
           type: 'alert',
-          title: 'Budget-Warnung',
-          message: 'Du hast 90% deines monatlichen Budgets für Essen & Trinken erreicht.',
+          title: t('notifications.budget_warning'),
+          message: t('notifications.budget_warning_desc'),
           read: false,
           created_at: new Date(Date.now() - 3600000).toISOString(),
         },
         {
           id: 3,
           type: 'info',
-          title: 'Neue AI-Funktion verfügbar',
-          message: 'Probiere unseren neuen Budget-Assistenten mit erweiterten Prognosen!',
+          title: t('notifications.new_ai_feature'),
+          message: t('notifications.new_ai_feature_desc'),
           read: true,
           created_at: new Date(Date.now() - 86400000).toISOString(),
         },
@@ -149,10 +151,10 @@ const Notifications: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Benachrichtigungen</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('notifications.title')}</h1>
             {unreadCount > 0 && (
               <p className="text-neutral-400">
-                {unreadCount} ungelesene Benachrichtigung{unreadCount !== 1 ? 'en' : ''}
+                {unreadCount} {t('notifications.unread_count')}
               </p>
             )}
           </div>
@@ -169,7 +171,7 @@ const Notifications: React.FC = () => {
               }}
             >
               <CheckCheck size={18} />
-              <span>Alle als gelesen markieren</span>
+              <span>{t('notifications.mark_all_read')}</span>
             </motion.button>
           )}
         </div>
@@ -193,7 +195,7 @@ const Notifications: React.FC = () => {
               color: filter === 'all' ? '#fff' : premiumDesign.colors.neutral[400],
             }}
           >
-            Alle ({notifications.length})
+            {t('notifications.all')} ({notifications.length})
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -206,7 +208,7 @@ const Notifications: React.FC = () => {
               color: filter === 'unread' ? '#fff' : premiumDesign.colors.neutral[400],
             }}
           >
-            Ungelesen ({unreadCount})
+            {t('notifications.unread')} ({unreadCount})
             {unreadCount > 0 && (
               <span
                 className="absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse"
@@ -237,12 +239,12 @@ const Notifications: React.FC = () => {
               {filter === 'unread' ? <BellOff size={40} className="text-neutral-600" /> : <Bell size={40} className="text-neutral-600" />}
             </div>
             <h3 className="text-xl font-bold text-white mb-2">
-              {filter === 'unread' ? 'Keine ungelesenen Benachrichtigungen' : 'Keine Benachrichtigungen'}
+              {filter === 'unread' ? t('notifications.no_unread') : t('notifications.no_notifications')}
             </h3>
             <p className="text-neutral-400">
               {filter === 'unread'
-                ? 'Du hast alle Benachrichtigungen gelesen!'
-                : 'Du hast noch keine Benachrichtigungen erhalten.'}
+                ? t('notifications.all_read')
+                : t('notifications.no_notifications_desc')}
             </p>
           </motion.div>
         ) : (
@@ -292,7 +294,7 @@ const Notifications: React.FC = () => {
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => markAsRead(notification.id)}
                                 className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                                title="Als gelesen markieren"
+                                title={t('notifications.mark_as_read')}
                               >
                                 <Check size={16} className="text-success-500" />
                               </motion.button>
@@ -302,7 +304,7 @@ const Notifications: React.FC = () => {
                               whileTap={{ scale: 0.9 }}
                               onClick={() => deleteNotification(notification.id)}
                               className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                              title="Löschen"
+                              title={t('common.delete')}
                             >
                               <Trash2 size={16} className="text-danger-500" />
                             </motion.button>

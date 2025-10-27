@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CreditCard, Plus, Trash2, Check, AlertCircle } from 'lucide-react'
 import { premiumDesign } from '../config/premiumDesign'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface PaymentMethod {
   id: number
@@ -12,6 +13,7 @@ interface PaymentMethod {
 }
 
 const PaymentMethods: React.FC = () => {
+  const { t } = useLanguage()
   const [methods, setMethods] = useState<PaymentMethod[]>([
     {
       id: 1,
@@ -33,11 +35,11 @@ const PaymentMethods: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 2000))
 
       // For now, just show alert
-      alert('PayPal-Integration wird implementiert. Bitte später erneut versuchen.')
+      alert(t('payment.paypal_integration_message'))
 
     } catch (error) {
       console.error('Error adding PayPal:', error)
-      alert('Fehler beim Hinzufügen von PayPal')
+      alert(t('payment.error_adding'))
     } finally {
       setLoading(false)
       setShowAddModal(false)
@@ -45,7 +47,7 @@ const PaymentMethods: React.FC = () => {
   }
 
   const removeMethod = async (id: number) => {
-    if (!confirm('Möchtest du diese Zahlungsmethode wirklich entfernen?')) return
+    if (!confirm(t('payment.confirm_remove'))) return
 
     setLoading(true)
     try {
@@ -53,7 +55,7 @@ const PaymentMethods: React.FC = () => {
       setMethods(prev => prev.filter(m => m.id !== id))
     } catch (error) {
       console.error('Error removing method:', error)
-      alert('Fehler beim Entfernen')
+      alert(t('payment.error_removing'))
     } finally {
       setLoading(false)
     }
@@ -66,7 +68,7 @@ const PaymentMethods: React.FC = () => {
       setMethods(prev => prev.map(m => ({ ...m, default: m.id === id })))
     } catch (error) {
       console.error('Error setting default:', error)
-      alert('Fehler beim Setzen der Standard-Zahlungsmethode')
+      alert(t('payment.error_setting_default'))
     } finally {
       setLoading(false)
     }
@@ -82,8 +84,8 @@ const PaymentMethods: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Zahlungsmethoden</h1>
-            <p className="text-neutral-400">Verwalte deine Zahlungsoptionen</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('payment.title')}</h1>
+            <p className="text-neutral-400">{t('payment.subtitle')}</p>
           </div>
 
           <motion.button
@@ -97,7 +99,7 @@ const PaymentMethods: React.FC = () => {
             }}
           >
             <Plus size={18} />
-            <span>Hinzufügen</span>
+            <span>{t('common.add')}</span>
           </motion.button>
         </div>
 
@@ -114,10 +116,9 @@ const PaymentMethods: React.FC = () => {
         >
           <AlertCircle size={20} className="text-primary-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-neutral-300">
-            <p className="font-semibold text-white mb-1">PayPal Integration</p>
+            <p className="font-semibold text-white mb-1">{t('payment.paypal_integration')}</p>
             <p>
-              Verbinde dein PayPal-Konto für automatische Transaktionserkennung und
-              nahtlose Premium-Zahlungen.
+              {t('payment.paypal_integration_desc')}
             </p>
           </div>
         </motion.div>
@@ -140,10 +141,10 @@ const PaymentMethods: React.FC = () => {
                 <CreditCard size={40} className="text-neutral-600" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
-                Keine Zahlungsmethoden
+                {t('payment.no_methods')}
               </h3>
               <p className="text-neutral-400 mb-6">
-                Füge eine Zahlungsmethode hinzu, um Premium-Features zu nutzen
+                {t('payment.add_method_desc')}
               </p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -155,7 +156,7 @@ const PaymentMethods: React.FC = () => {
                   boxShadow: premiumDesign.effects.shadow.glow,
                 }}
               >
-                Erste Zahlungsmethode hinzufügen
+                {t('payment.add_first_method')}
               </motion.button>
             </motion.div>
           ) : (
@@ -194,7 +195,7 @@ const PaymentMethods: React.FC = () => {
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
                         <h3 className="font-bold text-white">
-                          {method.type === 'paypal' ? 'PayPal' : 'Kreditkarte'}
+                          {method.type === 'paypal' ? t('payment.paypal') : t('payment.credit_card')}
                         </h3>
                         {method.default && (
                           <span
@@ -204,7 +205,7 @@ const PaymentMethods: React.FC = () => {
                               color: '#fff',
                             }}
                           >
-                            Standard
+                            {t('payment.default')}
                           </span>
                         )}
                       </div>
@@ -232,7 +233,7 @@ const PaymentMethods: React.FC = () => {
                         }}
                       >
                         <Check size={14} />
-                        <span>Als Standard</span>
+                        <span>{t('payment.set_as_default')}</span>
                       </motion.button>
                     )}
 
@@ -242,7 +243,7 @@ const PaymentMethods: React.FC = () => {
                       onClick={() => removeMethod(method.id)}
                       disabled={loading || method.default}
                       className="p-2 rounded-xl transition-colors hover:bg-danger-500/20"
-                      title="Entfernen"
+                      title={t('common.delete')}
                     >
                       <Trash2 size={18} className="text-danger-500" />
                     </motion.button>
@@ -276,7 +277,7 @@ const PaymentMethods: React.FC = () => {
               }}
             >
               <h2 className="text-2xl font-bold text-white mb-6">
-                Zahlungsmethode hinzufügen
+                {t('payment.add_payment_method')}
               </h2>
 
               {/* PayPal Option */}
@@ -302,9 +303,9 @@ const PaymentMethods: React.FC = () => {
                     💳
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white mb-1">PayPal</h3>
+                    <h3 className="font-bold text-white mb-1">{t('payment.paypal')}</h3>
                     <p className="text-sm text-neutral-400">
-                      Sichere Zahlung mit PayPal
+                      {t('payment.paypal_secure')}
                     </p>
                   </div>
                   {loading ? (
@@ -333,9 +334,9 @@ const PaymentMethods: React.FC = () => {
                     <CreditCard size={32} className="text-neutral-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white mb-1">Kreditkarte</h3>
+                    <h3 className="font-bold text-white mb-1">{t('payment.credit_card')}</h3>
                     <p className="text-sm text-neutral-400">
-                      Bald verfügbar
+                      {t('payment.coming_soon')}
                     </p>
                   </div>
                 </div>
@@ -352,7 +353,7 @@ const PaymentMethods: React.FC = () => {
                   border: premiumDesign.glass.light.border,
                 }}
               >
-                Abbrechen
+                {t('common.cancel')}
               </motion.button>
             </motion.div>
           </motion.div>

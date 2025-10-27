@@ -2,67 +2,130 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpaarBot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SpaarBot - Ausgabe erfassen</title>
+    <meta name="description" content="Schnelle Ausgabenerfassung mit SpaarBot">
     <style>
+        /* ==========================================
+           MODERN PREMIUM DESIGN - WEEK 1
+           Clean, Minimalist, Trendy
+           ========================================== */
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            /* Light Mode Colors */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b7280;
+            --text-hint: #9ca3af;
+            --border-color: #e5e7eb;
+            --accent-color: #4f46e5;
+            --accent-hover: #4338ca;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+            /* Typography */
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, "SF Mono", Monaco, "Cascadia Mono", "Roboto Mono", monospace;
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #0f172a;
+                --bg-secondary: #1e293b;
+                --bg-card: #1e293b;
+                --text-primary: #f1f5f9;
+                --text-secondary: #cbd5e1;
+                --text-hint: #94a3b8;
+                --border-color: #334155;
+                --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+                --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* Telegram WebApp Theme Variables (overrides above when available) */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #f7f7f7);
-            color: var(--tg-theme-text-color, #1e1e1e);
-            padding: 16px;
+            font-family: var(--font-sans);
+            background-color: var(--tg-theme-bg-color, var(--bg-primary));
+            color: var(--tg-theme-text-color, var(--text-primary));
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container {
             max-width: 500px;
             margin: 0 auto;
+            padding: 20px 16px;
         }
 
+        /* ==========================================
+           HEADER - MINIMALIST & CLEAN
+           ========================================== */
         .header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
+            padding: 20px 0;
         }
 
-        .header h1 {
-            font-size: 24px;
+        .header-title {
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
         }
 
-        .header p {
-            color: var(--tg-theme-hint-color, #999);
+        .header-subtitle {
             font-size: 14px;
+            color: var(--tg-theme-hint-color, var(--text-hint));
+            font-weight: 500;
         }
 
+        /* ==========================================
+           TABS - MODERN DESIGN
+           ========================================== */
         .tabs {
             display: flex;
             gap: 8px;
-            margin-bottom: 24px;
-            background: var(--tg-theme-secondary-bg-color, white);
-            padding: 4px;
-            border-radius: 12px;
+            margin-bottom: 28px;
+            background: var(--tg-theme-secondary-bg-color, var(--bg-secondary));
+            padding: 6px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
         }
 
         .tab {
             flex: 1;
-            padding: 12px;
+            padding: 12px 16px;
             border: none;
             background: transparent;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--tg-theme-text-color, var(--text-primary));
+        }
+
+        .tab:active {
+            transform: scale(0.98);
         }
 
         .tab.active {
-            background: var(--tg-theme-button-color, #2481cc);
+            background: var(--tg-theme-button-color, var(--accent-color));
             color: var(--tg-theme-button-text-color, white);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .tab-content {
@@ -71,118 +134,286 @@
 
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.3s ease-in-out;
         }
 
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==========================================
+           CARD - PREMIUM DESIGN
+           ========================================== */
         .card {
-            background: var(--tg-theme-secondary-bg-color, white);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background: var(--tg-theme-secondary-bg-color, var(--bg-card));
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--tg-theme-hint-color, var(--border-color));
+            transition: transform 0.2s ease;
         }
 
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ==========================================
+           FORM INPUTS - MODERN & CLEAN
+           ========================================== */
         .input-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .input-group label {
             display: block;
             font-size: 14px;
             font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--tg-theme-text-color, #1e1e1e);
+            margin-bottom: 10px;
+            color: var(--tg-theme-text-color, var(--text-primary));
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .input-group input,
         .input-group select {
             width: 100%;
             padding: 14px 16px;
-            border: 2px solid var(--tg-theme-hint-color, #ddd);
-            border-radius: 12px;
+            border: 2px solid var(--tg-theme-hint-color, var(--border-color));
+            border-radius: 14px;
             font-size: 16px;
-            background: var(--tg-theme-bg-color, white);
-            color: var(--tg-theme-text-color, #1e1e1e);
-            transition: border-color 0.2s;
+            background: var(--tg-theme-bg-color, var(--bg-primary));
+            color: var(--tg-theme-text-color, var(--text-primary));
+            transition: all 0.3s ease;
+            font-family: var(--font-sans);
         }
 
         .input-group input:focus,
         .input-group select:focus {
             outline: none;
-            border-color: var(--tg-theme-button-color, #2481cc);
+            border-color: var(--tg-theme-button-color, var(--accent-color));
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
+        .input-group input::placeholder {
+            color: var(--tg-theme-hint-color, var(--text-hint));
+        }
+
+        /* Amount input - special styling */
+        #amount {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: -0.5px;
+            font-family: var(--font-mono);
+        }
+
+        /* ==========================================
+           BUTTONS - PREMIUM DESIGN
+           ========================================== */
         .btn-primary {
             width: 100%;
-            padding: 16px;
-            background: var(--tg-theme-button-color, #4CAF50);
+            padding: 16px 24px;
+            background: var(--tg-theme-button-color, var(--accent-color));
             color: var(--tg-theme-button-text-color, white);
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn-primary:active {
-            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
 
+        /* ==========================================
+           SUCCESS MESSAGE - MODERN
+           ========================================== */
         .success {
-            background: #4CAF50;
+            background: var(--success-color);
             color: white;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 16px 20px;
+            border-radius: 16px;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             display: none;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+            animation: slideDown 0.3s ease-out;
         }
 
         .success.show {
             display: block;
         }
 
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==========================================
+           STATS SECTION - CLEAN DESIGN
+           ========================================== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 16px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
-            background: var(--tg-theme-secondary-bg-color, white);
-            padding: 16px;
-            border-radius: 12px;
+            background: var(--tg-theme-secondary-bg-color, var(--bg-secondary));
+            padding: 20px;
+            border-radius: 16px;
             text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--tg-theme-hint-color, var(--border-color));
         }
 
         .stat-card .value {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            color: var(--tg-theme-button-color, var(--accent-color));
+            font-family: var(--font-mono);
         }
 
         .stat-card .label {
+            font-size: 13px;
+            color: var(--tg-theme-hint-color, var(--text-hint));
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==========================================
+           TRANSACTIONS LIST
+           ========================================== */
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--tg-theme-hint-color, var(--border-color));
+            transition: background-color 0.2s ease;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-item:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-description {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--tg-theme-text-color, var(--text-primary));
+        }
+
+        .transaction-date {
             font-size: 12px;
-            color: var(--tg-theme-hint-color, #999);
+            color: var(--tg-theme-hint-color, var(--text-hint));
+        }
+
+        .transaction-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--error-color);
+            font-family: var(--font-mono);
+        }
+
+        /* ==========================================
+           LOADING SPINNER
+           ========================================== */
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==========================================
+           EMPTY STATE
+           ========================================== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--tg-theme-hint-color, var(--text-hint));
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>💰 SpaarBot</h1>
-            <p>Dein intelligenter Finanzassistent</p>
+            <div class="header-title">💰 SpaarBot</div>
+            <div class="header-subtitle">Dein intelligenter Finanzassistent</div>
         </div>
 
+        <!-- Tabs -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('add')">➕ Hinzufügen</button>
-            <button class="tab" onclick="switchTab('stats')">📊 Statistik</button>
+            <button class="tab active" onclick="switchTab('add')">
+                ➕ Hinzufügen
+            </button>
+            <button class="tab" onclick="switchTab('stats')">
+                📊 Übersicht
+            </button>
         </div>
 
         <!-- Tab: Ausgabe hinzufügen -->
@@ -194,24 +425,45 @@
             <div class="card">
                 <form id="expense-form">
                     <div class="input-group">
-                        <label for="amount">💶 Betrag (€)</label>
-                        <input type="number" id="amount" placeholder="15.50" step="0.01" min="0" required>
+                        <label for="amount">
+                            💶 Betrag (€)
+                        </label>
+                        <input
+                            type="number"
+                            id="amount"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0"
+                            required
+                            autocomplete="off"
+                        >
                     </div>
 
                     <div class="input-group">
-                        <label for="description">📝 Beschreibung</label>
-                        <input type="text" id="description" placeholder="z.B. Kaffee bei Starbucks" required>
+                        <label for="description">
+                            📝 Beschreibung
+                        </label>
+                        <input
+                            type="text"
+                            id="description"
+                            placeholder="z.B. Kaffee bei Starbucks"
+                            required
+                            autocomplete="off"
+                        >
                     </div>
 
                     <div class="input-group">
-                        <label for="category">🏷️ Kategorie</label>
+                        <label for="category">
+                            🏷️ Kategorie
+                        </label>
                         <select id="category" required>
-                            <option value="" disabled selected>Wählen Sie eine Kategorie</option>
+                            <option value="" disabled selected>Kategorie wählen...</option>
                         </select>
                     </div>
 
                     <button type="submit" class="btn-primary" id="submit-btn">
-                        ✓ Speichern
+                        <span id="submit-text">✓ Speichern</span>
+                        <span id="submit-spinner" class="spinner" style="display:none;"></span>
                     </button>
                 </form>
             </div>
@@ -226,55 +478,99 @@
                 </div>
                 <div class="stat-card">
                     <div class="value" id="transactions-count">0</div>
-                    <div class="label">Transaktionen</div>
+                    <div class="label">Einträge</div>
                 </div>
             </div>
 
             <div class="card">
-                <h3 style="margin-bottom: 12px;">Letzte Ausgaben</h3>
+                <h3 style="margin-bottom: 16px; font-size: 18px; font-weight: 700;">
+                    📋 Letzte Ausgaben
+                </h3>
                 <div id="transactions-list">
-                    <p style="color: var(--tg-theme-hint-color, #999); text-align: center;">
-                        Noch keine Transaktionen
-                    </p>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div class="empty-state-text">Noch keine Transaktionen</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
         const API_BASE_URL = window.location.origin;
+        const API_PREFIX = '/api/v1';
         let currentUser = null;
 
-        // Initialize Telegram WebApp
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-        Telegram.WebApp.setHeaderColor('secondary_bg_color');
+        // ==========================================
+        // TELEGRAM WEB APP INITIALIZATION
+        // ==========================================
+        try {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            Telegram.WebApp.setHeaderColor('secondary_bg_color');
 
-        // Get user from Telegram
-        currentUser = Telegram.WebApp.initDataUnsafe.user;
+            // Get user from Telegram
+            currentUser = Telegram.WebApp.initDataUnsafe.user;
 
-        // Tab switching
+            if (!currentUser) {
+                console.warn('⚠️ Telegram user not found - TWA may not work properly');
+            } else {
+                console.log('✅ Telegram WebApp initialized:', currentUser.id);
+            }
+        } catch (error) {
+            console.error('❌ Error initializing Telegram WebApp:', error);
+        }
+
+        // ==========================================
+        // TAB SWITCHING
+        // ==========================================
         function switchTab(tabName) {
+            // Remove active class from all tabs and content
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
 
+            // Add active class to selected tab and content
             event.target.classList.add('active');
             document.getElementById('tab-' + tabName).classList.add('active');
 
+            // Load statistics when switching to stats tab
             if (tabName === 'stats') {
                 loadStatistics();
             }
+
+            // Haptic feedback
+            try {
+                Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            } catch (e) {
+                console.log('Haptic feedback not available');
+            }
         }
 
-        // Load categories
+        // ==========================================
+        // LOAD CATEGORIES
+        // ==========================================
         async function loadCategories() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/twa/data/categories`);
+                const url = currentUser
+                    ? `${API_BASE_URL}${API_PREFIX}/twa/data/categories?telegram_id=${currentUser.id}`
+                    : `${API_BASE_URL}${API_PREFIX}/twa/data/categories`;
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const categories = await response.json();
 
                 const select = document.getElementById('category');
-                select.innerHTML = '<option value="" disabled selected>Wählen Sie eine Kategorie</option>';
+                select.innerHTML = '<option value="" disabled selected>Kategorie wählen...</option>';
 
                 categories.forEach(cat => {
                     const option = document.createElement('option');
@@ -282,12 +578,20 @@
                     option.textContent = `${cat.icon} ${cat.name}`;
                     select.appendChild(option);
                 });
+
+                console.log(`✅ Loaded ${categories.length} categories`);
             } catch (error) {
-                console.error("Failed to load categories:", error);
+                console.error("❌ Failed to load categories:", error);
+
+                // Fallback: show error message
+                const select = document.getElementById('category');
+                select.innerHTML = '<option value="" disabled selected>Fehler beim Laden...</option>';
             }
         }
 
-        // Submit expense
+        // ==========================================
+        // SUBMIT EXPENSE
+        // ==========================================
         document.getElementById('expense-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -296,28 +600,44 @@
             const category_id = document.getElementById('category').value;
 
             if (!currentUser) {
-                Telegram.WebApp.showAlert('Fehler: Benutzer nicht gefunden');
+                try {
+                    Telegram.WebApp.showAlert('Fehler: Benutzer nicht gefunden. Bitte /start verwenden.');
+                } catch (e) {
+                    alert('Fehler: Benutzer nicht gefunden.');
+                }
                 return;
             }
 
+            // UI feedback
             const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const submitSpinner = document.getElementById('submit-spinner');
+
             submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Speichern...';
+            submitText.style.display = 'none';
+            submitSpinner.style.display = 'inline-block';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/twa/expense/submit`, {
+                const response = await fetch(`${API_BASE_URL}${API_PREFIX}/twa/expense/submit`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         telegram_id: currentUser.id,
                         amount: parseFloat(amount),
-                        description: description,
+                        description: description.trim(),
                         category_id: parseInt(category_id)
                     })
                 });
 
+                const result = await response.json();
+
                 if (response.ok) {
-                    // Show success
+                    // Success!
+                    console.log('✅ Transaction saved:', result);
+
+                    // Show success message
                     document.getElementById('success-message').classList.add('show');
                     setTimeout(() => {
                         document.getElementById('success-message').classList.remove('show');
@@ -327,60 +647,111 @@
                     document.getElementById('expense-form').reset();
 
                     // Haptic feedback
-                    Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    try {
+                        Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    } catch (e) {
+                        console.log('Haptic feedback not available');
+                    }
                 } else {
-                    throw new Error('Failed to save');
+                    throw new Error(result.detail || 'Failed to save');
                 }
             } catch (error) {
-                Telegram.WebApp.showAlert(`Fehler beim Speichern: ${error.message}`);
-                Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                console.error('❌ Error saving transaction:', error);
+
+                try {
+                    Telegram.WebApp.showAlert(`Fehler beim Speichern: ${error.message}`);
+                    Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                } catch (e) {
+                    alert(`Fehler beim Speichern: ${error.message}`);
+                }
             } finally {
+                // Reset button
                 submitBtn.disabled = false;
-                submitBtn.textContent = '✓ Speichern';
+                submitText.style.display = 'inline';
+                submitSpinner.style.display = 'none';
             }
         });
 
-        // Load statistics
+        // ==========================================
+        // LOAD STATISTICS
+        // ==========================================
         async function loadStatistics() {
-            if (!currentUser) return;
+            if (!currentUser) {
+                console.warn('⚠️ Cannot load statistics without user');
+                return;
+            }
 
             try {
                 const response = await fetch(
-                    `${API_BASE_URL}/api/v1/transactions/?telegram_id=${currentUser.id}&limit=10`
+                    `${API_BASE_URL}${API_PREFIX}/twa/data/recent-transactions?telegram_id=${currentUser.id}&limit=10`
                 );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const transactions = await response.json();
 
                 // Update stats
-                const total = transactions.reduce((sum, t) => t.transaction_type === 'expense' ? sum + t.amount : sum, 0);
+                const total = transactions.reduce((sum, t) =>
+                    t.transaction_type === 'expense' ? sum + t.amount : sum, 0
+                );
+
                 document.getElementById('total-expenses').textContent = `€${total.toFixed(2)}`;
                 document.getElementById('transactions-count').textContent = transactions.length;
 
                 // Show transactions list
                 const listEl = document.getElementById('transactions-list');
+
                 if (transactions.length === 0) {
-                    listEl.innerHTML = '<p style="color: var(--tg-theme-hint-color, #999); text-align: center;">Noch keine Transaktionen</p>';
+                    listEl.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <div class="empty-state-text">Noch keine Transaktionen</div>
+                        </div>
+                    `;
                 } else {
                     listEl.innerHTML = transactions.map(t => `
-                        <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="font-weight: 600;">${t.description || 'Keine Beschreibung'}</div>
-                                <div style="font-size: 12px; color: var(--tg-theme-hint-color, #999);">
-                                    ${new Date(t.transaction_date).toLocaleDateString('de-DE')}
+                        <div class="transaction-item">
+                            <div class="transaction-details">
+                                <div class="transaction-description">
+                                    ${t.category_icon} ${t.description || 'Keine Beschreibung'}
+                                </div>
+                                <div class="transaction-date">
+                                    ${new Date(t.transaction_date).toLocaleDateString('de-DE', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    })}
                                 </div>
                             </div>
-                            <div style="font-size: 18px; font-weight: 700; color: #f44336;">
+                            <div class="transaction-amount">
                                 €${t.amount.toFixed(2)}
                             </div>
                         </div>
                     `).join('');
                 }
+
+                console.log(`✅ Loaded ${transactions.length} transactions`);
             } catch (error) {
-                console.error('Failed to load statistics:', error);
+                console.error('❌ Failed to load statistics:', error);
+
+                const listEl = document.getElementById('transactions-list');
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-text">Fehler beim Laden der Statistiken</div>
+                    </div>
+                `;
             }
         }
 
-        // Initialize
+        // ==========================================
+        // INITIALIZE
+        // ==========================================
+        console.log('🚀 SpaarBot TWA initializing...');
         loadCategories();
+        console.log('✅ SpaarBot TWA ready!');
     </script>
 </body>
 </html>

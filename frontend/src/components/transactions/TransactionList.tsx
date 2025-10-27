@@ -20,23 +20,23 @@ interface TransactionListProps {
 
 export const TransactionList: React.FC<TransactionListProps> = ({ transactions }) => {
   const getCategoryIcon = (category?: string | { icon: string }) => {
-    if (!category) return '📦'
+    if (!category) return 'ðŸ“¦'
     if (typeof category === 'string') {
       const icons: Record<string, string> = {
-        food: '🍔',
-        transport: '🚗',
-        shopping: '🛍️',
-        entertainment: '🎬',
-        health: '💊',
-        salary: '💰',
-        freelance: '💻',
-        investment: '📈',
-        gift: '🎁',
-        other: '📦',
+        food: 'ðŸ”',
+        transport: 'ðŸš—',
+        shopping: 'ðŸ›ï¸',
+        entertainment: 'ðŸŽ¬',
+        health: 'ðŸ’Š',
+        salary: 'ðŸ’°',
+        freelance: 'ðŸ’»',
+        investment: 'ðŸ“ˆ',
+        gift: 'ðŸŽ',
+        other: 'ðŸ“¦',
       }
-      return icons[category] || '📦'
+      return icons[category] || 'ðŸ“¦'
     }
-    return category.icon || '📦'
+    return category.icon || 'ðŸ“¦'
   }
 
   const getCategoryName = (category?: string | { name: string }) => {
@@ -113,7 +113,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions }
                 )}
                 <span>
                   {transaction.type === 'expense' ? '-' : '+'}
-                  {transaction.amount.toFixed(2)} €
+                  {transaction.amount.toFixed(2)} â‚¬
                 </span>
               </div>
             </div>

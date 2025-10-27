@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Settings, Bell, Calendar, User, LogOut, CreditCard,
@@ -9,7 +9,7 @@ import { useUserStore } from '../../store/userStore'
 import { useNavigate } from 'react-router-dom'
 import { CalendarPopup } from './CalendarPopup'
 
-export const PremiumHeader: React.FC = () => {
+export const PremiumHeader = () => {
   const { user, isPremium, logout } = useUserStore()
   const navigate = useNavigate()
 
@@ -20,46 +20,51 @@ export const PremiumHeader: React.FC = () => {
   const menuItems = [
     {
       icon: Sparkles,
-      label: isPremium ? 'SpaarBot Premium' : 'Upgrade to Premium',
+      label: isPremium ? 'SpaarBot Premium' : 'Upgrade auf Premium',
       action: () => navigate('/upgrade'),
       highlight: !isPremium,
-      badge: !isPremium ? 'NEW' : null
+      badge: !isPremium ? 'NEU' : null
     },
     {
       icon: User,
-      label: 'Персональные данные',
+      label: 'Persönliche Daten',
       action: () => navigate('/profile')
     },
     {
       icon: Settings,
-      label: 'Настройки',
+      label: 'Einstellungen',
       action: () => navigate('/settings')
     },
     {
       icon: Bell,
-      label: 'Уведомления',
+      label: 'Benachrichtigungen',
       action: () => navigate('/notifications'),
       badge: unreadNotifications > 0 ? unreadNotifications : null
     },
     {
       icon: CreditCard,
-      label: 'Способы оплаты',
+      label: 'Zahlungsmethoden',
       action: () => navigate('/payment-methods')
     },
     {
       icon: Shield,
-      label: 'Безопасность',
+      label: 'Sicherheit',
       action: () => navigate('/security')
     },
     {
       icon: TrendingUp,
-      label: 'Статистика использования',
+      label: 'Nutzungsstatistik',
       action: () => navigate('/usage-stats')
     },
     {
       icon: LogOut,
-      label: 'Выйти из аккаунта',
-      action: logout,
+      label: 'Abmelden',
+      action: () => {
+        if (confirm('Möchtest du dich wirklich abmelden?')) {
+          logout()
+          navigate('/')
+        }
+      },
       danger: true,
       separator: true
     }
@@ -129,7 +134,6 @@ export const PremiumHeader: React.FC = () => {
             }}
           >
             <Calendar size={20} />
-            {/* Indicator for upcoming subscriptions */}
             <span
               className="absolute top-1 right-1 w-2 h-2 rounded-full animate-pulse"
               style={{ background: premiumDesign.colors.warning[500] }}
@@ -217,7 +221,7 @@ export const PremiumHeader: React.FC = () => {
                   {/* Menu Items */}
                   <div className="py-2">
                     {menuItems.map((item, index) => (
-                      <React.Fragment key={index}>
+                      <div key={index}>
                         {item.separator && (
                           <div
                             className="my-2 h-px"
@@ -263,7 +267,7 @@ export const PremiumHeader: React.FC = () => {
                             </span>
                           )}
                         </motion.button>
-                      </React.Fragment>
+                      </div>
                     ))}
                   </div>
                 </motion.div>

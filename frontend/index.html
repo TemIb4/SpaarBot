@@ -5,10 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#1a1a1a" />
-    <title>SpaarBot - Dein Finanz-Assistent</title>
 
-    <!-- ✅ CRITICAL: Telegram Web App SDK -->
+    <!-- CRITICAL: Prevent ALL caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <title>SpaarBot - Dein Finanz-Assistent</title>
 
     <style>
       /* Prevent white flash on load */
@@ -60,6 +66,20 @@
         font-size: 14px;
         color: #888;
       }
+
+      /* Version indicator (for debugging) */
+      .version-indicator {
+        position: fixed;
+        bottom: 80px;
+        right: 10px;
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-family: monospace;
+        z-index: 9998;
+      }
     </style>
   </head>
   <body>
@@ -75,9 +95,17 @@
     <!-- React App Root -->
     <div id="root"></div>
 
+    <!-- Version indicator (remove in production) -->
+    <div class="version-indicator" id="version-indicator"></div>
+
     <script type="module" src="/src/main.tsx"></script>
 
     <script>
+      // Generate unique version on every load
+      const appVersion = 'v1.0.' + Date.now();
+      console.log('🚀 App Version:', appVersion);
+      document.getElementById('version-indicator').textContent = appVersion;
+
       // Remove loading screen when app is ready
       window.addEventListener('load', () => {
         setTimeout(() => {
@@ -90,19 +118,39 @@
         }, 500);
       });
 
-      // Debug: Log Telegram WebApp initialization
+      // Telegram WebApp initialization
       if (window.Telegram?.WebApp) {
-        console.log('✅ Telegram WebApp initialized', {
-          version: window.Telegram.WebApp.version,
-          platform: window.Telegram.WebApp.platform,
-          colorScheme: window.Telegram.WebApp.colorScheme
+        const tg = window.Telegram.WebApp;
+
+        console.log('✅ Telegram WebApp SDK loaded', {
+          version: tg.version,
+          platform: tg.platform,
+          colorScheme: tg.colorScheme,
+          user: tg.initDataUnsafe?.user
         });
 
-        // Expand to full height
-        window.Telegram.WebApp.expand();
-        window.Telegram.WebApp.ready();
+        try {
+          tg.expand();
+          console.log('✅ App expanded');
+        } catch (e) {
+          console.warn('⚠️ expand() not supported:', e.message);
+        }
+
+        try {
+          tg.ready();
+          console.log('✅ WebApp ready signal sent');
+        } catch (e) {
+          console.warn('⚠️ ready() failed:', e.message);
+        }
       } else {
         console.warn('⚠️ Telegram WebApp SDK not loaded - running in browser mode');
+      }
+
+      // Prevent caching via service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => registration.unregister());
+        });
       }
     </script>
   </body>

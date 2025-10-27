@@ -8,7 +8,10 @@ export interface ColorTheme {
   premium?: boolean
   colors: {
     primary: string
+    secondary: string
+    accent: string
     bg: string
+    bgCard: string
     text: string
   }
 }
@@ -33,7 +36,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       preview: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
       description: 'Klassisches dunkles Theme',
       premium: false,
-      colors: { primary: '#6366f1', bg: '#0a0a0a', text: '#ffffff' }
+      colors: {
+        primary: '#6366f1',
+        secondary: '#8b5cf6',
+        accent: '#a78bfa',
+        bg: '#0a0a0a',
+        bgCard: '#1a1a1a',
+        text: '#ffffff'
+      }
     },
     {
       id: 'blue',
@@ -41,7 +51,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       preview: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
       description: 'Beruhigendes Blau',
       premium: false,
-      colors: { primary: '#3b82f6', bg: '#0f172a', text: '#ffffff' }
+      colors: {
+        primary: '#3b82f6',
+        secondary: '#2563eb',
+        accent: '#60a5fa',
+        bg: '#0f172a',
+        bgCard: '#1e293b',
+        text: '#ffffff'
+      }
     },
     {
       id: 'purple',
@@ -49,7 +66,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       preview: 'linear-gradient(135deg, #6b21a8 0%, #a855f7 100%)',
       description: 'Elegantes Lila',
       premium: true,
-      colors: { primary: '#a855f7', bg: '#1a0a2e', text: '#ffffff' }
+      colors: {
+        primary: '#a855f7',
+        secondary: '#9333ea',
+        accent: '#c084fc',
+        bg: '#1a0a2e',
+        bgCard: '#2d1b4e',
+        text: '#ffffff'
+      }
     },
     {
       id: 'emerald',
@@ -57,23 +81,42 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       preview: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)',
       description: 'Frisches Grün',
       premium: true,
-      colors: { primary: '#10b981', bg: '#022c22', text: '#ffffff' }
+      colors: {
+        primary: '#10b981',
+        secondary: '#059669',
+        accent: '#34d399',
+        bg: '#022c22',
+        bgCard: '#064e3b',
+        text: '#ffffff'
+      }
     },
   ]
 
   const setTheme = (newTheme: string) => {
+    console.log('🎨 Setting theme to:', newTheme)
     setThemeState(newTheme)
     localStorage.setItem('spaarbot-theme', newTheme)
   }
 
   useEffect(() => {
     const selectedTheme = availableThemes.find(t => t.id === theme)
-    if (selectedTheme) {
-      document.body.style.setProperty('--color-primary', selectedTheme.colors.primary)
-      document.body.style.setProperty('--color-bg', selectedTheme.colors.bg)
-      document.body.style.setProperty('--color-text', selectedTheme.colors.text)
-    }
-  }, [theme])
+    if (!selectedTheme) return
+
+    console.log('🎨 Applying theme:', theme)
+
+    const root = document.documentElement
+    root.style.setProperty('--color-primary', selectedTheme.colors.primary)
+    root.style.setProperty('--color-secondary', selectedTheme.colors.secondary)
+    root.style.setProperty('--color-accent', selectedTheme.colors.accent)
+    root.style.setProperty('--color-bg', selectedTheme.colors.bg)
+    root.style.setProperty('--color-bg-card', selectedTheme.colors.bgCard)
+    root.style.setProperty('--color-text', selectedTheme.colors.text)
+
+    document.body.style.backgroundColor = selectedTheme.colors.bg
+    document.body.style.color = selectedTheme.colors.text
+
+    console.log('✅ Theme applied successfully')
+  }, [theme, availableThemes])
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, availableThemes }}>

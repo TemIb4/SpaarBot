@@ -2,7 +2,7 @@
 Groq AI Service
 """
 from groq import AsyncGroq
-from app.core.config import get_settings
+from app.core.config import get_settings  # ✅ ИСПРАВЛЕНО: правильный импорт
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class GroqService:
     def __init__(self):
         self.client = AsyncGroq(api_key=settings.GROQ_API_KEY)
         self.model = "llama-3.1-70b-versatile"
-        logger.info("Groq client initialized successfully")
+        logger.info("✅ Groq client initialized successfully")
 
     async def chat(self, messages: list, temperature: float = 0.7, max_tokens: int = 1024) -> str:
         """
@@ -41,7 +41,7 @@ class GroqService:
             return response
 
         except Exception as e:
-            logger.error(f"Groq API error: {e}")
+            logger.error(f"❌ Groq API error: {e}")
             raise Exception(f"AI service error: {str(e)}")
 
 
@@ -84,9 +84,9 @@ Respond with ONLY the category name, nothing else."""
             return {"category_name": category_name}
         else:
             # Fallback to first category if AI returned invalid category
-            logger.warning(f"AI returned invalid category: {category_name}, using default")
+            logger.warning(f"⚠️ AI returned invalid category: {category_name}, using default")
             return {"category_name": available_categories[0] if available_categories else "Sonstiges"}
 
     except Exception as e:
-        logger.error(f"Categorization error: {e}")
+        logger.error(f"❌ Categorization error: {e}")
         return {"category_name": "Sonstiges"}

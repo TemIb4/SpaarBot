@@ -1,365 +1,141 @@
 """
 PayPal Integration Endpoints
-Интеграция с PayPal для premium подписок и синхронизации транзакций
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 from app.db.database import get_db
-from app.db import crud
-from app.schemas.user import UserResponse
-from app.core.config import get_settings
-from pydantic import BaseModel, HttpUrl
-from typing import Optional, List
+from app.services import paypal_service
 from datetime import datetime, timedelta
 import logging
-import httpx
-import json
-import hmac
-import hashlib
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
-settings = get_settings()
+router = APIRouter(prefix="/api/v1/paypal", tags=["paypal"])
 
 
-class PayPalSubscriptionCreate(BaseModel):
-    """Схема для создания PayPal подписки"""
-    plan_id: str  # 'monthly' or 'yearly'
-    return_url: HttpUrl
-    cancel_url: HttpUrl
+class PaymentRequest(BaseModel):
+    telegram_id: int
+    amount: float
+    description: str
 
 
-class PayPalSubscriptionResponse(BaseModel):
-    """Ответ с ссылкой на PayPal checkout"""
-    approval_url: str
-    subscription_id: str
+class PaymentExecuteRequest(BaseModel):
+    payment_id: str
+    payer_id: str
 
 
-class PayPalWebhookEvent(BaseModel):
-    """PayPal Webhook Event"""
-    id: str
-    event_type: str
-    resource: dict
-    create_time: str
+class LinkAccountRequest(BaseModel):
+    telegram_id: int
+    access_token: str
 
 
-# PayPal API Configuration
-PAYPAL_API_BASE = (
-    "https://api-m.paypal.com"
-    if settings.PAYPAL_MODE == "live"
-    else "https://api-m.sandbox.paypal.com"
-)
-
-PAYPAL_PLAN_IDS = {
-    'monthly': 'P-MONTHLY-PREMIUM-PLAN-ID',  # TODO: Заменить на реальные ID из PayPal Dashboard
-    'yearly': 'P-YEARLY-PREMIUM-PLAN-ID'
-}
-
-
-async def get_paypal_access_token() -> str:
-    """Получить PayPal access token"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{PAYPAL_API_BASE}/v1/oauth2/token",
-                auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET),
-                data={"grant_type": "client_credentials"}
-            )
-            response.raise_for_status()
-            return response.json()["access_token"]
-    except Exception as e:
-        logger.error(f"PayPal auth error: {e}")
-        raise HTTPException(status_code=500, detail="PayPal authentication failed")
-
-
-def verify_webhook_signature(
-    request_body: bytes,
-    headers: dict,
-    webhook_id: str
-) -> bool:
-    """
-    Проверить подпись PayPal webhook
-
-    Args:
-        request_body: Raw request body
-        headers: Request headers
-        webhook_id: PayPal Webhook ID
-
-    Returns:
-        True если подпись валидна
-    """
-    # Получить необходимые headers
-    transmission_id = headers.get('paypal-transmission-id')
-    transmission_time = headers.get('paypal-transmission-time')
-    cert_url = headers.get('paypal-cert-url')
-    transmission_sig = headers.get('paypal-transmission-sig')
-    auth_algo = headers.get('paypal-auth-algo')
-
-    if not all([transmission_id, transmission_time, cert_url, transmission_sig, auth_algo]):
-        logger.warning("Missing webhook signature headers")
-        return False
-
-    # В продакшене нужно проверить сертификат через PayPal API
-    # Для MVP возвращаем True, но TODO: реализовать полную верификацию
-    logger.info(f"Webhook signature verification bypassed for MVP")
-    return True
-
-
-@router.post("/create-subscription", response_model=PayPalSubscriptionResponse)
-async def create_paypal_subscription(
-    data: PayPalSubscriptionCreate,
-    request: Request,
+@router.post("/create-payment")
+async def create_payment(
+    request: PaymentRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Создать PayPal подписку
-
-    Steps:
-    1. Получить access token
-    2. Создать subscription в PayPal
-    3. Вернуть approval URL для redirect
-    """
-    # Получить пользователя из Telegram init data
-    telegram_id = request.state.user.telegram_id  # TODO: Implement auth middleware
-
-    user = await crud.get_user_by_telegram_id(db, telegram_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Получить plan ID
-    plan_id = PAYPAL_PLAN_IDS.get(data.plan_id)
-    if not plan_id:
-        raise HTTPException(status_code=400, detail="Invalid plan ID")
-
+    """Create PayPal payment"""
     try:
-        # Получить access token
-        access_token = await get_paypal_access_token()
-
-        # Создать subscription
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{PAYPAL_API_BASE}/v1/billing/subscriptions",
-                headers={
-                    "Authorization": f"Bearer {access_token}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "plan_id": plan_id,
-                    "application_context": {
-                        "brand_name": "SpaarBot",
-                        "locale": "de-DE",
-                        "shipping_preference": "NO_SHIPPING",
-                        "user_action": "SUBSCRIBE_NOW",
-                        "payment_method": {
-                            "payer_selected": "PAYPAL",
-                            "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
-                        },
-                        "return_url": str(data.return_url),
-                        "cancel_url": str(data.cancel_url)
-                    },
-                    "custom_id": str(user.id)  # Связать с пользователем
-                }
-            )
-            response.raise_for_status()
-            subscription_data = response.json()
-
-        # Найти approval URL
-        approval_url = None
-        for link in subscription_data.get("links", []):
-            if link.get("rel") == "approve":
-                approval_url = link.get("href")
-                break
-
-        if not approval_url:
-            raise HTTPException(status_code=500, detail="No approval URL in PayPal response")
-
-        logger.info(f"PayPal subscription created for user {user.id}: {subscription_data['id']}")
-
-        return PayPalSubscriptionResponse(
-            approval_url=approval_url,
-            subscription_id=subscription_data["id"]
+        base_url = "https://yourdomain.com"  # Replace with actual domain
+        result = paypal_service.create_payment(
+            amount=request.amount,
+            description=request.description,
+            return_url=f"{base_url}/paypal/success",
+            cancel_url=f"{base_url}/paypal/cancel"
         )
 
-    except httpx.HTTPError as e:
-        logger.error(f"PayPal API error: {e}")
-        raise HTTPException(status_code=500, detail="PayPal subscription creation failed")
-
-
-@router.post("/webhook")
-async def paypal_webhook(
-    request: Request,
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    PayPal Webhook Handler
-
-    События:
-    - BILLING.SUBSCRIPTION.ACTIVATED: Подписка активирована
-    - BILLING.SUBSCRIPTION.CANCELLED: Подписка отменена
-    - BILLING.SUBSCRIPTION.EXPIRED: Подписка истекла
-    - PAYMENT.SALE.COMPLETED: Платеж завершен
-    """
-    # Получить raw body для верификации подписи
-    body = await request.body()
-
-    # Верифицировать подпись
-    is_valid = verify_webhook_signature(
-        body,
-        dict(request.headers),
-        settings.PAYPAL_WEBHOOK_ID
-    )
-
-    if not is_valid:
-        logger.warning("Invalid PayPal webhook signature")
-        raise HTTPException(status_code=401, detail="Invalid signature")
-
-    # Парсить событие
-    try:
-        event = json.loads(body.decode())
-        event_type = event.get("event_type")
-        resource = event.get("resource", {})
-
-        logger.info(f"PayPal webhook received: {event_type}")
-
-        # Обработать событие
-        if event_type == "BILLING.SUBSCRIPTION.ACTIVATED":
-            await handle_subscription_activated(db, resource)
-
-        elif event_type == "BILLING.SUBSCRIPTION.CANCELLED":
-            await handle_subscription_cancelled(db, resource)
-
-        elif event_type == "BILLING.SUBSCRIPTION.EXPIRED":
-            await handle_subscription_expired(db, resource)
-
-        elif event_type == "PAYMENT.SALE.COMPLETED":
-            await handle_payment_completed(db, resource)
-
-        return {"status": "success"}
+        if result["success"]:
+            # Save payment_id to database
+            return result
+        else:
+            raise HTTPException(status_code=400, detail=result["error"])
 
     except Exception as e:
-        logger.error(f"Webhook processing error: {e}")
-        raise HTTPException(status_code=500, detail="Webhook processing failed")
+        logger.error(f"Create payment error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-async def handle_subscription_activated(db: AsyncSession, resource: dict):
-    """Обработать активацию подписки"""
-    subscription_id = resource.get("id")
-    custom_id = resource.get("custom_id")  # User ID
-
-    if not custom_id:
-        logger.warning(f"No custom_id in subscription {subscription_id}")
-        return
-
-    # Обновить пользователя
-    user = await crud.get_user(db, int(custom_id))
-    if user:
-        user.is_premium = True
-        user.premium_since = datetime.utcnow()
-        user.paypal_subscription_id = subscription_id
-        await db.commit()
-
-        logger.info(f"User {user.id} upgraded to premium via PayPal")
-
-
-async def handle_subscription_cancelled(db: AsyncSession, resource: dict):
-    """Обработать отмену подписки"""
-    subscription_id = resource.get("id")
-
-    # Найти пользователя по subscription_id
-    user = await crud.get_user_by_paypal_subscription(db, subscription_id)
-    if user:
-        user.is_premium = False
-        user.paypal_subscription_id = None
-        await db.commit()
-
-        logger.info(f"User {user.id} premium cancelled")
-
-
-async def handle_subscription_expired(db: AsyncSession, resource: dict):
-    """Обработать истечение подписки"""
-    subscription_id = resource.get("id")
-
-    user = await crud.get_user_by_paypal_subscription(db, subscription_id)
-    if user:
-        user.is_premium = False
-        await db.commit()
-
-        logger.info(f"User {user.id} premium expired")
-
-
-async def handle_payment_completed(db: AsyncSession, resource: dict):
-    """Обработать завершение платежа"""
-    amount = resource.get("amount", {}).get("total")
-    billing_agreement_id = resource.get("billing_agreement_id")
-
-    logger.info(f"Payment completed: {amount} EUR for subscription {billing_agreement_id}")
-
-    # TODO: Можно сохранить историю платежей для аналитики
-
-
-@router.get("/subscription-status/{subscription_id}")
-async def get_subscription_status(
-    subscription_id: str,
+@router.post("/execute-payment")
+async def execute_payment(
+    request: PaymentExecuteRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Получить статус PayPal подписки
-    """
+    """Execute approved PayPal payment"""
     try:
-        access_token = await get_paypal_access_token()
+        result = paypal_service.execute_payment(
+            payment_id=request.payment_id,
+            payer_id=request.payer_id
+        )
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{PAYPAL_API_BASE}/v1/billing/subscriptions/{subscription_id}",
-                headers={"Authorization": f"Bearer {access_token}"}
-            )
-            response.raise_for_status()
-            subscription = response.json()
+        if result["success"]:
+            # Update user to Premium in database
+            # Create transaction record
+            return result
+        else:
+            raise HTTPException(status_code=400, detail=result["error"])
 
-        return {
-            "id": subscription["id"],
-            "status": subscription["status"],
-            "plan_id": subscription["plan_id"],
-            "start_time": subscription.get("start_time"),
-            "billing_info": subscription.get("billing_info", {})
-        }
-
-    except httpx.HTTPError as e:
-        logger.error(f"PayPal subscription status error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get subscription status")
+    except Exception as e:
+        logger.error(f"Execute payment error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/cancel-subscription/{subscription_id}")
-async def cancel_subscription(
-    subscription_id: str,
+@router.post("/link-account")
+async def link_account(
+    request: LinkAccountRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Отменить PayPal подписку
-    """
+    """Link user's PayPal account"""
     try:
-        access_token = await get_paypal_access_token()
+        result = paypal_service.link_account(
+            user_id=request.telegram_id,
+            access_token=request.access_token
+        )
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{PAYPAL_API_BASE}/v1/billing/subscriptions/{subscription_id}/cancel",
-                headers={
-                    "Authorization": f"Bearer {access_token}",
-                    "Content-Type": "application/json"
-                },
-                json={"reason": "Customer requested cancellation"}
-            )
-            response.raise_for_status()
+        if result["success"]:
+            # Save PayPal account info to database
+            return result
+        else:
+            raise HTTPException(status_code=400, detail=result["error"])
 
-        # Обновить пользователя
-        user = await crud.get_user_by_paypal_subscription(db, subscription_id)
-        if user:
-            user.is_premium = False
-            user.paypal_subscription_id = None
-            await db.commit()
+    except Exception as e:
+        logger.error(f"Link account error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-        return {"status": "cancelled"}
 
-    except httpx.HTTPError as e:
-        logger.error(f"PayPal cancellation error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to cancel subscription")
+@router.get("/transactions/{telegram_id}")
+async def get_transactions(
+    telegram_id: int,
+    start_date: str,
+    end_date: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get PayPal account transactions"""
+    try:
+        # Get user's PayPal access token from database
+        access_token = "USER_ACCESS_TOKEN"  # From database
+
+        transactions = paypal_service.get_account_transactions(
+            start_date=start_date,
+            end_date=end_date,
+            access_token=access_token
+        )
+
+        return {"transactions": transactions}
+
+    except Exception as e:
+        logger.error(f"Get transactions error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/success")
+async def payment_success(payment_id: str, payer_id: str):
+    """PayPal payment success callback"""
+    # Redirect to frontend with success message
+    return {"message": "Payment successful", "payment_id": payment_id}
+
+
+@router.get("/cancel")
+async def payment_cancel():
+    """PayPal payment cancel callback"""
+    # Redirect to frontend with cancel message
+    return {"message": "Payment cancelled"}

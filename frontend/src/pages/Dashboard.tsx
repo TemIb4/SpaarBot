@@ -1,392 +1,322 @@
-// src/pages/Dashboard.tsx
-
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import {
-  Plus, TrendingDown, TrendingUp, Eye, EyeOff,
-  ArrowUpRight, Sparkles
+  TrendingUp, Plus, Calendar,
+  PieChart, BarChart3, ArrowUpRight, ArrowDownRight
 } from 'lucide-react'
 import { premiumDesign } from '../config/premiumDesign'
-import { useUserStore } from '../store/userStore'
-import { useTransactionStore } from '../store/transactionStore'
-import { AddTransactionModal } from '../components/modals/AddTransactionModal'
+import { useNavigate } from 'react-router-dom'
+import { PremiumHeader } from '../components/layout/PremiumHeader'
 import { TransactionList } from '../components/transactions/TransactionList'
-import { format, startOfMonth, endOfMonth } from 'date-fns'
-import { de } from 'date-fns/locale'
+import { AddTransactionModal } from '../components/modals/AddTransactionModal'
+import { format } from 'date-fns'
+import { de, enUS, ru, uk } from 'date-fns/locale'
+import { useLanguage } from '../contexts/LanguageContext'
 
-const Dashboard: React.FC = () => {
-  const { user, isPremium } = useUserStore()
-  const { transactions, loading, fetchTransactions } = useTransactionStore()
-  const [showBalance, setShowBalance] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month')
+const Dashboard = () => {
+  const navigate = useNavigate()
+  const { t, language } = useLanguage()
+  const [showAddTransaction, setShowAddTransaction] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')
 
-  useEffect(() => {
-    loadData()
-  }, [period])
-
-  const loadData = async () => {
-    const now = new Date()
-    let startDate: Date
-    let endDate: Date = now
-
-    switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        break
-      case 'month':
-        startDate = startOfMonth(now)
-        endDate = endOfMonth(now)
-        break
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1)
-        break
-      default:
-        startDate = startOfMonth(now)
-    }
-
-    if (fetchTransactions) {
-      await fetchTransactions(format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'))
-    }
+  // Locale mapping for date-fns
+  const localeMap = {
+    de: de,
+    en: enUS,
+    ru: ru,
+    uk: uk,
   }
+  const dateLocale = localeMap[language as keyof typeof localeMap] || de
 
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0)
+  // Mock data
+  const totalBalance = 2454.50
+  const totalExpenses = 45.50
+  const totalIncome = 2500.00
+  const monthlySubscriptions = 22.98
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
+  const recentTransactions = [
+    {
+      id: 1,
+      type: 'expense' as const,
+      amount: 45.50,
+      description: 'Rewe Einkauf',
+      category: 'food',
+      date: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      type: 'income' as const,
+      amount: 2500.00,
+      description: t('categories.salary'),
+      category: 'salary',
+      date: new Date().toISOString(),
+    },
+  ]
 
-  const balance = totalIncome - totalExpenses
-
-  const expenseChange = 12.5
-  const incomeChange = 8.3
-
-  const recentTransactions = transactions.slice(0, 5)
+  const quickStats = [
+    {
+      label: t('dashboard.average_day'),
+      value: '15.17 €',
+      change: '+5.2%',
+      positive: true,
+      icon: TrendingUp,
+    },
+    {
+      label: t('dashboard.biggest_expense'),
+      value: '45.50 €',
+      subtitle: 'Rewe Einkauf',
+      icon: ArrowDownRight,
+    },
+    {
+      label: t('dashboard.savings_quote'),
+      value: '98.2%',
+      change: '+2.1%',
+      positive: true,
+      icon: PieChart,
+    },
+  ]
 
   return (
-    <div className="min-h-[calc(100vh-10rem)] py-8">
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="max-w-7xl mx-auto"
-      >
-        <div className="mb-8">
-          <motion.h1
-            initial={{ x: -20 }}
-            animate={{ x: 0 }}
-            className="text-3xl md:text-4xl font-bold text-white mb-2"
-          >
-            Willkommen zurück, {user?.first_name || 'User'}! 👋
-          </motion.h1>
-          <motion.p
-            initial={{ x: -20 }}
-            animate={{ x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-neutral-400"
-          >
-            {format(new Date(), 'EEEE, d. MMMM yyyy', { locale: de })}
-          </motion.p>
-        </div>
+    <div className="min-h-screen">
+      <PremiumHeader />
 
+      <div className="pt-20 px-4 pb-24 max-w-7xl mx-auto">
+        {/* Welcome */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex p-1 rounded-2xl mb-8"
+          className="mb-6"
+        >
+          <h2 className="text-2xl font-bold text-white mb-1">
+            {t('dashboard.welcome')} 👋
+          </h2>
+          <p className="text-sm text-neutral-400">
+            {format(new Date(), 'EEEE, dd. MMMM yyyy', { locale: dateLocale })}
+          </p>
+        </motion.div>
+
+        {/* Period Selector */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="inline-flex p-1 rounded-2xl mb-6"
           style={{
             background: premiumDesign.glass.medium.background,
             border: premiumDesign.glass.medium.border,
           }}
         >
-          {(['week', 'month', 'year'] as const).map((p) => (
+          {(['week', 'month', 'year'] as const).map((period) => (
             <motion.button
-              key={p}
+              key={period}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setPeriod(p)}
-              className="px-6 py-2 rounded-xl font-semibold transition-all capitalize"
+              onClick={() => setSelectedPeriod(period)}
+              className="px-6 py-2 rounded-xl font-semibold transition-all"
               style={{
-                background: period === p
+                background: selectedPeriod === period
                   ? premiumDesign.colors.gradients.primary
                   : 'transparent',
-                color: period === p ? '#fff' : premiumDesign.colors.neutral[400],
+                color: selectedPeriod === period ? '#fff' : premiumDesign.colors.neutral[400],
               }}
             >
-              {p === 'week' ? 'Woche' : p === 'month' ? 'Monat' : 'Jahr'}
+              {t(`dashboard.${period}`)}
             </motion.button>
           ))}
         </motion.div>
 
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-3xl p-8 mb-8 relative overflow-hidden"
-          style={{
-            background: premiumDesign.colors.neutral[900],
-            border: `1px solid ${premiumDesign.colors.neutral[800]}`,
-          }}
-        >
-          {isPremium && (
-            <div
-              className="absolute top-6 right-6 px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1"
-              style={{
-                background: premiumDesign.colors.gradients.premium,
-                color: '#fff',
-              }}
-            >
-              <Sparkles size={12} />
-              <span>PREMIUM</span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg text-neutral-400">Gesamtbilanz</h2>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowBalance(!showBalance)}
-              className="p-2 rounded-xl hover:bg-white/10 transition-colors"
-            >
-              {showBalance ? (
-                <Eye size={20} className="text-neutral-400" />
-              ) : (
-                <EyeOff size={20} className="text-neutral-400" />
-              )}
-            </motion.button>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {showBalance ? (
-              <motion.div
-                key="balance"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <div className="flex items-baseline space-x-3 mb-2">
-                  <span className="text-5xl md:text-6xl font-bold text-white">
-                    {balance.toFixed(2)}
-                  </span>
-                  <span className="text-3xl text-neutral-400">€</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {balance >= 0 ? (
-                    <>
-                      <TrendingUp size={16} className="text-success-500" />
-                      <span className="text-sm text-success-500">
-                        Positiver Saldo
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <TrendingDown size={16} className="text-danger-500" />
-                      <span className="text-sm text-danger-500">
-                        Negativer Saldo
-                      </span>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="hidden"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-5xl md:text-6xl font-bold text-neutral-700"
-              >
-                ••••••
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {/* Balance Cards */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
           <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="rounded-3xl p-6"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="col-span-3 rounded-2xl p-5"
             style={{
-              background: premiumDesign.colors.neutral[900],
-              border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+              background: premiumDesign.colors.gradients.primary,
+              boxShadow: premiumDesign.effects.shadow.lg,
             }}
           >
-            <div className="flex items-center space-x-3 mb-4">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{
-                  background: `${premiumDesign.colors.accent[500]}20`,
-                  border: `1px solid ${premiumDesign.colors.accent[500]}40`,
-                }}
-              >
-                <TrendingDown size={24} className="text-accent-400" />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm text-neutral-400">Ausgaben</h3>
-                <p className="text-xs text-neutral-500 capitalize">
-                  {period === 'week' ? 'Diese Woche' : period === 'month' ? 'Dieser Monat' : 'Dieses Jahr'}
+                <p className="text-sm text-white/80 mb-2">{t('dashboard.total_balance')}</p>
+                <p className="text-4xl font-bold text-white mb-1">
+                  {totalBalance.toFixed(2)} €
                 </p>
-              </div>
-            </div>
-
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="text-4xl font-bold text-white mb-1">
-                  {totalExpenses.toFixed(2)} €
-                </div>
                 <div className="flex items-center space-x-2">
-                  {expenseChange > 0 ? (
-                    <>
-                      <ArrowUpRight size={14} className="text-danger-500" />
-                      <span className="text-sm text-danger-500">
-                        +{expenseChange}% vs. letzte Periode
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <TrendingDown size={14} className="text-success-500" />
-                      <span className="text-sm text-success-500">
-                        {expenseChange}% vs. letzte Periode
-                      </span>
-                    </>
-                  )}
+                  <TrendingUp size={14} className="text-white/80" />
+                  <p className="text-sm text-white/80">
+                    +{((totalIncome - totalExpenses) / totalIncome * 100).toFixed(1)}%
+                  </p>
                 </div>
               </div>
+              <div className="text-5xl">💰</div>
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="rounded-3xl p-6"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="rounded-xl p-4"
             style={{
-              background: premiumDesign.colors.neutral[900],
-              border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+              background: premiumDesign.glass.medium.background,
+              border: premiumDesign.glass.medium.border,
             }}
           >
-            <div className="flex items-center space-x-3 mb-4">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{
-                  background: `${premiumDesign.colors.success[500]}20`,
-                  border: `1px solid ${premiumDesign.colors.success[500]}40`,
-                }}
-              >
-                <TrendingUp size={24} className="text-success-400" />
-              </div>
-              <div>
-                <h3 className="text-sm text-neutral-400">Einkommen</h3>
-                <p className="text-xs text-neutral-500 capitalize">
-                  {period === 'week' ? 'Diese Woche' : period === 'month' ? 'Dieser Monat' : 'Dieses Jahr'}
-                </p>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-2xl">📉</div>
+              <ArrowDownRight size={16} className="text-accent-400" />
             </div>
+            <p className="text-xs text-neutral-500 mb-1">{t('dashboard.expenses')}</p>
+            <p className="text-xl font-bold text-accent-400">
+              {totalExpenses.toFixed(2)} €
+            </p>
+          </motion.div>
 
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="text-4xl font-bold text-white mb-1">
-                  {totalIncome.toFixed(2)} €
-                </div>
-                <div className="flex items-center space-x-2">
-                  {incomeChange > 0 ? (
-                    <>
-                      <ArrowUpRight size={14} className="text-success-500" />
-                      <span className="text-sm text-success-500">
-                        +{incomeChange}% vs. letzte Periode
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <TrendingDown size={14} className="text-danger-500" />
-                      <span className="text-sm text-danger-500">
-                        {incomeChange}% vs. letzte Periode
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="rounded-xl p-4"
+            style={{
+              background: premiumDesign.glass.medium.background,
+              border: premiumDesign.glass.medium.border,
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-2xl">📈</div>
+              <ArrowUpRight size={16} className="text-success-400" />
             </div>
+            <p className="text-xs text-neutral-500 mb-1">{t('dashboard.income')}</p>
+            <p className="text-xl font-bold text-success-400">
+              {totalIncome.toFixed(2)} €
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            whileHover={{ scale: 1.02 }}
+            onClick={() => navigate('/subscriptions')}
+            className="rounded-xl p-4 cursor-pointer"
+            style={{
+              background: premiumDesign.glass.medium.background,
+              border: premiumDesign.glass.medium.border,
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-2xl">📅</div>
+              <Calendar size={16} className="text-warning-400" />
+            </div>
+            <p className="text-xs text-neutral-500 mb-1">{t('dashboard.subscriptions_month')}</p>
+            <p className="text-xl font-bold text-warning-400">
+              {monthlySubscriptions.toFixed(2)} €
+            </p>
           </motion.div>
         </div>
 
+        {/* Quick Stats - Компактная оптимизированная версия */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {quickStats.map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.6 + index * 0.1 }}
+              className="rounded-xl p-3"
+              style={{
+                background: premiumDesign.glass.light.background,
+                border: premiumDesign.glass.light.border,
+              }}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <stat.icon size={16} className="text-primary-400 flex-shrink-0" />
+                {stat.change && (
+                  <span
+                    className="text-xs font-semibold"
+                    style={{
+                      color: stat.positive
+                        ? premiumDesign.colors.success[400]
+                        : premiumDesign.colors.danger[400],
+                    }}
+                  >
+                    {stat.change}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-neutral-500 mb-1 leading-tight">{stat.label}</p>
+              <p className="text-base md:text-lg font-bold text-white mb-0.5 truncate">{stat.value}</p>
+              {stat.subtitle && (
+                <p className="text-xs text-neutral-600 truncate">{stat.subtitle}</p>
+              )}
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Recent Transactions */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="rounded-3xl p-6"
-          style={{
-            background: premiumDesign.colors.neutral[900],
-            border: `1px solid ${premiumDesign.colors.neutral[800]}`,
-          }}
+          transition={{ delay: 0.9 }}
+          className="mb-6"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">
-              Letzte Transaktionen
-            </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-white">{t('dashboard.recent_transactions')}</h3>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 rounded-xl font-semibold text-white flex items-center space-x-2"
-              style={{
-                background: premiumDesign.colors.gradients.primary,
-                boxShadow: premiumDesign.effects.shadow.glow,
-              }}
+              onClick={() => navigate('/stats')}
+              className="text-sm font-semibold text-primary-400"
             >
-              <Plus size={18} />
-              <span>Hinzufügen</span>
+              {t('dashboard.show_all')} →
             </motion.button>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500" />
-            </div>
-          ) : recentTransactions.length === 0 ? (
-            <div className="text-center py-12">
-              <div
-                className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl"
-                style={{
-                  background: premiumDesign.glass.medium.background,
-                  border: premiumDesign.glass.medium.border,
-                }}
-              >
-                📊
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">
-                Keine Transaktionen
-              </h3>
-              <p className="text-neutral-400 mb-6">
-                Füge deine erste Transaktion hinzu
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowAddModal(true)}
-                className="px-6 py-3 rounded-xl font-semibold text-white"
-                style={{
-                  background: premiumDesign.colors.gradients.primary,
-                  boxShadow: premiumDesign.effects.shadow.glow,
-                }}
-              >
-                Erste Transaktion hinzufügen
-              </motion.button>
-            </div>
-          ) : (
-            <TransactionList transactions={recentTransactions} />
-          )}
+          <TransactionList transactions={recentTransactions} />
         </motion.div>
 
-        <AnimatePresence>
-          {showAddModal && (
-            <AddTransactionModal onClose={() => setShowAddModal(false)} />
-          )}
-        </AnimatePresence>
-      </motion.div>
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="grid grid-cols-2 gap-3"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowAddTransaction(true)}
+            className="p-4 rounded-xl font-semibold text-white flex items-center justify-center space-x-2"
+            style={{
+              background: premiumDesign.colors.gradients.primary,
+              boxShadow: premiumDesign.effects.shadow.glow,
+            }}
+          >
+            <Plus size={20} />
+            <span>{t('dashboard.new_transaction')}</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/stats')}
+            className="p-4 rounded-xl font-semibold flex items-center justify-center space-x-2"
+            style={{
+              background: premiumDesign.glass.medium.background,
+              border: premiumDesign.glass.medium.border,
+              color: premiumDesign.colors.neutral[300],
+            }}
+          >
+            <BarChart3 size={20} />
+            <span>{t('dashboard.view_stats')}</span>
+          </motion.button>
+        </motion.div>
+      </div>
+
+      {showAddTransaction && (
+        <AddTransactionModal onClose={() => setShowAddTransaction(false)} />
+      )}
     </div>
   )
 }

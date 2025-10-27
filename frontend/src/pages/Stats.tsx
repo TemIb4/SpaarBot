@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { premiumDesign } from '../config/premiumDesign'
 import { useTransactionStore } from '../store/transactionStore'
+import { useLanguage } from '../contexts/LanguageContext'
 import { CategoryPieChart } from '../components/charts/CategoryPieChart'
 import { ExpenseChart } from '../components/charts/ExpenseChart'
 import { MonthlyComparisonChart } from '../components/charts/MonthlyComparisonChart'
@@ -16,6 +17,7 @@ import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 
 const Stats: React.FC = () => {
   const { transactions, loading, fetchTransactions } = useTransactionStore()
+  const { t } = useLanguage()
   const [period, setPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
   const [selectedChart, setSelectedChart] = useState<'pie' | 'line' | 'bar' | 'comparison'>('pie')
 
@@ -51,43 +53,45 @@ const Stats: React.FC = () => {
     }
   }
 
+  // ✅ ИСПРАВЛЕНО: переменные транзакций переименованы с t → tx
   const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0)
+    .filter(tx => tx.type === 'expense')
+    .reduce((sum, tx) => sum + tx.amount, 0)
 
   const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
+    .filter(tx => tx.type === 'income')
+    .reduce((sum, tx) => sum + tx.amount, 0)
 
-  const averageExpense = transactions.filter(t => t.type === 'expense').length > 0
-    ? totalExpenses / transactions.filter(t => t.type === 'expense').length
+  const averageExpense = transactions.filter(tx => tx.type === 'expense').length > 0
+    ? totalExpenses / transactions.filter(tx => tx.type === 'expense').length
     : 0
 
   const highestExpense = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((max, t) => t.amount > max ? t.amount : max, 0)
+    .filter(tx => tx.type === 'expense')
+    .reduce((max, tx) => tx.amount > max ? tx.amount : max, 0)
 
-// Около строки 70-75, ЗАМЕНИТЬ:
+  // ✅ ИСПРАВЛЕНО: tx.category вместо t.category, t() - функция перевода
   const expensesByCategory = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((acc, t) => {
-      const category = t.category || 'Sonstiges'  // ✅ Теперь это строка
-      acc[category] = (acc[category] || 0) + t.amount
+    .filter(tx => tx.type === 'expense')
+    .reduce((acc, tx) => {
+      const category = tx.category || t('categories.other')
+      acc[category] = (acc[category] || 0) + tx.amount
       return acc
     }, {} as Record<string, number>)
 
   const topCategory = Object.entries(expensesByCategory)
     .sort(([, a], [, b]) => b - a)[0]
 
+  // ✅ ИСПРАВЛЕНО: tx вместо t в map, t() используется только для перевода
   const exportData = () => {
     const csvContent = [
-      ['Datum', 'Typ', 'Kategorie', 'Beschreibung', 'Betrag'].join(','),
-      ...transactions.map(t => [
-        format(new Date(t.date), 'dd.MM.yyyy'),
-        t.type === 'expense' ? 'Ausgabe' : 'Einnahme',
-        t.category || 'Sonstiges',
-        t.description,
-        t.amount.toFixed(2)
+      ['Date', 'Type', 'Category', 'Description', 'Amount'].join(','),
+      ...transactions.map(tx => [
+        format(new Date(tx.date), 'dd.MM.yyyy'),
+        tx.type === 'expense' ? t('dashboard.expenses') : t('dashboard.income'),
+        tx.category || t('categories.other'),
+        tx.description,
+        tx.amount.toFixed(2)
       ].join(','))
     ].join('\n')
 
@@ -99,42 +103,42 @@ const Stats: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-10rem)] py-8">
+    <div className="min-h-[calc(100vh-10rem)] py-6 px-4">
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="max-w-7xl mx-auto"
       >
-        <div className="flex items-center justify-between mb-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Statistiken</h1>
-            <p className="text-neutral-400">
-              Detaillierte Analyse deiner Finanzen
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">{t('stats.title')}</h1>
+            <p className="text-sm text-neutral-400">
+              {t('stats.detailed_analysis')}
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={exportData}
-              className="px-4 py-2 rounded-xl font-semibold text-white flex items-center space-x-2"
-              style={{
-                background: premiumDesign.glass.medium.background,
-                border: premiumDesign.glass.medium.border,
-              }}
-            >
-              <Download size={18} />
-              <span className="hidden sm:inline">Exportieren</span>
-            </motion.button>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={exportData}
+            className="px-3 py-2 md:px-4 md:py-2 rounded-xl font-semibold text-white flex items-center space-x-2"
+            style={{
+              background: premiumDesign.glass.medium.background,
+              border: premiumDesign.glass.medium.border,
+            }}
+          >
+            <Download size={18} />
+            <span className="hidden sm:inline text-sm">{t('stats.download')}</span>
+          </motion.button>
         </div>
 
+        {/* Period Selector */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="inline-flex p-1 rounded-2xl mb-8"
+          className="inline-flex p-1 rounded-2xl mb-6"
           style={{
             background: premiumDesign.glass.medium.background,
             border: premiumDesign.glass.medium.border,
@@ -145,7 +149,7 @@ const Stats: React.FC = () => {
               key={p}
               whileTap={{ scale: 0.95 }}
               onClick={() => setPeriod(p)}
-              className="px-6 py-2 rounded-xl font-semibold transition-all capitalize"
+              className="px-4 py-2 rounded-xl font-semibold transition-all text-sm"
               style={{
                 background: period === p
                   ? premiumDesign.colors.gradients.primary
@@ -153,131 +157,153 @@ const Stats: React.FC = () => {
                 color: period === p ? '#fff' : premiumDesign.colors.neutral[400],
               }}
             >
-              {p === 'week' ? 'Woche' : p === 'month' ? 'Monat' : p === 'quarter' ? 'Quartal' : 'Jahr'}
+              {t(`stats.${p}`)}
             </motion.button>
           ))}
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Grid - Компактная оптимизированная версия */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {/* Total Expenses */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-3"
             style={{
               background: premiumDesign.colors.neutral[900],
               border: `1px solid ${premiumDesign.colors.neutral[800]}`,
             }}
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{
-                background: `${premiumDesign.colors.accent[500]}20`,
-                border: `1px solid ${premiumDesign.colors.accent[500]}40`,
-              }}
-            >
-              <TrendingDown size={20} className="text-accent-400" />
+            <div className="flex items-start justify-between gap-2">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: `${premiumDesign.colors.accent[500]}20`,
+                  border: `1px solid ${premiumDesign.colors.accent[500]}40`,
+                }}
+              >
+                <TrendingDown size={16} className="text-accent-400" />
+              </div>
+              <div className="flex-1 text-right min-w-0">
+                <div className="text-lg md:text-xl font-bold text-white truncate">
+                  {totalExpenses.toFixed(0)} €
+                </div>
+                <div className="text-xs text-neutral-400 leading-tight">{t('stats.total_expenses')}</div>
+              </div>
             </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {totalExpenses.toFixed(0)} €
-            </div>
-            <div className="text-xs text-neutral-400">Gesamt Ausgaben</div>
           </motion.div>
 
+          {/* Total Income */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-3"
             style={{
               background: premiumDesign.colors.neutral[900],
               border: `1px solid ${premiumDesign.colors.neutral[800]}`,
             }}
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{
-                background: `${premiumDesign.colors.success[500]}20`,
-                border: `1px solid ${premiumDesign.colors.success[500]}40`,
-              }}
-            >
-              <TrendingUp size={20} className="text-success-400" />
+            <div className="flex items-start justify-between gap-2">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: `${premiumDesign.colors.success[500]}20`,
+                  border: `1px solid ${premiumDesign.colors.success[500]}40`,
+                }}
+              >
+                <TrendingUp size={16} className="text-success-400" />
+              </div>
+              <div className="flex-1 text-right min-w-0">
+                <div className="text-lg md:text-xl font-bold text-white truncate">
+                  {totalIncome.toFixed(0)} €
+                </div>
+                <div className="text-xs text-neutral-400 leading-tight">{t('stats.total_income')}</div>
+              </div>
             </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {totalIncome.toFixed(0)} €
-            </div>
-            <div className="text-xs text-neutral-400">Gesamt Einnahmen</div>
           </motion.div>
 
+          {/* Average Expense */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-3"
             style={{
               background: premiumDesign.colors.neutral[900],
               border: `1px solid ${premiumDesign.colors.neutral[800]}`,
             }}
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{
-                background: `${premiumDesign.colors.primary[500]}20`,
-                border: `1px solid ${premiumDesign.colors.primary[500]}40`,
-              }}
-            >
-              <BarChart3 size={20} className="text-primary-400" />
+            <div className="flex items-start justify-between gap-2">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: `${premiumDesign.colors.primary[500]}20`,
+                  border: `1px solid ${premiumDesign.colors.primary[500]}40`,
+                }}
+              >
+                <BarChart3 size={16} className="text-primary-400" />
+              </div>
+              <div className="flex-1 text-right min-w-0">
+                <div className="text-lg md:text-xl font-bold text-white truncate">
+                  {averageExpense.toFixed(0)} €
+                </div>
+                <div className="text-xs text-neutral-400 leading-tight">{t('stats.avg_expense')}</div>
+              </div>
             </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {averageExpense.toFixed(0)} €
-            </div>
-            <div className="text-xs text-neutral-400">Ø Ausgabe</div>
           </motion.div>
 
+          {/* Highest Expense */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="rounded-2xl p-6"
+            className="rounded-2xl p-3"
             style={{
               background: premiumDesign.colors.neutral[900],
               border: `1px solid ${premiumDesign.colors.neutral[800]}`,
             }}
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{
-                background: `${premiumDesign.colors.warning[500]}20`,
-                border: `1px solid ${premiumDesign.colors.warning[500]}40`,
-              }}
-            >
-              <TrendingUp size={20} className="text-warning-400" />
+            <div className="flex items-start justify-between gap-2">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: `${premiumDesign.colors.warning[500]}20`,
+                  border: `1px solid ${premiumDesign.colors.warning[500]}40`,
+                }}
+              >
+                <TrendingUp size={16} className="text-warning-400" />
+              </div>
+              <div className="flex-1 text-right min-w-0">
+                <div className="text-lg md:text-xl font-bold text-white truncate">
+                  {highestExpense.toFixed(0)} €
+                </div>
+                <div className="text-xs text-neutral-400 leading-tight">{t('stats.highest_expense')}</div>
+              </div>
             </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {highestExpense.toFixed(0)} €
-            </div>
-            <div className="text-xs text-neutral-400">Höchste Ausgabe</div>
           </motion.div>
         </div>
 
+        {/* Chart Selector */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="flex items-center space-x-3 mb-6 overflow-x-auto pb-2"
+          className="flex items-center gap-2 mb-4 overflow-x-auto pb-2"
         >
           {[
-            { id: 'pie', label: 'Kategorien', icon: PieChart },
-            { id: 'line', label: 'Trend', icon: LineChartIcon },
-            { id: 'bar', label: 'Wöchentlich', icon: BarChart3 },
-            { id: 'comparison', label: 'Vergleich', icon: Calendar },
+            { id: 'pie', label: t('stats.categories'), icon: PieChart },
+            { id: 'line', label: t('stats.trend'), icon: LineChartIcon },
+            { id: 'bar', label: t('stats.weekly'), icon: BarChart3 },
+            { id: 'comparison', label: t('stats.comparison'), icon: Calendar },
           ].map((chart) => (
             <motion.button
               key={chart.id}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setSelectedChart(chart.id as any)}
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-xl font-semibold whitespace-nowrap"
+              className="flex items-center space-x-2 px-3 py-2 rounded-xl font-semibold whitespace-nowrap text-sm"
               style={{
                 background: selectedChart === chart.id
                   ? premiumDesign.colors.gradients.primary
@@ -288,17 +314,18 @@ const Stats: React.FC = () => {
                 color: selectedChart === chart.id ? '#fff' : premiumDesign.colors.neutral[400],
               }}
             >
-              <chart.icon size={18} />
+              <chart.icon size={16} />
               <span>{chart.label}</span>
             </motion.button>
           ))}
         </motion.div>
 
+        {/* Chart Display */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="rounded-3xl p-6 mb-8"
+          className="rounded-3xl p-4 md:p-6 mb-6"
           style={{
             background: premiumDesign.colors.neutral[900],
             border: `1px solid ${premiumDesign.colors.neutral[800]}`,
@@ -320,10 +347,10 @@ const Stats: React.FC = () => {
                 📊
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
-                Keine Daten verfügbar
+                {t('stats.no_data')}
               </h3>
-              <p className="text-neutral-400">
-                Füge Transaktionen hinzu, um Statistiken zu sehen
+              <p className="text-neutral-400 text-sm">
+                {t('dashboard.add_first')}
               </p>
             </div>
           ) : (
@@ -336,22 +363,23 @@ const Stats: React.FC = () => {
           )}
         </motion.div>
 
+        {/* Category Breakdown */}
         {topCategory && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="rounded-3xl p-6"
+            className="rounded-3xl p-4 md:p-6 mb-6"
             style={{
               background: premiumDesign.colors.neutral[900],
               border: `1px solid ${premiumDesign.colors.neutral[800]}`,
             }}
           >
-            <h2 className="text-xl font-bold text-white mb-6">
-              Ausgaben nach Kategorie
+            <h2 className="text-lg md:text-xl font-bold text-white mb-4">
+              {t('stats.expenses_by_category')}
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {Object.entries(expensesByCategory)
                 .sort(([, a], [, b]) => b - a)
                 .map(([category, amount], index) => {
@@ -373,15 +401,15 @@ const Stats: React.FC = () => {
                       transition={{ delay: 0.9 + index * 0.05 }}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
                           <div
                             className="w-3 h-3 rounded-full"
                             style={{ background: color }}
                           />
-                          <span className="text-white font-medium">{category}</span>
+                          <span className="text-white font-medium text-sm">{category}</span>
                         </div>
                         <div className="text-right">
-                          <div className="text-white font-bold">
+                          <div className="text-white font-bold text-sm">
                             {amount.toFixed(2)} €
                           </div>
                           <div className="text-xs text-neutral-400">
@@ -407,44 +435,6 @@ const Stats: React.FC = () => {
             </div>
           </motion.div>
         )}
-
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-8 rounded-2xl p-6"
-          style={{
-            background: premiumDesign.glass.medium.background,
-            border: premiumDesign.glass.medium.border,
-          }}
-        >
-          <div className="flex items-start space-x-3">
-            <TrendingUp size={20} className="text-primary-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-neutral-300">
-              <p className="font-semibold text-white mb-2">💡 Smart Insights</p>
-              <ul className="space-y-1">
-                {topCategory && (
-                  <li>
-                    • Deine größte Ausgabenkategorie ist <span className="text-white font-semibold">{topCategory[0]}</span> mit {topCategory[1].toFixed(2)} €
-                  </li>
-                )}
-                {totalExpenses > totalIncome && (
-                  <li className="text-warning-400">
-                    • ⚠️ Du gibst mehr aus als du einnimmst. Überlege, Ausgaben zu reduzieren.
-                  </li>
-                )}
-                {averageExpense > 50 && (
-                  <li>
-                    • Deine durchschnittliche Ausgabe beträgt {averageExpense.toFixed(2)} €
-                  </li>
-                )}
-                <li>
-                  • Du hast {transactions.filter(t => t.type === 'expense').length} Ausgaben in dieser Periode erfasst
-                </li>
-              </ul>
-            </div>
-          </div>
-        </motion.div>
       </motion.div>
     </div>
   )

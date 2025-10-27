@@ -1,31 +1,38 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import deTranslations from '../locales/de.json'
+import enTranslations from '../locales/en.json'
+import ruTranslations from '../locales/ru.json'
+import ukTranslations from '../locales/uk.json'
 
-// Простые переводы
+// Type for translation object structure
+type TranslationObject = {
+  [key: string]: string | TranslationObject
+}
+
+// All available translations
 const translations = {
-  de: {
-    upgrade: 'Upgrade',
-    premium_required: 'Premium erforderlich',
-    unlock_feature: 'Diese Funktion ist nur für Premium-Nutzer verfügbar',
-    get_premium: 'Premium holen',
-  },
-  en: {
-    upgrade: 'Upgrade',
-    premium_required: 'Premium Required',
-    unlock_feature: 'This feature is only available for Premium users',
-    get_premium: 'Get Premium',
-  },
-  ru: {
-    upgrade: 'Обновить',
-    premium_required: 'Требуется Premium',
-    unlock_feature: 'Эта функция доступна только для Premium пользователей',
-    get_premium: 'Получить Premium',
-  },
-  uk: {
-    upgrade: 'Оновити',
-    premium_required: 'Потрібен Premium',
-    unlock_feature: 'Ця функція доступна тільки для Premium користувачів',
-    get_premium: 'Отримати Premium',
-  },
+  de: deTranslations,
+  en: enTranslations,
+  ru: ruTranslations,
+  uk: ukTranslations,
+} as const
+
+// Helper function to get nested value by path (e.g., 'dashboard.welcome')
+function getNestedTranslation(obj: TranslationObject, path: string): string {
+  const keys = path.split('.')
+  let result: string | TranslationObject = obj
+
+  for (const key of keys) {
+    if (typeof result === 'object' && key in result) {
+      result = result[key]
+    } else {
+      // Return the path itself if translation not found (fallback)
+      console.warn(`Translation key not found: ${path}`)
+      return path
+    }
+  }
+
+  return typeof result === 'string' ? result : path
 }
 
 interface LanguageContextType {
@@ -37,19 +44,25 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState(() => {
+  const [language, setLanguageState] = useState(() => {
     return localStorage.getItem('spaarbot-language') || 'de'
   })
 
   const t = (key: string): string => {
     const lang = language as keyof typeof translations
     const dict = translations[lang] || translations.de
-    return dict[key as keyof typeof dict] || key
+    return getNestedTranslation(dict as TranslationObject, key)
+  }
+
+  const setLanguage = (lang: string) => {
+    console.log('🌐 Setting language to:', lang)
+    setLanguageState(lang)
+    localStorage.setItem('spaarbot-language', lang)
   }
 
   useEffect(() => {
-    localStorage.setItem('spaarbot-language', language)
     document.documentElement.lang = language
+    console.log('🌐 Language applied:', language)
   }, [language])
 
   return (

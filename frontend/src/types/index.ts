@@ -3,16 +3,31 @@
 export interface User {
   id: number
   telegram_id: number
-  username?: string
   first_name: string
-  tier: 'free' | 'premium'  // ✅ ДОБАВЛЕНО
-  is_premium: boolean
-  created_at: string
+  last_name?: string
+  username?: string
+  language_code?: string
   email?: string
   location?: string
+  tier: 'free' | 'premium'
+  is_premium: boolean
+  created_at: string
+  updated_at?: string
+
+  // Stats
   total_transactions?: number
   categories_count?: number
   subscriptions_count?: number
+
+  // Premium
+  premium_since?: string
+  stripe_customer_id?: string
+  paypal_subscription_id?: string
+  paypal_id?: string
+
+  // Preferences
+  ui_mode?: 'pro' | 'lite'
+  language?: string
 }
 
 export interface Transaction {
