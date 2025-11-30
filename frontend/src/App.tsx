@@ -13,6 +13,10 @@ import Subscriptions from './pages/Subscriptions'
 import AIChat from './pages/AIChat'
 import Profile from './pages/Profile'
 import Upgrade from './pages/Upgrade'
+import Notifications from './pages/Notifications'
+import ConnectedAccounts from './pages/ConnectedAccounts'
+import Security from './pages/Security'
+import UsageStats from './pages/UsageStats'
 
 function App() {
   console.log('🚀 SpaarBot App initialized')
@@ -32,6 +36,10 @@ function App() {
                   <Route path="ai" element={<AIChat />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="upgrade" element={<Upgrade />} />
+                  <Route path="notifications" element={<Notifications />} />
+                  <Route path="/payment-methods" element={<ConnectedAccounts />} />
+                  <Route path="security" element={<Security />} />
+                  <Route path="usage-stats" element={<UsageStats />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
               </Routes>

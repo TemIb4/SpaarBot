@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { TrendingUp, MessageSquare, BarChart3, Calendar, Zap, Crown } from 'lucide-react'
 import { premiumDesign } from '../config/premiumDesign'
 import { useUserStore } from '../store/userStore'
+import { useLanguage } from '../contexts/LanguageContext'
 import { api } from '../lib/api'
 
 interface UsageData {
@@ -26,6 +27,7 @@ interface UsageData {
 
 const UsageStats: React.FC = () => {
   const { isPremium } = useUserStore()
+  const { t } = useLanguage()
   const [usage, setUsage] = useState<UsageData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -40,7 +42,6 @@ const UsageStats: React.FC = () => {
       setUsage(response.data)
     } catch (error) {
       console.error('Error loading usage stats:', error)
-      // Mock data
       setUsage({
         ai_requests: {
           used: isPremium ? 347 : 42,
@@ -83,15 +84,13 @@ const UsageStats: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         className="max-w-6xl mx-auto"
       >
-        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Nutzungsstatistiken</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('usage_stats.title')}</h1>
           <p className="text-neutral-400">
-            Übersicht über deine Aktivitäten und genutzten Features
+            {t('usage_stats.subtitle')}
           </p>
         </div>
 
-        {/* Premium Banner */}
         {!isPremium && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -117,10 +116,10 @@ const UsageStats: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">
-                    Upgrade für unbegrenzte Nutzung
+                    {t('usage_stats.upgrade_unlimited')}
                   </h3>
                   <p className="text-neutral-400">
-                    Entferne alle Limits und nutze SpaarBot ohne Einschränkungen
+                    {t('usage_stats.remove_limits')}
                   </p>
                 </div>
               </div>
@@ -134,15 +133,13 @@ const UsageStats: React.FC = () => {
                   boxShadow: premiumDesign.effects.shadow.glow,
                 }}
               >
-                Premium werden
+                {t('usage_stats.become_premium')}
               </motion.a>
             </div>
           </motion.div>
         )}
 
-        {/* Usage Cards Grid */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* AI Requests */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -165,9 +162,9 @@ const UsageStats: React.FC = () => {
                   <MessageSquare size={24} className="text-primary-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">AI-Anfragen</h3>
+                  <h3 className="text-lg font-bold text-white">{t('usage_stats.ai_requests')}</h3>
                   <p className="text-sm text-neutral-400">
-                    {isPremium ? 'Unbegrenzt' : 'Diesen Monat'}
+                    {isPremium ? t('usage_stats.unlimited') : t('usage_stats.this_month')}
                   </p>
                 </div>
               </div>
@@ -179,9 +176,9 @@ const UsageStats: React.FC = () => {
             {isPremium ? (
               <div className="text-center py-8">
                 <div className="text-5xl font-bold text-white mb-2">∞</div>
-                <p className="text-neutral-400">Unbegrenzte AI-Anfragen</p>
+                <p className="text-neutral-400">{t('usage_stats.unlimited_ai')}</p>
                 <div className="mt-4 text-sm text-neutral-500">
-                  {usage.ai_requests.used} Anfragen diesen Monat
+                  {t('usage_stats.requests_this_month').replace('{count}', usage.ai_requests.used.toString())}
                 </div>
               </div>
             ) : (
@@ -192,7 +189,7 @@ const UsageStats: React.FC = () => {
                       {usage.ai_requests.used}
                     </div>
                     <div className="text-sm text-neutral-400">
-                      von {usage.ai_requests.limit} genutzt
+                      {t('usage_stats.of_used').replace('{limit}', usage.ai_requests.limit.toString())}
                     </div>
                   </div>
                   <div className="text-right">
@@ -206,11 +203,10 @@ const UsageStats: React.FC = () => {
                     >
                       {usage.ai_requests.percentage}%
                     </div>
-                    <div className="text-xs text-neutral-500">verbraucht</div>
+                    <div className="text-xs text-neutral-500">{t('usage_stats.consumed')}</div>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
                 <div
                   className="h-3 rounded-full overflow-hidden"
                   style={{ background: premiumDesign.colors.neutral[800] }}
@@ -237,14 +233,13 @@ const UsageStats: React.FC = () => {
                       color: premiumDesign.colors.warning[400],
                     }}
                   >
-                    ⚠️ Du hast fast dein monatliches Limit erreicht
+                    ⚠️ {t('usage_stats.almost_limit')}
                   </div>
                 )}
               </>
             )}
           </motion.div>
 
-          {/* Subscriptions */}
           <motion.div
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -267,9 +262,9 @@ const UsageStats: React.FC = () => {
                   <Calendar size={24} className="text-accent-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Abonnements</h3>
+                  <h3 className="text-lg font-bold text-white">{t('usage_stats.subscriptions')}</h3>
                   <p className="text-sm text-neutral-400">
-                    {isPremium ? 'Unbegrenzt' : 'Aktive Abos'}
+                    {isPremium ? t('usage_stats.unlimited') : t('usage_stats.active_subs')}
                   </p>
                 </div>
               </div>
@@ -281,9 +276,9 @@ const UsageStats: React.FC = () => {
             {isPremium ? (
               <div className="text-center py-8">
                 <div className="text-5xl font-bold text-white mb-2">∞</div>
-                <p className="text-neutral-400">Unbegrenzte Abonnements</p>
+                <p className="text-neutral-400">{t('usage_stats.unlimited_subs')}</p>
                 <div className="mt-4 text-sm text-neutral-500">
-                  {usage.subscriptions.used} Abos aktuell aktiv
+                  {t('usage_stats.subs_currently_active').replace('{count}', usage.subscriptions.used.toString())}
                 </div>
               </div>
             ) : (
@@ -294,7 +289,7 @@ const UsageStats: React.FC = () => {
                       {usage.subscriptions.used}
                     </div>
                     <div className="text-sm text-neutral-400">
-                      von {usage.subscriptions.limit} verfügbar
+                      {t('usage_stats.of_available').replace('{limit}', usage.subscriptions.limit.toString())}
                     </div>
                   </div>
                   <div className="text-right">
@@ -308,11 +303,10 @@ const UsageStats: React.FC = () => {
                     >
                       {usage.subscriptions.percentage}%
                     </div>
-                    <div className="text-xs text-neutral-500">belegt</div>
+                    <div className="text-xs text-neutral-500">{t('usage_stats.used_slots')}</div>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
                 <div
                   className="h-3 rounded-full overflow-hidden"
                   style={{ background: premiumDesign.colors.neutral[800] }}
@@ -339,7 +333,7 @@ const UsageStats: React.FC = () => {
                       color: premiumDesign.colors.warning[400],
                     }}
                   >
-                    ⚠️ Fast alle Abo-Slots belegt
+                    ⚠️ {t('usage_stats.almost_full')}
                   </div>
                 )}
               </>
@@ -347,7 +341,6 @@ const UsageStats: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Activity Stats */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -358,10 +351,9 @@ const UsageStats: React.FC = () => {
             border: `1px solid ${premiumDesign.colors.neutral[800]}`,
           }}
         >
-          <h3 className="text-xl font-bold text-white mb-6">Aktivitätsübersicht</h3>
+          <h3 className="text-xl font-bold text-white mb-6">{t('usage_stats.activity_overview')}</h3>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {/* Total Transactions */}
             <div
               className="p-6 rounded-2xl"
               style={{
@@ -371,17 +363,16 @@ const UsageStats: React.FC = () => {
             >
               <div className="flex items-center space-x-3 mb-3">
                 <BarChart3 size={24} className="text-primary-400" />
-                <span className="text-sm text-neutral-400">Transaktionen</span>
+                <span className="text-sm text-neutral-400">{t('usage_stats.transactions')}</span>
               </div>
               <div className="text-3xl font-bold text-white mb-1">
                 {usage.transactions.total}
               </div>
               <div className="text-sm text-success-500">
-                +{usage.transactions.this_month} diesen Monat
+                {t('usage_stats.this_month_added').replace('{count}', usage.transactions.this_month.toString())}
               </div>
             </div>
 
-            {/* Streak */}
             <div
               className="p-6 rounded-2xl"
               style={{
@@ -391,17 +382,16 @@ const UsageStats: React.FC = () => {
             >
               <div className="flex items-center space-x-3 mb-3">
                 <Zap size={24} className="text-warning-400" />
-                <span className="text-sm text-neutral-400">Streak</span>
+                <span className="text-sm text-neutral-400">{t('usage_stats.streak')}</span>
               </div>
               <div className="text-3xl font-bold text-white mb-1">
                 {usage.streak_days} 🔥
               </div>
               <div className="text-sm text-neutral-400">
-                Tage in Folge aktiv
+                {t('usage_stats.days_active')}
               </div>
             </div>
 
-            {/* Premium Features */}
             <div
               className="p-6 rounded-2xl"
               style={{
@@ -411,19 +401,18 @@ const UsageStats: React.FC = () => {
             >
               <div className="flex items-center space-x-3 mb-3">
                 <TrendingUp size={24} className="text-accent-400" />
-                <span className="text-sm text-neutral-400">Premium Features</span>
+                <span className="text-sm text-neutral-400">{t('usage_stats.premium_features')}</span>
               </div>
               <div className="text-3xl font-bold text-white mb-1">
                 {isPremium ? usage.premium_features_used.length : 0}
               </div>
               <div className="text-sm text-neutral-400">
-                {isPremium ? 'aktiv genutzt' : 'nicht verfügbar'}
+                {isPremium ? t('usage_stats.actively_used') : t('usage_stats.not_available')}
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Premium Features Used */}
         {isPremium && usage.premium_features_used.length > 0 && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -436,7 +425,7 @@ const UsageStats: React.FC = () => {
             }}
           >
             <h3 className="text-xl font-bold text-white mb-4">
-              Genutzte Premium-Features
+              {t('usage_stats.used_premium_features')}
             </h3>
             <div className="flex flex-wrap gap-3">
               {usage.premium_features_used.map((feature, index) => (

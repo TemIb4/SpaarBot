@@ -4,21 +4,31 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="813fed76-dea3-4e1e-a376-fb88749d1b72" name="Changes" comment="UnStable New Design">
+    <list default="true" id="813fed76-dea3-4e1e-a376-fb88749d1b72" name="Changes" comment="Стабильно, стабильно плохо, но уже лучше">
+      <change afterPath="$PROJECT_DIR$/frontend/src/pages/ConnectedAccounts.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api/v1/endpoints/ai.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/v1/endpoints/ai.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api/v1/endpoints/paypal.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/v1/endpoints/paypal.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/bot/handlers/start.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/bot/handlers/start.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas/chat.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/chat.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/v1/endpoints/subscriptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/v1/endpoints/subscriptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/v1/endpoints/transactions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/v1/endpoints/transactions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/bot/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/bot/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/core/security.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas/transaction.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas/transaction.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/services/groq_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/groq_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/ocr_service.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/paypal_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/paypal_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/SETUP.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/SETUP.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/layout/AnimatedBackground.tsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/layout/BottomNav.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/layout/BottomNav.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/layout/Layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/layout/Layout.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/layout/PremiumHeader.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/layout/PremiumHeader.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/contexts/LanguageContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/contexts/LanguageContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/modals/AIChatModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/modals/AIChatModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/transactions/TransactionItem.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/contexts/ThemeContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/contexts/ThemeContext.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/locales/de.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/locales/de.json" afterDir="false" />
@@ -27,15 +37,16 @@
       <change beforePath="$PROJECT_DIR$/frontend/src/locales/uk.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/locales/uk.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/AIChat.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AIChat.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/Dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Dashboard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Notifications.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Notifications.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/PaymentMethods.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/PaymentMethods.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/PaymentMethods.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Security.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Security.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/Settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Settings.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/Stats.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Stats.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/Subscriptions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Subscriptions.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/store/userStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/store/userStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vite.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/twa/expense_input.html" beforeDir="false" afterPath="$PROJECT_DIR$/static/twa/expense_input.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Upgrade.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Upgrade.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/UsageStats.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/UsageStats.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/store/transactionStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/store/transactionStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/store/uiStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/store/uiStore.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +63,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;TemIb4&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/TemIb4/SpaarBot.git&quot;,
+    &quot;accountId&quot;: &quot;f7277fea-0e98-4f08-b32b-f9fac952489f&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
@@ -63,40 +86,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.create_project_structure.executor&quot;: &quot;Run&quot;,
-    &quot;Python.dfs.executor&quot;: &quot;Run&quot;,
-    &quot;Python.dss.executor&quot;: &quot;Run&quot;,
-    &quot;Python.fiximp.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.sdf.executor&quot;: &quot;Run&quot;,
-    &quot;Python.setup.executor&quot;: &quot;Run&quot;,
-    &quot;Python.setup_project.executor&quot;: &quot;Run&quot;,
-    &quot;Python.start.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.user.executor&quot;: &quot;Run&quot;,
-    &quot;Python.windows_events.executor&quot;: &quot;Run&quot;,
-    &quot;Python.в.executor&quot;: &quot;Run&quot;,
-    &quot;Python.фыв.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ыв.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Shell Script.create_project_structure.sh.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/arcer/PycharmProjects/SpaarBot/backend/app/api/v1/endpoints&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.create_project_structure.executor": "Run",
+    "Python.dfs.executor": "Run",
+    "Python.dss.executor": "Run",
+    "Python.fiximp.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.paypal_sync.executor": "Run",
+    "Python.reset_all.executor": "Run",
+    "Python.sdf.executor": "Run",
+    "Python.setup.executor": "Run",
+    "Python.setup_project.executor": "Run",
+    "Python.start.executor": "Run",
+    "Python.temp_paypal_setup.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.user.executor": "Run",
+    "Python.windows_events.executor": "Run",
+    "Python.в.executor": "Run",
+    "Python.фыв.executor": "Run",
+    "Python.ыв.executor": "Run",
+    "Python.ыва.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Shell Script.create_project_structure.sh.executor": "Run",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/arcer/PycharmProjects/SpaarBot/backend/app/api/v1/endpoints",
+    "settings.editor.selected.configurable": "CodeWithMe"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
-      &quot;PLAIN_TEXT&quot;
+  "keyToStringList": {
+    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
+      "PLAIN_TEXT"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\arcer\PycharmProjects\SpaarBot\backend\app\api\v1\endpoints" />
@@ -104,13 +131,14 @@
       <recent name="C:\Users\arcer\PycharmProjects\SpaarBot" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\arcer\PycharmProjects\SpaarBot\backend\app\api\v1\endpoints" />
       <recent name="C:\Users\arcer\PycharmProjects\SpaarBot\backend" />
     </key>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-1f77c24022e5-d902c0275401-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.26830.99" />
+        <option value="bundled-python-sdk-f69e5c277ee4-cbfc7b97e6b2-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.27397.106" />
       </set>
     </attachedChunks>
   </component>
@@ -154,7 +182,23 @@
       <option name="project" value="LOCAL" />
       <updated>1761070670554</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Стабильно, стабильно плохо, но уже лучше">
+      <option name="closed" value="true" />
+      <created>1761601421807</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1761601421807</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Стабильно, стабильно плохо, но уже лучше">
+      <option name="closed" value="true" />
+      <created>1761601429200</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1761601429200</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -171,6 +215,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Stable" />
     <MESSAGE value="UnStable New Design" />
-    <option name="LAST_COMMIT_MESSAGE" value="UnStable New Design" />
+    <MESSAGE value="Стабильно, стабильно плохо, но уже лучше" />
+    <option name="LAST_COMMIT_MESSAGE" value="Стабильно, стабильно плохо, но уже лучше" />
   </component>
 </project>

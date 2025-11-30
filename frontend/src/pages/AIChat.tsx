@@ -1,306 +1,137 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Send, TrendingUp, Lightbulb, PieChart } from 'lucide-react'
-import { premiumDesign } from '../config/premiumDesign'
+import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
+import { Send, Bot, Sparkles } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
-import { useUserStore } from '../store/userStore'
-import { api } from '../lib/api'
 
 interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
 }
 
-const AIChat: React.FC = () => {
-  const { t, language } = useLanguage()
-  const { user } = useUserStore()
-  const [messages, setMessages] = useState<Message[]>([])
+const AIChat = () => {
+  const { t } = useLanguage()
+  const [messages, setMessages] = useState<Message[]>([
+    { id: '1', role: 'assistant', content: t('ai.welcome') || 'Hello! I am your AI finance assistant. How can I help you save money today?' }
+  ])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Загрузка истории чата при монтировании
-  useEffect(() => {
-    loadChatHistory()
-  }, [])
+  const [isTyping, setIsTyping] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   // Автоскролл к последнему сообщению
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isTyping])
 
-  const loadChatHistory = () => {
-    // Загрузка из localStorage
-    const saved = localStorage.getItem('spaarbot-chat-history')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setMessages(parsed.map((m: any) => ({
-          ...m,
-          timestamp: new Date(m.timestamp)
-        })))
-        return
-      } catch (e) {
-        console.error('Failed to load chat history:', e)
-      }
-    }
-
-    // Приветственное сообщение на выбранном языке
-    const greetings = {
-      de: `Hi! Ich bin dein AI Finanz-Assistent. Ich kann dir helfen bei:
-
-• Ausgabenanalyse und Spartipps
-• Budget-Planung und Optimierung
-• Finanzielle Ziele und Strategien
-• Kategorisierung von Transaktionen
-
-Wie kann ich dir heute helfen?`,
-      en: `Hi! I'm your AI Finance Assistant. I can help you with:
-
-• Expense analysis and saving tips
-• Budget planning and optimization
-• Financial goals and strategies
-• Transaction categorization
-
-How can I help you today?`,
-      ru: `Привет! Я твой AI финансовый ассистент. Я могу помочь с:
-
-• Анализом расходов и советами по экономии
-• Планированием и оптимизацией бюджета
-• Финансовыми целями и стратегиями
-• Категоризацией транзакций
-
-Как я могу помочь тебе сегодня?`,
-      uk: `Привіт! Я твій AI фінансовий асистент. Я можу допомогти з:
-
-• Аналізом витрат та порадами по заощадженню
-• Плануванням та оптимізацією бюджету
-• Фінансовими цілями та стратегіями
-• Категоризацією транзакцій
-
-Як я можу допомогти тобі сьогодні?`
-    }
-
-    const greeting: Message = {
-      id: 'welcome',
-      role: 'assistant',
-      content: greetings[language as keyof typeof greetings] || greetings.de,
-      timestamp: new Date()
-    }
-
-    setMessages([greeting])
-    saveChatHistory([greeting])
-  }
-
-  const saveChatHistory = (msgs: Message[]) => {
-    localStorage.setItem('spaarbot-chat-history', JSON.stringify(msgs))
-  }
-
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date()
-    }
-
-    const updatedMessages = [...messages, userMessage]
-    setMessages(updatedMessages)
-    saveChatHistory(updatedMessages)
+  const handleSend = async () => {
+    if (!input.trim()) return
+    const newMsg: Message = { id: Date.now().toString(), role: 'user', content: input }
+    setMessages(prev => [...prev, newMsg])
     setInput('')
-    setLoading(true)
+    setIsTyping(true)
 
-    try {
-      // Отправка на backend с историей и языком
-      const response = await api.post('/api/v1/ai', {
-        message: userMessage.content,
-        history: messages.slice(-5).map(m => ({ // Последние 5 сообщений для контекста
-          role: m.role,
-          content: m.content
-        })),
-        language: language,
-        user_id: user?.telegram_id
-      })
-
-      const assistantMessage: Message = {
+    // Имитация ответа (Mock)
+    setTimeout(() => {
+      const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.data.response || response.data.message,
-        timestamp: new Date()
+        content: "Based on your spending habits, you could save about €50/month by cooking at home on Fridays!"
       }
-
-      const finalMessages = [...updatedMessages, assistantMessage]
-      setMessages(finalMessages)
-      saveChatHistory(finalMessages)
-
-    } catch (error) {
-      console.error('AI Chat error:', error)
-
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: t('common.error') + ': ' + (error as any).message,
-        timestamp: new Date()
-      }
-
-      const finalMessages = [...updatedMessages, errorMessage]
-      setMessages(finalMessages)
-      saveChatHistory(finalMessages)
-    } finally {
-      setLoading(false)
-    }
+      setMessages(prev => [...prev, aiMsg])
+      setIsTyping(false)
+    }, 1500)
   }
-
-  const quickQuestions = [
-    { icon: TrendingUp, text: t('ai.where_save'), query: language === 'de' ? 'Wo kann ich sparen?' : 'Where can I save?' },
-    { icon: Lightbulb, text: t('ai.budget_tips'), query: language === 'de' ? 'Budget-Tipps' : 'Budget tips' },
-    { icon: PieChart, text: t('ai.finance_analysis'), query: language === 'de' ? 'Finanz-Analyse' : 'Finance analysis' },
-  ]
 
   return (
-    <div className="min-h-[calc(100vh-10rem)] flex flex-col">
+    // Используем 100dvh для корректной высоты на мобильных браузерах (учитывает адресную строку)
+    <div className="h-[100dvh] bg-black flex flex-col relative overflow-hidden">
+
       {/* Header */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="p-4 border-b"
-        style={{ borderColor: premiumDesign.colors.neutral[800] }}
-      >
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
-          {t('ai.title')}
-        </h1>
-        <p className="text-sm text-neutral-400">
-          {t('ai.powered_by')}
-        </p>
-      </motion.div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <AnimatePresence>
-          {messages.map((message, index) => (
-            <motion.div
-              key={message.id}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                  message.role === 'user'
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                    : 'text-white'
-                }`}
-                style={
-                  message.role === 'assistant'
-                    ? {
-                        background: premiumDesign.glass.medium.background,
-                        border: premiumDesign.glass.medium.border,
-                      }
-                    : {}
-                }
-              >
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                <p className="text-xs opacity-60 mt-2">
-                  {message.timestamp.toLocaleTimeString(language, {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start"
-          >
-            <div
-              className="rounded-2xl px-4 py-3"
-              style={{
-                background: premiumDesign.glass.medium.background,
-                border: premiumDesign.glass.medium.border,
-              }}
-            >
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 rounded-full bg-primary-500 animate-bounce" />
-                <div className="w-2 h-2 rounded-full bg-primary-500 animate-bounce delay-100" />
-                <div className="w-2 h-2 rounded-full bg-primary-500 animate-bounce delay-200" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        <div ref={messagesEndRef} />
+      <div className="pt-6 pb-4 px-5 border-b border-white/5 bg-black/80 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <Bot size={20} className="text-white" />
+          </div>
+          <div>
+            <h1 className="font-bold text-lg text-white">Finance AI</h1>
+            <p className="text-xs text-green-400 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"/> Online
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Quick Questions */}
-      {messages.length <= 1 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="px-4 pb-4"
-        >
-          <p className="text-sm text-neutral-400 mb-3">{t('ai.quick_questions')}</p>
-          <div className="grid grid-cols-3 gap-2">
-            {quickQuestions.map((q, i) => (
-              <motion.button
-                key={i}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setInput(q.query)
-                  setTimeout(() => sendMessage(), 100)
-                }}
-                className="p-3 rounded-xl text-xs flex flex-col items-center gap-2"
-                style={{
-                  background: premiumDesign.glass.light.background,
-                  border: premiumDesign.glass.light.border,
-                }}
-              >
-                <q.icon size={20} className="text-primary-400" />
-                <span className="text-neutral-300 text-center leading-tight">{q.text}</span>
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-      )}
+      {/* Messages Area */}
+      {/* pb-40 дает большой отступ снизу, чтобы контент не прятался за полем ввода */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-44 scroll-smooth">
+        {messages.map((msg) => (
+          <motion.div
+            key={msg.id}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed ${
+                msg.role === 'user'
+                  ? 'bg-neutral-800 text-white rounded-tr-none'
+                  : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg shadow-purple-500/20 rounded-tl-none'
+              }`}
+            >
+              {msg.role === 'assistant' && <Sparkles size={14} className="mb-2 opacity-50" />}
+              {msg.content}
+            </div>
+          </motion.div>
+        ))}
 
-      {/* Input */}
-      <div className="p-4 border-t" style={{ borderColor: premiumDesign.colors.neutral[800] }}>
-        <div className="flex gap-2">
-          <input
-            type="text"
+        {isTyping && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+             <div className="bg-neutral-900 px-4 py-3 rounded-2xl rounded-tl-none border border-white/5 flex gap-1">
+                <span className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce delay-75" />
+                <span className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce delay-150" />
+             </div>
+          </motion.div>
+        )}
+        {/* Невидимый блок для скролла */}
+        <div ref={scrollRef} />
+      </div>
+
+      {/* Input Area */}
+      {/* absolute bottom-20 поднимает поле ввода на ~80px вверх, чтобы не перекрывать нижнее меню навигации */}
+      <div className="absolute bottom-20 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/90 to-transparent z-30">
+
+        {/* Quick Prompts */}
+        {messages.length < 3 && (
+            <div className="flex gap-2 overflow-x-auto mb-3 no-scrollbar pb-1">
+            {['💸 Save Money', '📊 Analyze Budget', '📈 Investment Tips'].map(tag => (
+                <button
+                key={tag}
+                onClick={() => setInput(tag)}
+                className="whitespace-nowrap px-4 py-2 bg-neutral-900/90 border border-white/10 rounded-full text-xs text-neutral-300 hover:bg-neutral-800 active:scale-95 transition-transform"
+                >
+                {tag}
+                </button>
+            ))}
+            </div>
+        )}
+
+        <div className="flex items-center gap-2">
+            <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder={t('ai.write_message')}
-            className="flex-1 px-4 py-3 rounded-xl text-white placeholder-neutral-500 focus:outline-none"
-            style={{
-              background: premiumDesign.glass.medium.background,
-              border: premiumDesign.glass.medium.border,
-            }}
-          />
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={sendMessage}
-            disabled={!input.trim() || loading}
-            className="px-4 py-3 rounded-xl text-white disabled:opacity-50"
-            style={{
-              background: premiumDesign.colors.gradients.primary,
-            }}
-          >
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Ask AI anything..."
+            className="flex-1 bg-neutral-800 border border-white/10 text-white px-5 py-3.5 rounded-2xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-neutral-500 shadow-xl"
+            />
+            <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="p-3.5 bg-white text-black rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/10"
+            >
             <Send size={20} />
-          </motion.button>
+            </motion.button>
         </div>
       </div>
     </div>

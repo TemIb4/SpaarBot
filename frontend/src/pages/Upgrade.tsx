@@ -6,10 +6,12 @@ import {
 } from 'lucide-react'
 import { premiumDesign } from '../config/premiumDesign'
 import { useUserStore } from '../store/userStore'
+import { useLanguage } from '../contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 
 const Upgrade: React.FC = () => {
   const { isPremium } = useUserStore()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly')
   const [loading, setLoading] = useState(false)
@@ -17,13 +19,13 @@ const Upgrade: React.FC = () => {
   const plans = {
     monthly: {
       price: 3.99,
-      period: 'Monat',
+      period: t('upgrade.per_month'),
       savings: null,
       priceId: 'price_monthly_premium'
     },
     yearly: {
       price: 39.99,
-      period: 'Jahr',
+      period: t('upgrade.per_year'),
       savings: '17%',
       priceId: 'price_yearly_premium'
     }
@@ -31,38 +33,32 @@ const Upgrade: React.FC = () => {
 
   const features = {
     free: [
-      { icon: BarChart3, text: 'Базовая статистика', included: true },
-      { icon: Calendar, text: 'До 4 подписок', included: true },
-      { icon: MessageSquare, text: '50 AI запросов/месяц', included: true },
-      { icon: TrendingUp, text: 'Расширенная аналитика', included: false },
-      { icon: Shield, text: 'Приоритетная поддержка', included: false },
-      { icon: Sparkles, text: 'Неограниченные AI запросы', included: false },
+      { icon: BarChart3, text: t('upgrade.feature_basic_stats'), included: true },
+      { icon: Calendar, text: t('upgrade.feature_up_to_4_subs'), included: true },
+      { icon: MessageSquare, text: t('upgrade.feature_50_ai'), included: true },
+      { icon: TrendingUp, text: t('upgrade.feature_advanced_analytics'), included: false },
+      { icon: Shield, text: t('upgrade.feature_priority_support'), included: false },
+      { icon: Sparkles, text: t('upgrade.feature_unlimited_ai'), included: false },
     ],
     premium: [
-      { icon: BarChart3, text: 'Продвинутая аналитика с AI', included: true },
-      { icon: Calendar, text: 'Неограниченные подписки', included: true },
-      { icon: MessageSquare, text: 'Безлимитные AI запросы', included: true },
-      { icon: TrendingUp, text: 'Прогнозы и инсайты', included: true },
-      { icon: Shield, text: 'Приоритетная поддержка 24/7', included: true },
-      { icon: Sparkles, text: 'Ранний доступ к функциям', included: true },
-      { icon: Crown, text: 'Эксклюзивные финансовые данные', included: true },
-      { icon: Zap, text: 'Автоматическая категоризация', included: true },
+      { icon: BarChart3, text: t('upgrade.feature_advanced_ai'), included: true },
+      { icon: Calendar, text: t('upgrade.feature_unlimited_subs'), included: true },
+      { icon: MessageSquare, text: t('upgrade.feature_unlimited_ai_requests'), included: true },
+      { icon: TrendingUp, text: t('upgrade.feature_forecasts'), included: true },
+      { icon: Shield, text: t('upgrade.feature_priority_247'), included: true },
+      { icon: Sparkles, text: t('upgrade.feature_early_access'), included: true },
+      { icon: Crown, text: t('upgrade.feature_exclusive_data'), included: true },
+      { icon: Zap, text: t('upgrade.feature_auto_categorization'), included: true },
     ]
   }
 
   const handleUpgrade = async () => {
     setLoading(true)
     try {
-      // TODO: Implement PayPal checkout
       const plan = plans[selectedPlan]
       console.log('Upgrading to:', plan)
-
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Redirect to payment page or show PayPal modal
       alert(`Redirecting to PayPal for ${plan.price}€/${plan.period}`)
-
     } catch (error) {
       console.error('Upgrade error:', error)
       alert('Ошибка при обновлении. Попробуйте позже.')
@@ -93,10 +89,10 @@ const Upgrade: React.FC = () => {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}>
-            Du bist bereits Premium!
+            {t('upgrade.already_premium')}
           </h1>
           <p className="text-neutral-400 mb-8 max-w-md mx-auto">
-            Vielen Dank für deine Unterstützung! Du hast Zugriff auf alle Premium-Funktionen.
+            {t('upgrade.thank_you')}
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -108,7 +104,7 @@ const Upgrade: React.FC = () => {
               border: premiumDesign.glass.medium.border,
             }}
           >
-            Zu den Einstellungen
+            {t('upgrade.to_settings')}
           </motion.button>
         </motion.div>
       </div>
@@ -122,7 +118,6 @@ const Upgrade: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         className="max-w-6xl mx-auto"
       >
-        {/* Header */}
         <div className="text-center mb-12">
           <motion.div
             initial={{ scale: 0 }}
@@ -145,14 +140,13 @@ const Upgrade: React.FC = () => {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            Upgrade auf Premium
+            {t('upgrade.title')}
           </h1>
           <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
-            Entfessle die volle Kraft von SpaarBot mit unbegrenzten Features und AI-Power
+            {t('upgrade.subtitle')}
           </p>
         </div>
 
-        {/* Plan Toggle */}
         <div className="flex justify-center mb-12">
           <div
             className="inline-flex p-1 rounded-2xl"
@@ -172,7 +166,7 @@ const Upgrade: React.FC = () => {
                 color: selectedPlan === 'monthly' ? '#fff' : premiumDesign.colors.neutral[400],
               }}
             >
-              Monatlich
+              {t('upgrade.monthly')}
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -185,7 +179,7 @@ const Upgrade: React.FC = () => {
                 color: selectedPlan === 'yearly' ? '#fff' : premiumDesign.colors.neutral[400],
               }}
             >
-              Jährlich
+              {t('upgrade.yearly')}
               {plans.yearly.savings && (
                 <span
                   className="absolute -top-2 -right-2 px-2 py-0.5 text-xs font-bold rounded-full"
@@ -194,16 +188,14 @@ const Upgrade: React.FC = () => {
                     color: '#fff',
                   }}
                 >
-                  -{plans.yearly.savings}
+                  {t('upgrade.save_percent').replace('{percent}', plans.yearly.savings)}
                 </span>
               )}
             </motion.button>
           </div>
         </div>
 
-        {/* Comparison Cards */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* Free Plan */}
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -215,12 +207,12 @@ const Upgrade: React.FC = () => {
             }}
           >
             <div className="mb-6">
-              <h3 className="text-2xl font-bold mb-2 text-white">Free</h3>
+              <h3 className="text-2xl font-bold mb-2 text-white">{t('upgrade.free_plan')}</h3>
               <div className="flex items-baseline mb-4">
                 <span className="text-5xl font-bold text-white">0</span>
                 <span className="text-2xl text-neutral-400 ml-2">€</span>
               </div>
-              <p className="text-neutral-400">Für den Einstieg</p>
+              <p className="text-neutral-400">{t('upgrade.for_starters')}</p>
             </div>
 
             <ul className="space-y-4 mb-8">
@@ -246,11 +238,10 @@ const Upgrade: React.FC = () => {
                 border: premiumDesign.glass.light.border,
               }}
             >
-              Aktueller Plan
+              {t('upgrade.current_plan')}
             </button>
           </motion.div>
 
-          {/* Premium Plan */}
           <motion.div
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -262,7 +253,6 @@ const Upgrade: React.FC = () => {
               boxShadow: premiumDesign.effects.shadow.glow,
             }}
           >
-            {/* Popular Badge */}
             <div
               className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold"
               style={{
@@ -270,7 +260,7 @@ const Upgrade: React.FC = () => {
                 color: '#fff',
               }}
             >
-              ⭐ BELIEBT
+              ⭐ {t('upgrade.popular')}
             </div>
 
             <div className="mb-6">
@@ -282,7 +272,7 @@ const Upgrade: React.FC = () => {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Premium
+                {t('upgrade.premium_plan')}
               </h3>
               <div className="flex items-baseline mb-4">
                 <span className="text-5xl font-bold text-white">
@@ -294,7 +284,7 @@ const Upgrade: React.FC = () => {
               </div>
               {selectedPlan === 'yearly' && (
                 <p className="text-success-500 text-sm font-semibold">
-                  Spare {plans.yearly.savings} gegenüber monatlicher Zahlung
+                  {t('upgrade.save_compared').replace('{percent}', plans.yearly.savings!)}
                 </p>
               )}
             </div>
@@ -328,19 +318,18 @@ const Upgrade: React.FC = () => {
               {loading ? (
                 <span className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2" />
-                  Wird geladen...
+                  {t('upgrade.loading')}
                 </span>
               ) : (
                 <>
                   <Sparkles size={20} className="inline mr-2" />
-                  Jetzt upgraden
+                  {t('upgrade.upgrade_now')}
                 </>
               )}
             </motion.button>
           </motion.div>
         </div>
 
-        {/* Trust Badges */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -356,17 +345,17 @@ const Upgrade: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <Shield size={20} className="text-success-500" />
-              <span className="text-sm text-neutral-300">Sichere Zahlung</span>
+              <span className="text-sm text-neutral-300">{t('upgrade.secure_payment')}</span>
             </div>
             <div className="w-px h-6" style={{ background: premiumDesign.colors.neutral[700] }} />
             <div className="flex items-center space-x-2">
               <Check size={20} className="text-success-500" />
-              <span className="text-sm text-neutral-300">Jederzeit kündbar</span>
+              <span className="text-sm text-neutral-300">{t('upgrade.cancel_anytime')}</span>
             </div>
             <div className="w-px h-6" style={{ background: premiumDesign.colors.neutral[700] }} />
             <div className="flex items-center space-x-2">
               <Sparkles size={20} className="text-primary-500" />
-              <span className="text-sm text-neutral-300">30 Tage Geld-zurück</span>
+              <span className="text-sm text-neutral-300">{t('upgrade.money_back')}</span>
             </div>
           </div>
         </motion.div>

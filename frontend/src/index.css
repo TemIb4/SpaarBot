@@ -1,9 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Inter font */
 
 /* CSS Variables for dynamic theming */
 :root {
@@ -13,6 +10,9 @@
   --color-bg: #0a0a0a;
   --color-bg-card: #1a1a1a;
   --color-text: #ffffff;
+  --gradient-from: #3b0764;
+  --gradient-via: #a855f7;
+  --gradient-to: #f3e8ff;
 }
 
 /* Apply theme colors */
@@ -26,55 +26,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Spinner animation */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1a1a1a;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Smooth transitions */
-* {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Disable transitions on theme change to prevent flicker */
-.theme-transitioning * {
-  transition: none !important;
-}
-/* CSS Variables for dynamic theming */
-:root {
-  --color-primary: #6366f1;
-  --color-secondary: #8b5cf6;
-  --color-accent: #a78bfa;
-  --color-bg: #0a0a0a;
-  --color-bg-card: #1a1a1a;
-  --color-text: #ffffff;
-}
-
-/* Apply theme colors */
-body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  overscroll-behavior-y: contain;
 }
 
 /* Custom scrollbar */
@@ -99,17 +51,6 @@ body {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
-}
-
-/* Remove default margins */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: #0a0a0a;
-  color: #fafafa;
 }
 
 /* Disable text selection for better app-like feel */
@@ -216,6 +157,68 @@ input, textarea, [contenteditable="true"] {
   animation: float 3s ease-in-out infinite;
 }
 
+/* ✨ СУПЕР ПЛАВНЫЕ АНИМАЦИИ ДЛЯ ФОНА ✨ */
+
+@keyframes float-orb-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translate(5%, -3%) scale(1.05) rotate(90deg);
+  }
+  50% {
+    transform: translate(-3%, 4%) scale(0.95) rotate(180deg);
+  }
+  75% {
+    transform: translate(-4%, -2%) scale(1.02) rotate(270deg);
+  }
+}
+
+@keyframes float-orb-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  20% {
+    transform: translate(-4%, 6%) scale(1.08) rotate(72deg);
+  }
+  40% {
+    transform: translate(3%, -5%) scale(0.92) rotate(144deg);
+  }
+  60% {
+    transform: translate(-6%, -3%) scale(1.05) rotate(216deg);
+  }
+  80% {
+    transform: translate(5%, 5%) scale(0.95) rotate(288deg);
+  }
+}
+
+@keyframes float-orb-3 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(-48%, -52%) scale(1.08) rotate(120deg);
+  }
+  66% {
+    transform: translate(-52%, -48%) scale(0.92) rotate(240deg);
+  }
+}
+
+@keyframes float-orb-4 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(-8%, 6%) scale(1.12);
+  }
+  50% {
+    transform: translate(6%, -8%) scale(0.88);
+  }
+  75% {
+    transform: translate(-6%, -6%) scale(1.05);
+  }
+}
+
 /* Card hover effects */
 .card-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -309,9 +312,4 @@ input, textarea, [contenteditable="true"] {
   body {
     font-size: 14px;
   }
-}
-
-/* Prevent pull-to-refresh on mobile */
-body {
-  overscroll-behavior-y: contain;
 }

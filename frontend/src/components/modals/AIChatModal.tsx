@@ -1,9 +1,5 @@
-/**
- * AI Chat Modal Component
- */
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-// import { Button } from '@/components/ui/Button'  ❌ УДАЛИЛИ - не используется
 import { api } from '@/lib/api'
 import { useTelegram } from '@/hooks/useTelegram'
 
@@ -49,7 +45,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
     setIsLoading(true)
 
     try {
-      const response = await api.post('/ai/chat', {
+      const response = await api.post('/api/v1/ai/query', {
         telegram_id: user.id,
         message: input,
       })

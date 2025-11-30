@@ -8,10 +8,12 @@ import { premiumDesign } from '../../config/premiumDesign'
 import { useUserStore } from '../../store/userStore'
 import { useNavigate } from 'react-router-dom'
 import { CalendarPopup } from './CalendarPopup'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 export const PremiumHeader = () => {
   const { user, isPremium, logout } = useUserStore()
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
@@ -20,47 +22,47 @@ export const PremiumHeader = () => {
   const menuItems = [
     {
       icon: Sparkles,
-      label: isPremium ? 'SpaarBot Premium' : 'Upgrade auf Premium',
+      label: isPremium ? t('menu.premium_active') : t('menu.upgrade'),
       action: () => navigate('/upgrade'),
       highlight: !isPremium,
-      badge: !isPremium ? 'NEU' : null
+      badge: !isPremium ? t('menu.new_badge') : null
     },
     {
       icon: User,
-      label: 'Persönliche Daten',
+      label: t('menu.profile'),
       action: () => navigate('/profile')
     },
     {
       icon: Settings,
-      label: 'Einstellungen',
+      label: t('menu.settings'),
       action: () => navigate('/settings')
     },
     {
       icon: Bell,
-      label: 'Benachrichtigungen',
+      label: t('menu.notifications'),
       action: () => navigate('/notifications'),
       badge: unreadNotifications > 0 ? unreadNotifications : null
     },
     {
       icon: CreditCard,
-      label: 'Zahlungsmethoden',
+      label: t('menu.payment_methods'),
       action: () => navigate('/payment-methods')
     },
     {
       icon: Shield,
-      label: 'Sicherheit',
+      label: t('menu.security'),
       action: () => navigate('/security')
     },
     {
       icon: TrendingUp,
-      label: 'Nutzungsstatistik',
+      label: t('menu.usage_stats'),
       action: () => navigate('/usage-stats')
     },
     {
       icon: LogOut,
-      label: 'Abmelden',
+      label: t('menu.logout'),
       action: () => {
-        if (confirm('Möchtest du dich wirklich abmelden?')) {
+        if (confirm(t('menu.logout_confirm'))) {
           logout()
           navigate('/')
         }

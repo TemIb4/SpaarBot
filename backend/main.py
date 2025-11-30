@@ -13,14 +13,18 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-
+from app.api.v1.endpoints import stats
 from app.core.config import get_settings
 from app.db.database import init_db, get_db
 from app.bot.handlers import start
-# ✅ ИСПРАВЛЕННЫЕ ИМПОРТЫ - добавлен subscriptions
+
+# ✅ ВСЕ ENDPOINTS
 from app.api.v1.endpoints import transactions, ai, auth, twa, feedback, paypal
 from app.api.v1.endpoints import settings as settings_endpoint
 from app.api.v1.endpoints import users, subscriptions
+# ✅ НОВЫЕ ENDPOINTS (AI Insights, Bank CSV)
+from app.api.v1.endpoints import ai_insights, bank
+from app.api.v1.endpoints import paypal_oauth, paypal_sync, accounts
 
 # Configure logging
 logging.basicConfig(
@@ -58,7 +62,6 @@ def get_bot_and_dispatcher():
     if dp is None:
         dp = Dispatcher()
 
-        # Middleware для инъекции database session
         @dp.update.middleware()
         async def db_session_middleware(handler, event, data):
             """Inject database session into handlers"""
@@ -66,7 +69,6 @@ def get_bot_and_dispatcher():
                 data['db'] = session
                 return await handler(event, data)
 
-        # Register only start router
         dp.include_router(start.router)
 
     return bot, dp
@@ -75,27 +77,21 @@ def get_bot_and_dispatcher():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle manager for FastAPI"""
-    # Startup
     logger.info("🚀 Starting SpaarBot...")
     await init_db()
     logger.info("✅ Database initialized")
 
-    # Get bot and dispatcher
     bot_instance, dp_instance = get_bot_and_dispatcher()
-
-    # Start bot polling in background
     asyncio.create_task(dp_instance.start_polling(bot_instance))
     logger.info("🤖 Bot polling started")
 
     yield
 
-    # Shutdown
     logger.info("Shutting down...")
     if bot_instance:
         await bot_instance.session.close()
 
 
-# Create FastAPI app
 app = FastAPI(
     title="SpaarBot API",
     description="AI-powered personal finance assistant",
@@ -103,7 +99,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
@@ -113,14 +108,10 @@ app.add_middleware(
 )
 
 
-# CSP middleware for Telegram WebApp
 class CSPMiddleware(BaseHTTPMiddleware):
-    """Content Security Policy middleware for Telegram WebApp compatibility"""
-
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
 
-        # Add CSP for /app routes (frontend)
         if request.url.path.startswith('/app'):
             response.headers['Content-Security-Policy'] = (
                 "default-src 'self'; "
@@ -132,7 +123,6 @@ class CSPMiddleware(BaseHTTPMiddleware):
                 "frame-ancestors 'self' https://web.telegram.org https://telegram.org;"
             )
 
-            # Add no-cache headers
             response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
@@ -143,13 +133,9 @@ class CSPMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(CSPMiddleware)
 
-# ============================================
-# API ROUTES (MUST BE BEFORE STATIC FILES!)
-# ============================================
-
 logger.info("📝 Registering API routes...")
 
-# ✅ ПРАВИЛЬНАЯ РЕГИСТРАЦИЯ ВСЕХ РОУТЕРОВ
+# ✅ СУЩЕСТВУЮЩИЕ РОУТЕРЫ
 app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["auth"])
 logger.info("  ✅ Auth router registered")
 
@@ -171,32 +157,40 @@ logger.info("  ✅ Settings router registered")
 app.include_router(paypal.router, prefix=f"{settings.API_V1_PREFIX}/paypal", tags=["paypal"])
 logger.info("  ✅ PayPal router registered")
 
-# ✅ ИСПРАВЛЕНО: Правильный prefix /users
 app.include_router(users.router, prefix=f"{settings.API_V1_PREFIX}/users", tags=["users"])
 logger.info("  ✅ Users router registered")
 
-# ✅ ДОБАВЛЕНО: Регистрация subscriptions
 app.include_router(subscriptions.router, prefix=f"{settings.API_V1_PREFIX}/subscriptions", tags=["subscriptions"])
 logger.info("  ✅ Subscriptions router registered")
 
+app.include_router(paypal_oauth.router, prefix="/api/v1/paypal", tags=["PayPal"])
+app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["Accounts"])
+app.include_router(paypal_sync.router, prefix="/api/v1/paypal", tags=["PayPal Sync"])
+
+app.include_router(
+    paypal_oauth.router,
+    prefix=f"{settings.API_V1_PREFIX}/paypal",
+    tags=["paypal"]
+)
+# ============================================
+# ✅ PREMIUM FEATURES ROUTERS
+# ============================================
+
+app.include_router(ai_insights.router, prefix=f"{settings.API_V1_PREFIX}/ai-insights", tags=["ai-insights"])
+logger.info("  ✅ AI Insights router registered (PREMIUM)")
+
+app.include_router(bank.router, prefix=f"{settings.API_V1_PREFIX}/bank", tags=["bank"])
+logger.info("  ✅ Bank Integration router registered (PREMIUM)")
+
 logger.info("✅ All API routes registered successfully!")
 
-
-# ============================================
-# STATIC FILES
-# ============================================
-
-# Mount static files for /static/*
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 logger.info(f"✅ Static files mounted at /static")
 
-
-# ============================================
-# FRONTEND (SPA) ROUTING
-# ============================================
+app.include_router(stats.router, prefix=f"{settings.API_V1_PREFIX}/stats", tags=["stats"])
+logger.info("  ✅ Stats router registered")
 
 if FRONTEND_DIR.exists():
-    # Serve static assets (JS, CSS, images)
     app.mount(
         "/app/assets",
         StaticFiles(directory=str(FRONTEND_DIR / "assets")),
@@ -204,26 +198,16 @@ if FRONTEND_DIR.exists():
     )
     logger.info(f"✅ Frontend assets mounted at /app/assets")
 
-    # Serve other static files (vite.svg, etc.)
     @app.get("/app/vite.svg")
     async def serve_vite_svg():
-        """Serve vite.svg"""
         file_path = FRONTEND_DIR / "vite.svg"
         if file_path.exists():
             return FileResponse(file_path)
         return {"detail": "Not Found"}
 
-    # SPA CATCH-ALL ROUTE: Serve index.html for all /app/* routes
     @app.get("/app/{full_path:path}")
     async def serve_spa(full_path: str):
-        """
-        Serve SPA for all /app/* routes (React Router)
-        Returns index.html for all routes to enable client-side routing
-        """
-        # Log the request
-        logger.info(f"🔍 SPA route requested: /app/{full_path}")
-
-        # Always return index.html for SPA routing
+        logger.info(f"📝 SPA route requested: /app/{full_path}")
         index_path = FRONTEND_DIR / "index.html"
 
         if index_path.exists():
@@ -246,26 +230,21 @@ else:
     logger.warning(f"⚠️ Frontend dist directory not found at {FRONTEND_DIR}")
 
 
-# ============================================
-# ROOT ROUTES
-# ============================================
-
 @app.get("/")
 async def root():
-    """Root endpoint - redirect to app"""
     return RedirectResponse(url="/app/")
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "frontend_exists": FRONTEND_DIR.exists(),
         "registered_routes": [
-            "auth", "transactions", "ai", "twa",
-            "feedback", "settings", "paypal", "users", "subscriptions"
+            "auth", "transactions", "ai", "twa", "feedback",
+            "settings", "paypal", "users", "subscriptions",
+            "ai-insights", "bank"  # ✅ PREMIUM FEATURES
         ]
     }
 

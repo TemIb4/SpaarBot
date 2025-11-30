@@ -2,8 +2,10 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Shield, Lock, Eye, EyeOff, Smartphone, Key, Check } from 'lucide-react'
 import { premiumDesign } from '../config/premiumDesign'
+import { useLanguage } from '../contexts/LanguageContext'
 
 const Security: React.FC = () => {
+  const { t } = useLanguage()
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
   const [biometricEnabled, setBiometricEnabled] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -19,19 +21,18 @@ const Security: React.FC = () => {
     e.preventDefault()
 
     if (passwordData.new !== passwordData.confirm) {
-      alert('Passwörter stimmen nicht überein')
+      alert(t('security.password_mismatch'))
       return
     }
 
     setLoading(true)
     try {
-      // TODO: API call to change password
       await new Promise(resolve => setTimeout(resolve, 2000))
-      alert('Passwort erfolgreich geändert')
+      alert(t('security.password_changed'))
       setPasswordData({ current: '', new: '', confirm: '' })
     } catch (error) {
       console.error('Error changing password:', error)
-      alert('Fehler beim Ändern des Passworts')
+      alert(t('security.error_changing_password'))
     } finally {
       setLoading(false)
     }
@@ -40,15 +41,14 @@ const Security: React.FC = () => {
   const toggle2FA = async () => {
     setLoading(true)
     try {
-      // TODO: API call to toggle 2FA
       await new Promise(resolve => setTimeout(resolve, 1500))
       setTwoFactorEnabled(!twoFactorEnabled)
       alert(twoFactorEnabled
-        ? '2FA deaktiviert'
-        : '2FA aktiviert. Überprüfe deine E-Mail für den Bestätigungscode.')
+        ? t('security.two_factor_disabled')
+        : t('security.two_factor_activated'))
     } catch (error) {
       console.error('Error toggling 2FA:', error)
-      alert('Fehler beim Umschalten von 2FA')
+      alert(t('security.error_toggling_2fa'))
     } finally {
       setLoading(false)
     }
@@ -57,12 +57,11 @@ const Security: React.FC = () => {
   const toggleBiometric = async () => {
     setLoading(true)
     try {
-      // TODO: API call to toggle biometric auth
       await new Promise(resolve => setTimeout(resolve, 1500))
       setBiometricEnabled(!biometricEnabled)
     } catch (error) {
       console.error('Error toggling biometric:', error)
-      alert('Fehler beim Umschalten der biometrischen Authentifizierung')
+      alert(t('security.error_toggling_biometric'))
     } finally {
       setLoading(false)
     }
@@ -75,13 +74,11 @@ const Security: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         className="max-w-4xl mx-auto"
       >
-        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Sicherheit</h1>
-          <p className="text-neutral-400">Schütze dein Konto mit zusätzlichen Sicherheitsmaßnahmen</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('security.title')}</h1>
+          <p className="text-neutral-400">{t('security.subtitle')}</p>
         </div>
 
-        {/* Password Change */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -103,16 +100,15 @@ const Security: React.FC = () => {
               <Lock size={24} className="text-primary-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Passwort ändern</h2>
-              <p className="text-sm text-neutral-400">Aktualisiere dein Passwort regelmäßig</p>
+              <h2 className="text-xl font-bold text-white">{t('security.change_password')}</h2>
+              <p className="text-sm text-neutral-400">{t('security.update_password_regularly')}</p>
             </div>
           </div>
 
           <form onSubmit={handlePasswordChange} className="space-y-4">
-            {/* Current Password */}
             <div>
               <label className="block text-sm font-medium text-neutral-400 mb-2">
-                Aktuelles Passwort
+                {t('security.current_password')}
               </label>
               <div className="relative">
                 <input
@@ -136,10 +132,9 @@ const Security: React.FC = () => {
               </div>
             </div>
 
-            {/* New Password */}
             <div>
               <label className="block text-sm font-medium text-neutral-400 mb-2">
-                Neues Passwort
+                {t('security.new_password')}
               </label>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -155,10 +150,9 @@ const Security: React.FC = () => {
               />
             </div>
 
-            {/* Confirm Password */}
             <div>
               <label className="block text-sm font-medium text-neutral-400 mb-2">
-                Passwort bestätigen
+                {t('security.confirm_password')}
               </label>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -188,16 +182,15 @@ const Security: React.FC = () => {
               {loading ? (
                 <span className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2" />
-                  Wird gespeichert...
+                  {t('profile.saving')}
                 </span>
               ) : (
-                'Passwort ändern'
+                t('security.change_password')
               )}
             </motion.button>
           </form>
         </motion.div>
 
-        {/* Two-Factor Authentication */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -220,9 +213,9 @@ const Security: React.FC = () => {
                 <Smartphone size={24} className="text-success-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Zwei-Faktor-Authentifizierung</h2>
+                <h2 className="text-lg font-bold text-white">{t('security.two_factor')}</h2>
                 <p className="text-sm text-neutral-400">
-                  Zusätzliche Sicherheitsebene für dein Konto
+                  {t('security.two_factor_desc')}
                 </p>
               </div>
             </div>
@@ -265,17 +258,14 @@ const Security: React.FC = () => {
               >
                 <Check size={20} className="text-success-500 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-neutral-300">
-                  <p className="font-semibold text-white mb-1">2FA ist aktiviert</p>
-                  <p>
-                    Bei jeder Anmeldung erhältst du einen Bestätigungscode per E-Mail.
-                  </p>
+                  <p className="font-semibold text-white mb-1">{t('security.two_factor_enabled')}</p>
+                  <p>{t('security.two_factor_enabled_desc')}</p>
                 </div>
               </div>
             </motion.div>
           )}
         </motion.div>
 
-        {/* Biometric Authentication */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -298,9 +288,9 @@ const Security: React.FC = () => {
                 <Key size={24} className="text-accent-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Biometrische Authentifizierung</h2>
+                <h2 className="text-lg font-bold text-white">{t('security.biometric')}</h2>
                 <p className="text-sm text-neutral-400">
-                  Face ID oder Touch ID nutzen
+                  {t('security.biometric_desc')}
                 </p>
               </div>
             </div>
@@ -343,17 +333,14 @@ const Security: React.FC = () => {
               >
                 <Check size={20} className="text-accent-500 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-neutral-300">
-                  <p className="font-semibold text-white mb-1">Biometrische Authentifizierung aktiv</p>
-                  <p>
-                    Du kannst dich jetzt mit Face ID oder Touch ID anmelden.
-                  </p>
+                  <p className="font-semibold text-white mb-1">{t('security.biometric_active')}</p>
+                  <p>{t('security.biometric_active_desc')}</p>
                 </div>
               </div>
             </motion.div>
           )}
         </motion.div>
 
-        {/* Security Tips */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -367,12 +354,12 @@ const Security: React.FC = () => {
           <div className="flex items-start space-x-3">
             <Shield size={20} className="text-primary-400 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-neutral-300">
-              <p className="font-semibold text-white mb-2">Sicherheitstipps</p>
+              <p className="font-semibold text-white mb-2">{t('security.security_tips')}</p>
               <ul className="space-y-1">
-                <li>• Verwende ein starkes, einzigartiges Passwort</li>
-                <li>• Aktiviere die Zwei-Faktor-Authentifizierung</li>
-                <li>• Teile dein Passwort niemals mit anderen</li>
-                <li>• Überprüfe regelmäßig deine Kontoaktivitäten</li>
+                <li>• {t('security.tip_strong_password')}</li>
+                <li>• {t('security.tip_enable_2fa')}</li>
+                <li>• {t('security.tip_never_share')}</li>
+                <li>• {t('security.tip_check_activity')}</li>
               </ul>
             </div>
           </div>

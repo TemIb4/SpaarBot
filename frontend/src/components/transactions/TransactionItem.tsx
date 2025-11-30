@@ -1,3 +1,5 @@
+// TransactionItem.tsx - ИСПРАВЛЕННЫЙ
+
 import React from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Edit2, Trash2 } from 'lucide-react'
@@ -17,12 +19,35 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
 }) => {
   const isExpense = transaction.type === 'expense'
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat('de-DE', {
-      day: '2-digit',
-      month: 'short',
-    }).format(date)
+  // ИСПРАВЛЕНО: Безопасный парсинг дат
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) {
+      return new Date().toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: 'short',
+      })
+    }
+
+    try {
+      const date = new Date(dateString)
+      // Проверка что дата валидна
+      if (isNaN(date.getTime())) {
+        return new Date().toLocaleDateString('de-DE', {
+          day: '2-digit',
+          month: 'short',
+        })
+      }
+      return new Intl.DateTimeFormat('de-DE', {
+        day: '2-digit',
+        month: 'short',
+      }).format(date)
+    } catch (error) {
+      console.error('Date parsing error:', error, dateString)
+      return new Date().toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: 'short',
+      })
+    }
   }
 
   return (
@@ -57,7 +82,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
           {/* Details */}
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-white truncate mb-1">
-              {transaction.description}
+              {transaction.description || 'Transaction'}
             </h4>
             <div className="flex items-center space-x-3 text-xs text-neutral-500">
               <span>{transaction.category || 'Sonstiges'}</span>

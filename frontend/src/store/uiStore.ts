@@ -2,6 +2,7 @@
  * UI Store
  */
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface DateRange {
   start: string
@@ -13,6 +14,8 @@ interface UIStore {
   setDateRange: (range: DateRange) => void
   isAddingTransaction: boolean
   setIsAddingTransaction: (value: boolean) => void
+  animatedBackground: boolean
+  setAnimatedBackground: (value: boolean) => void
 }
 
 const getDefaultDateRange = (): DateRange => {
@@ -26,9 +29,22 @@ const getDefaultDateRange = (): DateRange => {
   }
 }
 
-export const useUIStore = create<UIStore>((set) => ({
-  dateRange: getDefaultDateRange(),
-  setDateRange: (range) => set({ dateRange: range }), // ✅ Принимает только объект
-  isAddingTransaction: false,
-  setIsAddingTransaction: (value) => set({ isAddingTransaction: value }),
-}))
+export const useUIStore = create<UIStore>()(
+  persist(
+    (set) => ({
+      dateRange: getDefaultDateRange(),
+      setDateRange: (range) => set({ dateRange: range }),
+      isAddingTransaction: false,
+      setIsAddingTransaction: (value) => set({ isAddingTransaction: value }),
+      animatedBackground: true, // ВСЕГДА ВКЛЮЧЕНО ПО УМОЛЧАНИЮ!
+      setAnimatedBackground: (value) => {
+        console.log('🎨 AnimatedBackground toggled:', value)
+        set({ animatedBackground: value })
+      },
+    }),
+    {
+      name: 'spaarbot-ui-storage',
+      version: 1, // Увеличиваем версию чтобы сбросить старые настройки
+    }
+  )
+)

@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, BarChart3, Calendar, Sparkles, Settings } from 'lucide-react'
+import { Home, BarChart3, Calendar, Sparkles } from 'lucide-react'
 import { premiumDesign } from '../../config/premiumDesign'
 import { useLanguage } from '../../contexts/LanguageContext'
 
@@ -13,8 +13,7 @@ export const BottomNav = () => {
     { path: '/', icon: Home, label: t('home') },
     { path: '/stats', icon: BarChart3, label: t('stats') },
     { path: '/ai', icon: Sparkles, label: t('ai') },
-    { path: '/subscriptions', icon: Calendar, label: t('subscriptions') },
-    { path: '/settings', icon: Settings, label: t('settings') },
+    { path: '/subscriptions', icon: Calendar, label: t('subscriptions') }
   ]
 
   return (

@@ -6,6 +6,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
+from typing import Optional
 
 from app.db.database import get_db
 from app.db.crud import get_user_by_telegram_id, get_user_transactions
@@ -19,6 +20,7 @@ class ChatRequest(BaseModel):
     """Schema for AI chat request"""
     telegram_id: int
     message: str
+    language: Optional[str] = 'de'
 
 
 class ChatResponse(BaseModel):
@@ -26,6 +28,8 @@ class ChatResponse(BaseModel):
     response: str
 
 
+@router.post("", response_model=ChatResponse)
+@router.post("/", response_model=ChatResponse)
 @router.post("/query", response_model=ChatResponse)
 async def ai_query(
     request: ChatRequest,
@@ -37,33 +41,25 @@ async def ai_query(
     Отправляет запрос пользователя AI ассистенту с контекстом финансов
     """
     try:
-        # Получить пользователя
         user = await get_user_by_telegram_id(db, request.telegram_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Получить последние транзакции для контекста
         transactions = await get_user_transactions(
             db=db,
             telegram_id=request.telegram_id,
             limit=20
         )
 
-        # Подготовить контекст
         context_parts = []
-
-        # Информация о пользователе
         context_parts.append(f"User: {user.first_name}")
-        context_parts.append(f"Language: {user.language_code or 'de'}")
         context_parts.append(f"Tier: {'Premium' if user.is_premium else 'Free'}")
 
-        # Последние транзакции
         if transactions:
             context_parts.append(f"\nRecent transactions ({len(transactions)}):")
             total_expenses = sum(t.amount for t in transactions if t.transaction_type == 'expense')
             context_parts.append(f"Total expenses: €{total_expenses:.2f}")
 
-            # Топ-3 категории
             categories = {}
             for t in transactions:
                 if t.transaction_type == 'expense' and t.category:
@@ -72,29 +68,30 @@ async def ai_query(
 
             if categories:
                 top_categories = sorted(categories.items(), key=lambda x: x[1], reverse=True)[:3]
-                context_parts.append("Top categories:")
+                context_parts.append("Top spending categories:")
                 for cat, amount in top_categories:
                     context_parts.append(f"  - {cat}: €{amount:.2f}")
 
         context = "\n".join(context_parts)
 
-        # Определить язык ответа
         language_map = {
             'de': 'German',
             'en': 'English',
             'ru': 'Russian',
             'uk': 'Ukrainian'
         }
-        response_language = language_map.get(user.language_code or 'de', 'German')
 
-        # Вызвать AI сервис
+        response_language = language_map.get(request.language, 'German')
+
+        logger.info(f"AI query: user={request.telegram_id}, language={request.language} ({response_language})")
+
         ai_response = await groq_service.chat(
             message=request.message,
             context=context,
             language=response_language
         )
 
-        logger.info(f"AI query processed for user {request.telegram_id}")
+        logger.info(f"AI response sent in {response_language}")
 
         return ChatResponse(response=ai_response)
 

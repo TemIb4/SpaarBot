@@ -1,17 +1,101 @@
-fastapi
-uvicorn[standard]
-aiogram
-sqlalchemy[asyncio]
-alembic
-pydantic
-pydantic-settings
-python-dotenv
-aiosqlite
-groq
-pillow
-pytesseract
-python-multipart
-aiofiles
-email_validator
-httpx
-pydantic[email]
+# ============================================================================
+# SPAARBOT REQUIREMENTS
+# Production-ready dependencies for all features
+# ============================================================================
+
+# Core Framework
+fastapi==0.121.1
+uvicorn[standard]==0.38.0
+python-multipart==0.0.20
+
+# Telegram Bot
+aiogram==3.22.0
+
+# Database
+sqlalchemy[asyncio]==2.0.44
+alembic==1.17.1
+aiosqlite==0.21.0
+# For PostgreSQL production: asyncpg==0.29.0
+
+# Configuration & Validation
+pydantic==2.12.4
+pydantic-settings==2.11.0
+pydantic-core== 2.41.5
+python-dotenv==1.2.1
+email-validator==2.3.0
+
+# AI & ML
+groq==0.33.0
+
+# Image Processing & OCR
+Pillow==12.0.0
+pytesseract==0.3.13
+
+# Data Processing
+pandas==2.3.3
+python-dateutil==2.9.0.post0
+
+# HTTP Client
+httpx==0.28.1
+requests==2.32.5
+
+# Celery & Background Tasks
+celery[redis]==5.6.0b1
+redis==7.0.1
+
+# File Handling
+aiofiles==25.1.0
+
+# Development & Testing (optional)
+pytest==9.0.0
+pytest-asyncio==1.2.0
+black
+flake8
+
+# Monitoring (optional, for production)
+# sentry-sdk==1.40.0
+# flower==2.0.1
+
+# ============================================================================
+# INSTALLATION INSTRUCTIONS
+# ============================================================================
+
+# 1. Create virtual environment
+#    python -m venv .venv
+#    source .venv/bin/activate  # Linux/Mac
+#    .venv\Scripts\activate     # Windows
+
+# 2. Install requirements
+#    pip install -r requirements.txt
+
+# 3. Install Tesseract OCR (system-level)
+#    Ubuntu: sudo apt install tesseract-ocr tesseract-ocr-deu
+#    Mac: brew install tesseract tesseract-lang
+#    Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+
+# 4. Install Redis (for Celery)
+#    Ubuntu: sudo apt install redis-server
+#    Mac: brew install redis
+#    Docker: docker run -d -p 6379:6379 redis:alpine
+
+# ============================================================================
+# VERSION NOTES
+# ============================================================================
+
+# - FastAPI 0.109.0: Latest stable with WebSocket support
+# - aiogram 3.3.0: Latest Telegram Bot API support
+# - SQLAlchemy 2.0: Async support, improved performance
+# - Celery 5.3: Redis support, scheduled tasks
+# - Pandas 2.1: CSV processing, data analysis
+# - Pytesseract: OCR receipt scanning
+# - Groq: AI-powered categorization and insights
+
+# ============================================================================
+# PRODUCTION RECOMMENDATIONS
+# ============================================================================
+
+# For production deployment, also install:
+# - gunicorn (WSGI server): pip install gunicorn
+# - PostgreSQL driver: pip install asyncpg psycopg2-binary
+# - Monitoring: pip install sentry-sdk prometheus-client
+# - SSL/TLS: Ensure certbot/Let's Encrypt configured
