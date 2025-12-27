@@ -1,53 +1,102 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { LanguageProvider } from './contexts/LanguageContext'
-import { ThemeProvider } from './contexts/ThemeContext'
-import { TierProvider } from './contexts/TierContext'
-import { UIModeProvider } from './contexts/UIModeContext'
+import { useEffect } from 'react'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
+
+// Layouts
 import Layout from './components/layout/Layout'
 
 // Pages
 import Dashboard from './pages/Dashboard'
-import Settings from './pages/Settings'
 import Stats from './pages/Stats'
-import Subscriptions from './pages/Subscriptions'
 import AIChat from './pages/AIChat'
-import Profile from './pages/Profile'
-import Upgrade from './pages/Upgrade'
-import Notifications from './pages/Notifications'
+import Subscriptions from './pages/Subscriptions'
 import ConnectedAccounts from './pages/ConnectedAccounts'
+import Profile from './pages/Profile'
+import Settings from './pages/Settings'
 import Security from './pages/Security'
-import UsageStats from './pages/UsageStats'
+import Notifications from './pages/Notifications'
 
 function App() {
-  console.log('🚀 SpaarBot App initialized')
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    // Проверяем наличие объекта Telegram
+    if (window.Telegram?.WebApp) {
+      // Используем 'as any', чтобы обойти строгую типизацию в vite-env.d.ts,
+      // так как там могут отсутствовать новые методы (requestFullscreen, BackButton и т.д.)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tg = window.Telegram.WebApp as any;
+
+      tg.ready();
+
+      try {
+        tg.expand();
+        // Проверка на существование метода перед вызовом (безопасность)
+        if (tg.requestFullscreen) {
+            tg.requestFullscreen();
+        }
+      } catch (e) {
+        console.log('Fullscreen/Expand error:', e);
+      }
+
+      // Настройка цветов (проверка на существование методов)
+      if (tg.setHeaderColor) tg.setHeaderColor('#000000');
+      if (tg.setBackgroundColor) tg.setBackgroundColor('#000000');
+
+      // Обработка нативной кнопки "Назад"
+      if (tg.BackButton) {
+        // Отвязываем старые обработчики во избежание дублирования
+        tg.BackButton.offClick();
+        tg.BackButton.onClick(() => {
+          navigate(-1);
+        });
+      }
+    }
+  }, [navigate]);
+
+  // Управление видимостью кнопки "Назад"
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tg = window.Telegram.WebApp as any;
+
+      if (tg.BackButton) {
+        if (location.pathname === '/' || location.pathname === '/app') {
+          tg.BackButton.hide();
+        } else {
+          tg.BackButton.show();
+        }
+      }
+    }
+  }, [location]);
 
   return (
-    <BrowserRouter basename="/app">
-      <ThemeProvider>
-        <LanguageProvider>
-          <TierProvider>
-            <UIModeProvider>
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="stats" element={<Stats />} />
-                  <Route path="subscriptions" element={<Subscriptions />} />
-                  <Route path="ai" element={<AIChat />} />
-                  <Route path="profile" element={<Profile />} />
-                  <Route path="upgrade" element={<Upgrade />} />
-                  <Route path="notifications" element={<Notifications />} />
-                  <Route path="/payment-methods" element={<ConnectedAccounts />} />
-                  <Route path="security" element={<Security />} />
-                  <Route path="usage-stats" element={<UsageStats />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
-            </UIModeProvider>
-          </TierProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Оборачиваем все в наш новый умный Layout */}
+        <Route element={<Layout />}>
+          {/* Главная */}
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/app" element={<Dashboard />} />
+
+          {/* Основные разделы */}
+          <Route path="/stats" element={<Stats />} />
+          <Route path="/ai-chat" element={<AIChat />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/accounts" element={<ConnectedAccounts />} />
+          <Route path="/profile" element={<Profile />} />
+
+          {/* Второстепенные страницы */}
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/security" element={<Security />} />
+          <Route path="/notifications" element={<Notifications />} />
+
+          {/* Страница добавления (пока редирект на дашборд или отдельная страница) */}
+          <Route path="/add" element={<Dashboard />} />
+        </Route>
+      </Routes>
+    </AnimatePresence>
   )
 }
 

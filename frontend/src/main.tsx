@@ -1,99 +1,54 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-// Error boundary для отлова ошибок
-interface ErrorBoundaryProps {
-  children: React.ReactNode
-}
+// Импортируем провайдеры (убедись, что эти файлы существуют!)
+import { ThemeProvider } from './contexts/ThemeContext'
+import { LanguageProvider } from './contexts/LanguageContext'
 
-interface ErrorBoundaryState {
-  hasError: boolean
-  error: Error | null
-}
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props)
-    this.state = { hasError: false, error: null }
+// Простой компонент для отлова ошибок (Error Boundary)
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: string }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: '' };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error: error.toString() };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('React Error:', error, errorInfo)
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("React Crash:", error, errorInfo);
   }
 
-  render(): React.ReactNode {
+  render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          background: '#0a0a0a',
-          color: '#fff',
-          padding: '20px',
-          textAlign: 'center',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        }}>
-          <div>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚠️</div>
-            <h1 style={{ fontSize: '24px', marginBottom: '10px' }}>Fehler beim Laden</h1>
-            <p style={{ color: '#888', marginBottom: '20px' }}>
-              {this.state.error?.message || 'Unbekannter Fehler'}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '12px 24px',
-                background: '#6366f1',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Neu laden
-            </button>
-          </div>
+        <div style={{ padding: 20, background: '#000', color: 'red', minHeight: '100vh' }}>
+          <h1>Critical Error</h1>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {this.state.error}
+          </pre>
         </div>
-      )
+      );
     }
-
-    return this.props.children
+    return this.props.children;
   }
 }
 
-// Initialize app
-const root = document.getElementById('root')
-
-if (!root) {
-  throw new Error('Root element not found')
-}
-
-// Log environment
-console.log('🚀 SpaarBot starting...', {
-  mode: import.meta.env.MODE,
-  isTelegram: !!(window as any).Telegram?.WebApp,
-  userAgent: navigator.userAgent
-})
-
-// Render app
-ReactDOM.createRoot(root).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      {/* Важно: basename="/app" указывает роутеру, что мы находимся в папке /app */}
+      <BrowserRouter basename="/app">
+        <LanguageProvider>
+          <ThemeProvider>
+             <App />
+          </ThemeProvider>
+        </LanguageProvider>
+      </BrowserRouter>
     </ErrorBoundary>
-  </React.StrictMode>
+  </React.StrictMode>,
 )
-
-// Log when mounted
-setTimeout(() => {
-  console.log('✅ App mounted successfully')
-}, 100)
