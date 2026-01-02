@@ -477,5 +477,26 @@
     "imported": "Importiert",
     "skipped": "Übersprungen",
     "errors": "Fehler"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "manage_accounts": "Verbundene Konten verwalten",
+    "no_accounts": "Keine Konten verbunden",
+    "connect_first": "Verbinden Sie Ihr erstes Konto",
+    "connect_new": "Neues Konto verbinden",
+    "connect_account": "Konto verbinden",
+    "choose_provider": "Wählen Sie einen Anbieter",
+    "default": "Standard",
+    "account_email": "Konto E-Mail",
+    "connected": "Verbunden",
+    "sync_success": "Synchronisation erfolgreich!",
+    "sync_error": "Synchronisation fehlgeschlagen",
+    "error_loading": "Fehler beim Laden der Konten",
+    "connect_error": "Verbindung fehlgeschlagen",
+    "paypal_desc": "Verbinden Sie Ihr PayPal-Konto",
+    "bank_desc": "Verbinden Sie Ihre Bank",
+    "coming_soon": "Bald verfügbar",
+    "security_title": "Bank-Sicherheit",
+    "security_desc": "Ihre Daten sind Ende-zu-Ende verschlüsselt. Wir speichern niemals Ihre Bankdaten."
   }
 }

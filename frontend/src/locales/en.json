@@ -477,5 +477,26 @@
     "imported": "Imported",
     "skipped": "Skipped",
     "errors": "Errors"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "manage_accounts": "Manage connected accounts",
+    "no_accounts": "No accounts connected",
+    "connect_first": "Connect your first account",
+    "connect_new": "Connect New Account",
+    "connect_account": "Connect Account",
+    "choose_provider": "Choose a provider",
+    "default": "Default",
+    "account_email": "Account Email",
+    "connected": "Connected",
+    "sync_success": "Sync successful!",
+    "sync_error": "Sync failed",
+    "error_loading": "Error loading accounts",
+    "connect_error": "Connection failed",
+    "paypal_desc": "Connect your PayPal account",
+    "bank_desc": "Connect your bank",
+    "coming_soon": "Coming Soon",
+    "security_title": "Bank-grade Security",
+    "security_desc": "Your data is encrypted end-to-end. We never store your banking credentials."
   }
 }

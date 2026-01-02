@@ -477,5 +477,26 @@
     "imported": "Импортировано",
     "skipped": "Пропущено",
     "errors": "Ошибки"
+  },
+  "wallet": {
+    "title": "Кошелек",
+    "manage_accounts": "Управление счетами",
+    "no_accounts": "Нет подключенных счетов",
+    "connect_first": "Подключите ваш первый счет",
+    "connect_new": "Подключить новый счет",
+    "connect_account": "Подключить счет",
+    "choose_provider": "Выберите провайдера",
+    "default": "По умолчанию",
+    "account_email": "Email счета",
+    "connected": "Подключено",
+    "sync_success": "Синхронизация успешна!",
+    "sync_error": "Ошибка синхронизации",
+    "error_loading": "Ошибка загрузки счетов",
+    "connect_error": "Ошибка подключения",
+    "paypal_desc": "Подключите ваш PayPal аккаунт",
+    "bank_desc": "Подключите ваш банк",
+    "coming_soon": "Скоро",
+    "security_title": "Банковская безопасность",
+    "security_desc": "Ваши данные зашифрованы end-to-end. Мы никогда не храним учетные данные банка."
   }
 }
