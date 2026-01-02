@@ -5,22 +5,18 @@ Anomaly detection and notification management
 import logging
 from datetime import datetime, timedelta, date
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, and_
 from aiogram import Bot
 
 from app.core.celery_app import celery_app
 from app.core.config import get_settings
 from app.db.models import User, Notification
+from app.db.database import async_session_maker
 from app.services.ai_insights_service import ai_insights_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-
-# Create async engine for tasks
-engine = create_async_engine(settings.DATABASE_URL, echo=False)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 # Initialize bot
 bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
@@ -35,7 +31,7 @@ def detect_anomalies_all_users():
     import asyncio
 
     async def _detect_anomalies():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Get all active users (with transactions in last month)
                 one_month_ago = date.today() - timedelta(days=30)
@@ -116,7 +112,7 @@ def cleanup_old_notifications():
     import asyncio
 
     async def _cleanup():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Delete read notifications older than 30 days
                 thirty_days_ago = datetime.now() - timedelta(days=30)
@@ -152,7 +148,7 @@ def send_budget_alerts():
     import asyncio
 
     async def _send_alerts():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Get premium users
                 result = await db.execute(
@@ -167,20 +163,16 @@ def send_budget_alerts():
 
                 for user in users:
                     try:
-                        # Check budget status
-                        # TODO: Implement budget checking logic
-                        # For now, this is a placeholder
+                        # TODO: Implement budget checking logic when Budget model is created
+                        # Required steps:
+                        # 1. Create Budget model in models.py with fields: telegram_id, category_id, limit, period
+                        # 2. Create CRUD functions: get_user_budgets(), get_current_spending_by_category()
+                        # 3. Check if current spending exceeds budget limit (e.g., 90% of limit)
+                        # 4. Send alert via Telegram bot if budget exceeded
+                        # 5. Create notification in database
 
-                        # Example:
-                        # budgets = await get_user_budgets(user.telegram_id, db)
-                        # current_spending = await get_current_month_spending(user.telegram_id, db)
-
-                        # for budget in budgets:
-                        #     if current_spending[budget.category] > budget.limit * 0.9:
-                        #         # Send alert
-                        #         pass
-
-                        pass
+                        # Placeholder - skip for now as Budget table doesn't exist yet
+                        continue
 
                     except Exception as e:
                         error_count += 1
@@ -205,7 +197,7 @@ def send_daily_summary(telegram_id: int):
     import asyncio
 
     async def _send_summary():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 from app.db.models import Transaction
 

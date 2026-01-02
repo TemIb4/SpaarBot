@@ -42,7 +42,6 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
         month: 'short',
       }).format(date)
     } catch (error) {
-      console.error('Date parsing error:', error, dateString)
       return new Date().toLocaleDateString('de-DE', {
         day: '2-digit',
         month: 'short',

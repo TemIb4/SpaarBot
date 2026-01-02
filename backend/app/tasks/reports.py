@@ -6,22 +6,18 @@ import logging
 from datetime import datetime, timedelta, date
 from typing import List, Dict
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from aiogram import Bot
 
 from app.core.celery_app import celery_app
 from app.core.config import get_settings
 from app.db.models import User, Transaction, Category
+from app.db.database import async_session_maker
 from app.services.ai_insights_service import ai_insights_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-
-# Create async engine for tasks
-engine = create_async_engine(settings.DATABASE_URL, echo=False)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 # Initialize bot
 bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
@@ -36,7 +32,7 @@ def send_weekly_reports():
     import asyncio
 
     async def _send_reports():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Get all users who have transactions in the last week
                 one_week_ago = date.today() - timedelta(days=7)
@@ -95,7 +91,7 @@ def generate_monthly_insights_all_users():
     import asyncio
 
     async def _generate_insights():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Get all premium users
                 result = await db.execute(
@@ -153,7 +149,7 @@ def send_custom_report(telegram_id: int, report_type: str = 'weekly'):
     import asyncio
 
     async def _send_report():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 if report_type == 'weekly':
                     report = await generate_weekly_report(telegram_id, db)

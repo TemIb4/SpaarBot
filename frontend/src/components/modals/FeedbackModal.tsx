@@ -13,7 +13,6 @@ export const FeedbackModal = ({ onClose }: FeedbackModalProps) => {
   const [comment, setComment] = useState('')
 
   const handleSubmit = () => {
-    console.log('Feedback submitted:', { rating, comment })
     onClose()
   }
 

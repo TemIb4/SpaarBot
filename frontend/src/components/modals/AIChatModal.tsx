@@ -58,7 +58,6 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
 
       setMessages(prev => [...prev, aiMessage])
     } catch (error) {
-      console.error('AI Chat error:', error)
       const errorMessage: Message = {
         role: 'assistant',
         content: '❌ Fehler beim Abrufen der Antwort. Bitte versuche es erneut.',

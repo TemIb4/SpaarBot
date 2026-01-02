@@ -38,7 +38,6 @@ export const useUIStore = create<UIStore>()(
       setIsAddingTransaction: (value) => set({ isAddingTransaction: value }),
       animatedBackground: true, // ВСЕГДА ВКЛЮЧЕНО ПО УМОЛЧАНИЮ!
       setAnimatedBackground: (value) => {
-        console.log('🎨 AnimatedBackground toggled:', value)
         set({ animatedBackground: value })
       },
     }),

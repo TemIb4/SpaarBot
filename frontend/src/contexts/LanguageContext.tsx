@@ -27,7 +27,6 @@ function getNestedTranslation(obj: TranslationObject, path: string): string {
       result = result[key]
     } else {
       // Return the path itself if translation not found (fallback)
-      console.warn(`Translation key not found: ${path}`)
       return path
     }
   }
@@ -55,14 +54,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const setLanguage = (lang: string) => {
-    console.log('🌐 Setting language to:', lang)
     setLanguageState(lang)
     localStorage.setItem('spaarbot-language', lang)
   }
 
   useEffect(() => {
     document.documentElement.lang = language
-    console.log('🌐 Language applied:', language)
   }, [language])
 
   return (

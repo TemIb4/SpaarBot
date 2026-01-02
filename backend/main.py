@@ -163,15 +163,15 @@ logger.info("  ✅ Users router registered")
 app.include_router(subscriptions.router, prefix=f"{settings.API_V1_PREFIX}/subscriptions", tags=["subscriptions"])
 logger.info("  ✅ Subscriptions router registered")
 
-app.include_router(paypal_oauth.router, prefix="/api/v1/paypal", tags=["PayPal"])
-app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["Accounts"])
-app.include_router(paypal_sync.router, prefix="/api/v1/paypal", tags=["PayPal Sync"])
+app.include_router(paypal_oauth.router, prefix=f"{settings.API_V1_PREFIX}/paypal", tags=["paypal"])
+logger.info("  ✅ PayPal OAuth router registered")
 
-app.include_router(
-    paypal_oauth.router,
-    prefix=f"{settings.API_V1_PREFIX}/paypal",
-    tags=["paypal"]
-)
+app.include_router(accounts.router, prefix=f"{settings.API_V1_PREFIX}/accounts", tags=["accounts"])
+logger.info("  ✅ Accounts router registered")
+
+app.include_router(paypal_sync.router, prefix=f"{settings.API_V1_PREFIX}/paypal/sync", tags=["paypal-sync"])
+logger.info("  ✅ PayPal Sync router registered")
+
 # ============================================
 # ✅ PREMIUM FEATURES ROUTERS
 # ============================================

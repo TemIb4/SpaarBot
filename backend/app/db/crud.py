@@ -7,7 +7,6 @@ from typing import List, Optional
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy.orm import Session
 
 from app.db.models import User, Category, Transaction
 from app.schemas.user import UserCreate
@@ -303,17 +302,33 @@ async def get_categories(
 
 async def get_user_accounts(db: AsyncSession, telegram_id: int) -> List:
     """
-    Get user accounts/wallets (placeholder for future feature)
+    Get user's connected accounts (banks, PayPal, etc.)
 
     Args:
         db: Database session
         telegram_id: User telegram ID
 
     Returns:
-        Empty list (feature not implemented yet)
+        List of connected accounts with type, email, and status
     """
-    # TODO: Implement when accounts/wallets feature is added
-    return []
+    user = await get_user_by_telegram_id(db, telegram_id)
+    if not user:
+        return []
+
+    accounts = []
+
+    # Check for PayPal account
+    if user.paypal_id:
+        accounts.append({
+            "id": f"paypal_{telegram_id}",
+            "type": "paypal",
+            "email": user.paypal_id,
+            "name": "PayPal",
+            "is_default": True,
+            "connected_at": user.updated_at.isoformat() if user.updated_at else None
+        })
+
+    return accounts
 
 
 # ✅ ДОБАВЬТЕ ЭТИ ФУНКЦИИ:
@@ -577,3 +592,45 @@ async def get_user_transactions(
 
     result = await db.execute(query)
     return list(result.scalars().all())
+
+# Feedback
+async def create_feedback(
+        db: AsyncSession,
+        telegram_id: int,
+        name: str,
+        email: str,
+        message: str,
+        rating: int = None,
+        category: str = 'general'
+):
+    """
+    Create new feedback entry in database
+
+    Args:
+        db: Database session
+        telegram_id: Telegram ID пользователя
+        name: Name of the user
+        email: Email of the user
+        message: Feedback message
+        rating: Rating from 1-5 (optional)
+        category: Category of feedback (bug, feature, general)
+
+    Returns:
+        Created Feedback object
+    """
+    from app.db.models import Feedback
+
+    feedback = Feedback(
+        telegram_id=telegram_id,
+        name=name,
+        email=email,
+        message=message,
+        rating=rating,
+        category=category
+    )
+
+    db.add(feedback)
+    await db.commit()
+    await db.refresh(feedback)
+
+    return feedback

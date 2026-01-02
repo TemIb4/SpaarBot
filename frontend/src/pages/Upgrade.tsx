@@ -56,11 +56,9 @@ const Upgrade: React.FC = () => {
     setLoading(true)
     try {
       const plan = plans[selectedPlan]
-      console.log('Upgrading to:', plan)
       await new Promise(resolve => setTimeout(resolve, 2000))
       alert(`Redirecting to PayPal for ${plan.price}€/${plan.period}`)
     } catch (error) {
-      console.error('Upgrade error:', error)
       alert('Ошибка при обновлении. Попробуйте позже.')
     } finally {
       setLoading(false)

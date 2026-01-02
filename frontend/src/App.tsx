@@ -29,10 +29,11 @@ function App() {
 
       try {
         tg.expand();
-        // @ts-ignore
-        if (tg.requestFullscreen) tg.requestFullscreen();
+        if (tg.requestFullscreen) {
+          tg.requestFullscreen();
+        }
       } catch (e) {
-        console.log('TG Init Warning:', e);
+        // Ignore fullscreen errors
       }
 
       // Настройка кнопки "Назад" в хедере Telegram

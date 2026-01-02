@@ -36,14 +36,12 @@ export const useUserStore = create<UserState>()(
           isPremium,
           isLoading: false
         })
-        console.log('👤 User loaded:', user?.first_name, 'ID:', user?.telegram_id, 'Premium:', isPremium)
       },
 
       setLoading: (isLoading) => set({ isLoading }),
 
       setError: (error) => {
         set({ error, isLoading: false })
-        console.error('❌ User error:', error)
       },
 
       clearUser: () => {
@@ -59,13 +57,10 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true, error: null })
 
         try {
-          console.log('🔄 Fetching or creating user:', telegram_id)
-
           // Пытаемся получить существующего пользователя
           try {
             const response = await api.get(`/api/v1/users/${telegram_id}`)
             if (response.data) {
-              console.log('✅ User found in database')
               get().setUser(response.data)
               return
             }
@@ -73,7 +68,6 @@ export const useUserStore = create<UserState>()(
             if (error.response?.status !== 404) {
               throw error
             }
-            console.log('📝 User not found, creating new user')
           }
 
           // Если пользователь не найден - создаем нового
@@ -88,7 +82,6 @@ export const useUserStore = create<UserState>()(
           const createResponse = await api.post('/api/v1/users', newUserData)
 
           if (createResponse.data) {
-            console.log('✅ User created successfully')
             get().setUser(createResponse.data)
 
             // Устанавливаем язык из Telegram
@@ -98,13 +91,11 @@ export const useUserStore = create<UserState>()(
               if (supportedLangs.includes(userLang)) {
                 localStorage.setItem('spaarbot-language', userLang)
                 document.documentElement.lang = userLang
-                console.log('🌍 Language auto-set to:', userLang)
               }
             }
           }
 
         } catch (error: any) {
-          console.error('❌ Failed to fetch/create user:', error.message)
           set({
             error: 'Fehler beim Laden des Benutzers. Bitte versuche es später erneut.',
             isLoading: false
@@ -122,8 +113,6 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true, error: null })
 
         try {
-          console.log('💾 Updating user:', data)
-
           const response = await api.patch(
             `/api/v1/users/${currentUser.telegram_id}`,
             data
@@ -131,18 +120,14 @@ export const useUserStore = create<UserState>()(
 
           if (response.data) {
             get().setUser(response.data)
-            console.log('✅ User updated successfully')
           }
 
         } catch (error: any) {
-          console.error('❌ Failed to update user:', error.message)
           set({ error: 'Fehler beim Aktualisieren' })
         }
       },
 
       logout: () => {
-        console.log('👋 Logging out')
-
         localStorage.removeItem('spaarbot-user-storage')
         localStorage.removeItem('spaarbot-language')
         localStorage.removeItem('spaarbot-theme')
@@ -157,13 +142,10 @@ export const useUserStore = create<UserState>()(
       },
 
       initialize: async () => {
-        console.log('🚀 Initializing user store')
-
         // Проверяем сохраненного пользователя
         const savedUser = get().user
 
         if (savedUser?.telegram_id) {
-          console.log('✅ Found saved user:', savedUser.first_name)
           // Обновляем данные с сервера в фоне
           get().fetchOrCreateUser(savedUser.telegram_id, savedUser)
           return
@@ -173,7 +155,6 @@ export const useUserStore = create<UserState>()(
         const tg = (window as any).Telegram?.WebApp
 
         if (!tg?.initDataUnsafe?.user) {
-          console.error('❌ No Telegram user data available')
           set({
             error: 'Telegram Benutzerdaten nicht verfügbar. Bitte öffne die App über Telegram.',
             isLoading: false
@@ -182,11 +163,6 @@ export const useUserStore = create<UserState>()(
         }
 
         const telegramUser = tg.initDataUnsafe.user
-        console.log('✅ Telegram user detected:', {
-          id: telegramUser.id,
-          first_name: telegramUser.first_name,
-          username: telegramUser.username,
-        })
 
         // Загружаем или создаем пользователя
         await get().fetchOrCreateUser(telegramUser.id, telegramUser)

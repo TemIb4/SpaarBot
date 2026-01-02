@@ -54,7 +54,6 @@ export const useTransactionStore = create<TransactionStore>((set) => ({
       }
 
     } catch (error: any) {
-      console.error('Error fetching transactions:', error)
       set({
         error: error.message || 'Failed to fetch transactions',
         loading: false,
@@ -77,7 +76,6 @@ export const useTransactionStore = create<TransactionStore>((set) => ({
       }
 
     } catch (error: any) {
-      console.error('Error adding transaction:', error)
       set({
         error: error.message || 'Failed to add transaction',
         loading: false
@@ -102,7 +100,6 @@ export const useTransactionStore = create<TransactionStore>((set) => ({
       }))
 
     } catch (error: any) {
-      console.error('Error deleting transaction:', error)
       set({
         error: error.message || 'Failed to delete transaction',
         loading: false

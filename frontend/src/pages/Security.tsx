@@ -31,7 +31,6 @@ const Security: React.FC = () => {
       alert(t('security.password_changed'))
       setPasswordData({ current: '', new: '', confirm: '' })
     } catch (error) {
-      console.error('Error changing password:', error)
       alert(t('security.error_changing_password'))
     } finally {
       setLoading(false)
@@ -47,7 +46,6 @@ const Security: React.FC = () => {
         ? t('security.two_factor_disabled')
         : t('security.two_factor_activated'))
     } catch (error) {
-      console.error('Error toggling 2FA:', error)
       alert(t('security.error_toggling_2fa'))
     } finally {
       setLoading(false)
@@ -60,7 +58,6 @@ const Security: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1500))
       setBiometricEnabled(!biometricEnabled)
     } catch (error) {
-      console.error('Error toggling biometric:', error)
       alert(t('security.error_toggling_biometric'))
     } finally {
       setLoading(false)

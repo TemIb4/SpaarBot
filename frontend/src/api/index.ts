@@ -31,7 +31,6 @@ const api = axios.create({
 // Error handler
 const handleApiError = (error: AxiosError<ApiError>): never => {
   const message = error.response?.data?.detail || error.message || 'Unknown error'
-  console.error('API Error:', message)
   throw new Error(message)
 }
 
