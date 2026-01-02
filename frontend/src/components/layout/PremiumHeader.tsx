@@ -20,274 +20,117 @@ export const PremiumHeader = () => {
   const [unreadNotifications] = useState(3)
 
   const menuItems = [
-    {
-      icon: Sparkles,
-      label: isPremium ? t('menu.premium_active') : t('menu.upgrade'),
-      action: () => navigate('/upgrade'),
-      highlight: !isPremium,
-      badge: !isPremium ? t('menu.new_badge') : null
-    },
-    {
-      icon: User,
-      label: t('menu.profile'),
-      action: () => navigate('/profile')
-    },
-    {
-      icon: Settings,
-      label: t('menu.settings'),
-      action: () => navigate('/settings')
-    },
-    {
-      icon: Bell,
-      label: t('menu.notifications'),
-      action: () => navigate('/notifications'),
-      badge: unreadNotifications > 0 ? unreadNotifications : null
-    },
-    {
-      icon: CreditCard,
-      label: t('menu.payment_methods'),
-      action: () => navigate('/payment-methods')
-    },
-    {
-      icon: Shield,
-      label: t('menu.security'),
-      action: () => navigate('/security')
-    },
-    {
-      icon: TrendingUp,
-      label: t('menu.usage_stats'),
-      action: () => navigate('/usage-stats')
-    },
-    {
-      icon: LogOut,
-      label: t('menu.logout'),
-      action: () => {
-        if (confirm(t('menu.logout_confirm'))) {
-          logout()
-          navigate('/')
-        }
-      },
-      danger: true,
-      separator: true
-    }
+    { icon: Sparkles, label: isPremium ? t('menu.premium_active') : t('menu.upgrade'), action: () => navigate('/upgrade'), highlight: !isPremium, badge: !isPremium ? 'NEU' : null },
+    { icon: User, label: t('menu.profile'), action: () => navigate('/profile') },
+    { icon: Settings, label: t('menu.settings'), action: () => navigate('/settings') },
+    { icon: Bell, label: t('menu.notifications'), action: () => navigate('/notifications'), badge: unreadNotifications > 0 ? unreadNotifications : null },
+    { icon: CreditCard, label: t('menu.payment_methods'), action: () => navigate('/payment-methods') },
+    { icon: Shield, label: t('menu.security'), action: () => navigate('/security') },
+    { icon: TrendingUp, label: t('menu.usage_stats'), action: () => navigate('/usage-stats') },
+    { icon: LogOut, label: t('menu.logout'), action: () => { if (window.confirm(t('menu.logout_confirm'))) { logout(); navigate('/'); } }, danger: true, separator: true }
   ]
 
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-50 px-4 py-3"
-      style={{
-        background: premiumDesign.glass.dark.background,
-        backdropFilter: premiumDesign.glass.dark.backdropFilter,
-        borderBottom: premiumDesign.glass.dark.border,
-      }}
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <motion.div
-          className="flex items-center space-x-3 cursor-pointer"
-          whileHover={{ scale: 1.02 }}
-          onClick={() => navigate('/')}
+    <>
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed top-0 left-0 right-0 z-[60] flex flex-col justify-end shadow-2xl"
+        style={{
+          height: 'var(--header-total-height)',
+          background: 'rgba(8, 8, 8, 0.90)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          paddingTop: 'var(--sat)',
+        }}
+      >
+        <div
+          className="w-full h-[var(--header-content-height)] flex items-center justify-between pl-4"
+          // Жесткий отступ справа для кнопок Telegram
+          style={{ paddingRight: 'var(--telegram-right-offset)' }}
         >
+          {/* LEFT SIDE: Logo */}
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl"
-            style={{
-              background: premiumDesign.colors.gradients.primary,
-              boxShadow: premiumDesign.effects.shadow.glow,
-            }}
+            className="flex items-center space-x-3 cursor-pointer select-none active:opacity-70 transition-opacity"
+            onClick={() => navigate('/')}
           >
-            💎
-          </div>
-          <div>
-            <h1
-              className="text-xl font-bold"
-              style={{
-                fontFamily: premiumDesign.typography.fontFamily.display,
-                background: premiumDesign.colors.gradients.primary,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-indigo-500/20 border border-white/10"
+              style={{ background: premiumDesign.colors.gradients.primary }}
             >
+              💎
+            </div>
+            <h1 className="text-lg font-bold tracking-tight text-white font-display">
               SpaarBot
             </h1>
-            {isPremium && (
-              <span className="text-xs text-yellow-400 font-semibold">
-                ✨ Premium
-              </span>
-            )}
           </div>
-        </motion.div>
 
-        {/* Right Section */}
-        <div className="flex items-center space-x-3">
-          {/* Calendar Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="relative p-2.5 rounded-xl transition-all"
-            style={{
-              background: showCalendar
-                ? premiumDesign.colors.primary[500]
-                : premiumDesign.glass.light.background,
-              border: premiumDesign.glass.light.border,
-              color: showCalendar ? '#fff' : premiumDesign.colors.neutral[300],
-            }}
-          >
-            <Calendar size={20} />
-            <span
-              className="absolute top-1 right-1 w-2 h-2 rounded-full animate-pulse"
-              style={{ background: premiumDesign.colors.warning[500] }}
-            />
-          </motion.button>
-
-          {/* User Menu */}
-          <div className="relative">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center space-x-2 px-3 py-2 rounded-xl transition-all"
-              style={{
-                background: showUserMenu
-                  ? premiumDesign.colors.primary[500]
-                  : premiumDesign.glass.light.background,
-                border: premiumDesign.glass.light.border,
-              }}
+          {/* RIGHT SIDE: Actions */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="p-2.5 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all"
             >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{
-                  background: premiumDesign.colors.gradients.accent,
-                  color: '#fff',
-                }}
+              <Calendar size={22} />
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center p-1 pl-2 rounded-xl hover:bg-white/5 active:scale-95 transition-all gap-2"
               >
-                {user?.first_name?.[0] || 'U'}
-              </div>
-              <span className="text-sm font-medium hidden sm:block text-white">
-                {user?.first_name || 'User'}
-              </span>
-              <ChevronDown
-                size={16}
-                className="text-neutral-400 transition-transform"
-                style={{
-                  transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)',
-                }}
-              />
-            </motion.button>
-
-            {/* Dropdown Menu */}
-            <AnimatePresence>
-              {showUserMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-72 rounded-2xl overflow-hidden"
-                  style={{
-                    background: premiumDesign.colors.neutral[900],
-                    border: `1px solid ${premiumDesign.colors.neutral[800]}`,
-                    boxShadow: premiumDesign.effects.shadow['2xl'],
-                  }}
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border border-white/10 shadow-sm"
+                  style={{ background: premiumDesign.colors.gradients.accent, color: '#fff' }}
                 >
-                  {/* User Info Header */}
-                  <div
-                    className="p-4 border-b"
-                    style={{
-                      borderColor: premiumDesign.colors.neutral[800],
-                      background: premiumDesign.glass.dark.background,
-                    }}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold"
-                        style={{
-                          background: premiumDesign.colors.gradients.primary,
-                        }}
-                      >
-                        {user?.first_name?.[0] || 'U'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-white truncate">
-                          {user?.first_name || 'User'}
-                        </p>
-                        <p className="text-sm text-neutral-400 truncate">
-                          @{user?.username || 'username'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  {user?.first_name?.[0] || 'U'}
+                </div>
+                <ChevronDown size={14} className={`text-neutral-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+              </button>
 
-                  {/* Menu Items */}
-                  <div className="py-2">
-                    {menuItems.map((item, index) => (
-                      <div key={index}>
-                        {item.separator && (
-                          <div
-                            className="my-2 h-px"
-                            style={{ background: premiumDesign.colors.neutral[800] }}
-                          />
-                        )}
-                        <motion.button
-                          whileHover={{ x: 4 }}
-                          onClick={() => {
-                            item.action()
-                            setShowUserMenu(false)
-                          }}
-                          className="w-full px-4 py-3 flex items-center justify-between transition-colors"
-                          style={{
-                            color: item.danger
-                              ? premiumDesign.colors.danger[400]
-                              : premiumDesign.colors.neutral[300],
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = premiumDesign.glass.light.background
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent'
-                          }}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <item.icon size={18} />
-                            <span className="text-sm font-medium">
-                              {item.label}
-                            </span>
-                          </div>
-                          {item.badge && (
-                            <span
-                              className="px-2 py-0.5 text-xs font-bold rounded-full"
-                              style={{
-                                background: item.highlight
-                                  ? premiumDesign.colors.gradients.premium
-                                  : premiumDesign.colors.primary[500],
-                                color: '#fff',
-                              }}
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {showUserMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-50 origin-top-right bg-[#151515] border border-neutral-800 shadow-2xl"
+                    >
+                      <div className="p-2 space-y-1">
+                        {menuItems.map((item, index) => (
+                          <div key={index}>
+                            {item.separator && <div className="my-1.5 mx-2 h-px bg-white/10" />}
+                            <button
+                              onClick={() => { item.action(); setShowUserMenu(false); }}
+                              className={`w-full px-3 py-3 flex items-center justify-between rounded-xl transition-all active:scale-[0.98] ${
+                                item.highlight ? 'bg-indigo-600/10' : 'hover:bg-white/5'
+                              }`}
                             >
-                              {item.badge}
-                            </span>
-                          )}
-                        </motion.button>
+                              <div className="flex items-center space-x-3">
+                                <item.icon size={18} className={item.danger ? "text-red-400" : item.highlight ? "text-indigo-400" : "text-neutral-400"} />
+                                <span className={`text-sm font-medium ${item.danger ? "text-red-400" : "text-neutral-200"}`}>{item.label}</span>
+                              </div>
+                              {item.badge && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500 text-white">{item.badge}</span>}
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
-      </div>
+      </motion.header>
 
-      {/* Calendar Popup */}
       <AnimatePresence>
-        {showCalendar && (
-          <CalendarPopup onDateSelect={(date) => {
-            console.log('Selected date:', date)
-            setShowCalendar(false)
-          }} />
-        )}
+        {showCalendar && <CalendarPopup onDateSelect={() => setShowCalendar(false)} />}
       </AnimatePresence>
-    </motion.header>
+    </>
   )
 }

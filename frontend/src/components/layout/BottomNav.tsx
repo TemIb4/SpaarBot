@@ -10,43 +10,53 @@ export const BottomNav = () => {
   const { t } = useLanguage()
 
   const navItems = [
-    { path: '/app', icon: Home, label: t('home') },
-    { path: '/stats', icon: PieChart, label: t('stats') },
-    { path: '/ai-chat', icon: Sparkles, label: t('ai'), highlight: true }, // Центральная кнопка
-    { path: '/subscriptions', icon: Calendar, label: t('subscriptions') },
-    { path: '/accounts', icon: Wallet, label: t('wallet') }
+    { path: '/', icon: Home, label: t('nav.home') },
+    { path: '/stats', icon: PieChart, label: t('nav.stats') },
+    { path: '/ai-chat', icon: Sparkles, label: t('nav.ai'), highlight: true },
+    { path: '/subscriptions', icon: Calendar, label: t('nav.subscriptions') },
+    { path: '/accounts', icon: Wallet, label: 'Wallet' }
   ]
 
   return (
-    <div className="fixed bottom-6 left-4 right-4 z-50 flex justify-center">
+    // Фиксированная позиция, z-[60] чтобы быть выше всех
+    <div
+      className="fixed left-0 right-0 z-[60] flex justify-center px-4 pointer-events-none"
+      style={{
+        // Отступ снизу: 1.5rem (24px) + Safe Area Bottom
+        bottom: 'calc(1.5rem + var(--sab))',
+      }}
+    >
       <motion.nav
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="flex items-center justify-between px-2 py-2 rounded-[24px] shadow-2xl backdrop-blur-xl w-full max-w-md"
+        className="pointer-events-auto flex items-center justify-between px-3 py-2.5 rounded-[24px] w-full max-w-sm backdrop-blur-xl"
         style={{
-          background: 'rgba(15, 15, 15, 0.85)', // Глубокий черный
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'
+          // ИСПОЛЬЗУЕМ premiumDesign
+          background: 'rgba(18, 18, 18, 0.95)', // Почти черный, полупрозрачный
+          border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+          boxShadow: premiumDesign.effects.shadow['2xl']
         }}
       >
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path
+          const isActive = location.pathname === item.path || (item.path === '/' && (location.pathname === '/app' || location.pathname === '/index.html'))
           const Icon = item.icon
 
-          // Особый стиль для центральной кнопки (AI)
           if (item.highlight) {
             return (
               <motion.button
                 key={item.path}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => navigate(item.path)}
-                className="relative -top-5 mx-2 w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/30 border border-white/10"
+                className="relative -top-6 mx-1 w-14 h-14 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden border border-white/20"
                 style={{
+                  // ИСПОЛЬЗУЕМ premiumDesign для градиента и тени
                   background: premiumDesign.colors.gradients.primary,
+                  boxShadow: premiumDesign.effects.shadow.glow
                 }}
               >
-                <Icon size={24} className="text-white fill-white/20" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50" />
+                <Icon size={24} className="text-white relative z-10" />
               </motion.button>
             )
           }
@@ -54,32 +64,32 @@ export const BottomNav = () => {
           return (
             <motion.button
               key={item.path}
+              whileTap={{ scale: 0.9 }}
               onClick={() => navigate(item.path)}
-              className="relative flex flex-col items-center justify-center w-full h-full py-2"
+              className="relative flex flex-col items-center justify-center w-full h-full py-1 cursor-pointer group"
             >
-              {isActive && (
-                <motion.div
-                  layoutId="nav-glow"
-                  className="absolute inset-0 rounded-xl bg-white/5"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-              )}
-
-              <div className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${isActive ? '-translate-y-1' : ''}`}>
+              <div
+                className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${isActive ? '-translate-y-1.5' : ''}`}
+                style={{
+                  // При ховере используем прозрачный белый из системы дизайна
+                  backgroundColor: isActive ? 'transparent' : 'transparent'
+                }}
+              >
                 <Icon
-                  size={22}
-                  className={`transition-colors duration-300 ${
-                    isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-neutral-500'
-                  }`}
+                  size={24}
+                  className={`transition-colors duration-300 ${isActive ? 'text-white drop-shadow-md' : 'text-neutral-500'}`}
                   strokeWidth={isActive ? 2.5 : 2}
+                  style={{
+                    color: isActive ? '#fff' : premiumDesign.colors.neutral[500]
+                  }}
                 />
               </div>
 
               {isActive && (
                  <motion.span
-                   initial={{ opacity: 0, scale: 0.5 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   className="text-[10px] font-medium text-white absolute bottom-1"
+                   initial={{ opacity: 0, scale: 0.5, y: 5 }}
+                   animate={{ opacity: 1, scale: 1, y: 0 }}
+                   className="text-[10px] font-bold text-white absolute bottom-0.5 tracking-wide"
                  >
                    {item.label}
                  </motion.span>

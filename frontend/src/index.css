@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=cal-sans@400,500,600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,54 +7,64 @@
 
 :root {
   color-scheme: dark;
+
+  /* Safe Area Variables with a minimum fallback for older devices */
+  --sat: max(20px, env(safe-area-inset-top));
+  --sab: max(20px, env(safe-area-inset-bottom));
+
+  /* Hardcoded offset for Telegram's top-right buttons (X, ...) */
+  --telegram-right-offset: 60px;
+
+  /* Heights */
+  --header-content-height: 60px;
+  --header-total-height: calc(var(--sat) + var(--header-content-height));
+  --bottom-nav-height: 80px;
 }
 
 * {
-  -webkit-tap-highlight-color: transparent; /* Убирает синий квадрат при тапе на Android */
+  -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
 }
 
-html, body {
+html {
+  height: 100%;
+  width: 100%;
+  background-color: #000000;
+  overflow: hidden;
+}
+
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   background-color: #000000;
   color: #ffffff;
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
-
-  /* Критично для Telegram: отключает "резинку" при скролле всей страницы */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
   overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Скрываем скроллбар, но оставляем скролл рабочим */
+#root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent;
 }
 
-/* Утилиты для безопасных зон iPhone (челка и полоска снизу) */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom);
-}
+/* Utilities */
+.font-display { font-family: 'Cal Sans', 'Inter', sans-serif; }
+.font-mono-numbers { font-feature-settings: "tnum" on, "lnum" on; }
 
-.pt-safe {
-  padding-top: env(safe-area-inset-top);
-}
-
-/* Скрываем стрелочки у input number */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-/* Glassmorphism утилиты */
-.glass {
-  background: rgba(20, 20, 20, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
 }

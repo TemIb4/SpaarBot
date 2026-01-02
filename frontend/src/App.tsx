@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
 
 // Layouts
 import Layout from './components/layout/Layout'
@@ -15,88 +14,74 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import Security from './pages/Security'
 import Notifications from './pages/Notifications'
+import Upgrade from './pages/Upgrade'
+import UsageStats from './pages/UsageStats'
 
 function App() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  // Инициализация Telegram WebApp
   useEffect(() => {
-    // Проверяем наличие объекта Telegram
     if (window.Telegram?.WebApp) {
-      // Используем 'as any', чтобы обойти строгую типизацию в vite-env.d.ts,
-      // так как там могут отсутствовать новые методы (requestFullscreen, BackButton и т.д.)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tg = window.Telegram.WebApp as any;
-
+      const tg = window.Telegram.WebApp;
       tg.ready();
 
       try {
         tg.expand();
-        // Проверка на существование метода перед вызовом (безопасность)
-        if (tg.requestFullscreen) {
-            tg.requestFullscreen();
-        }
+        // @ts-ignore
+        if (tg.requestFullscreen) tg.requestFullscreen();
       } catch (e) {
-        console.log('Fullscreen/Expand error:', e);
+        console.log('TG Init Warning:', e);
       }
 
-      // Настройка цветов (проверка на существование методов)
-      if (tg.setHeaderColor) tg.setHeaderColor('#000000');
-      if (tg.setBackgroundColor) tg.setBackgroundColor('#000000');
-
-      // Обработка нативной кнопки "Назад"
+      // Настройка кнопки "Назад" в хедере Telegram
       if (tg.BackButton) {
-        // Отвязываем старые обработчики во избежание дублирования
-        tg.BackButton.offClick();
-        tg.BackButton.onClick(() => {
-          navigate(-1);
-        });
-      }
-    }
-  }, [navigate]);
+        const handleBack = () => navigate(-1);
+        tg.BackButton.onClick(handleBack);
 
-  // Управление видимостью кнопки "Назад"
-  useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tg = window.Telegram.WebApp as any;
-
-      if (tg.BackButton) {
+        // Показываем кнопку везде, кроме главной
         if (location.pathname === '/' || location.pathname === '/app') {
           tg.BackButton.hide();
         } else {
           tg.BackButton.show();
         }
+
+        return () => {
+          tg.BackButton.offClick(handleBack);
+        };
       }
     }
-  }, [location]);
+  }, [location.pathname, navigate]);
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        {/* Оборачиваем все в наш новый умный Layout */}
-        <Route element={<Layout />}>
-          {/* Главная */}
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/app" element={<Dashboard />} />
+    <Routes>
+      <Route element={<Layout />}>
+        {/* Главная страница */}
+        <Route path="/" element={<Dashboard />} />
 
-          {/* Основные разделы */}
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/ai-chat" element={<AIChat />} />
-          <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/accounts" element={<ConnectedAccounts />} />
-          <Route path="/profile" element={<Profile />} />
+        {/* Основные разделы */}
+        <Route path="/stats" element={<Stats />} />
+        <Route path="/ai-chat" element={<AIChat />} />
+        <Route path="/subscriptions" element={<Subscriptions />} />
+        <Route path="/accounts" element={<ConnectedAccounts />} />
 
-          {/* Второстепенные страницы */}
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/security" element={<Security />} />
-          <Route path="/notifications" element={<Notifications />} />
+        {/* Дополнительные страницы */}
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/security" element={<Security />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/upgrade" element={<Upgrade />} />
+        <Route path="/usage-stats" element={<UsageStats />} />
 
-          {/* Страница добавления (пока редирект на дашборд или отдельная страница) */}
-          <Route path="/add" element={<Dashboard />} />
-        </Route>
-      </Routes>
-    </AnimatePresence>
+        {/* Обработка "хвостов" и старых ссылок */}
+        <Route path="/app" element={<Dashboard />} />
+        <Route path="/index.html" element={<Dashboard />} />
+
+        {/* Любой неизвестный путь -> на главную */}
+        <Route path="*" element={<Dashboard />} />
+      </Route>
+    </Routes>
   )
 }
 
