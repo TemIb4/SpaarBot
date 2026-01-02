@@ -1,31 +1,241 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Download } from 'lucide-react'
+import { TrendingUp, TrendingDown, Download, AlertCircle } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useUserStore } from '../store/userStore'
+import { apiService } from '../lib/api'
+import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date-fns'
 
 // Типы для фильтров
 type PeriodType = 'week' | 'month' | '3months' | 'year'
 
+interface StatsData {
+  totalIncome: number
+  totalExpenses: number
+  balance: number
+  topCategories: Array<{
+    name: string
+    amount: number
+    color: string
+    icon: string
+    percentage: number
+  }>
+  trendData: number[]
+  previousPeriod: {
+    income: number
+    expenses: number
+  }
+}
+
 const Stats = () => {
   const { t } = useLanguage()
+  const { user } = useUserStore()
   const [period, setPeriod] = useState<PeriodType>('month')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [statsData, setStatsData] = useState<StatsData>({
+    totalIncome: 0,
+    totalExpenses: 0,
+    balance: 0,
+    topCategories: [],
+    trendData: [],
+    previousPeriod: { income: 0, expenses: 0 }
+  })
+
+  // Получение дат для выбранного периода
+  const getDateRange = (selectedPeriod: PeriodType) => {
+    const now = new Date()
+    const end = endOfDay(now)
+    let start: Date
+
+    switch (selectedPeriod) {
+      case 'week':
+        start = startOfDay(subDays(now, 7))
+        break
+      case 'month':
+        start = startOfDay(subMonths(now, 1))
+        break
+      case '3months':
+        start = startOfDay(subMonths(now, 3))
+        break
+      case 'year':
+        start = startOfDay(subYears(now, 1))
+        break
+      default:
+        start = startOfDay(subMonths(now, 1))
+    }
+
+    return {
+      start: format(start, 'yyyy-MM-dd'),
+      end: format(end, 'yyyy-MM-dd')
+    }
+  }
+
+  // Загрузка данных
+  const loadStats = async () => {
+    if (!user?.telegram_id) {
+      setError(t('stats.error_loading'))
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { start, end } = getDateRange(period)
+
+      // Параллельная загрузка всех данных
+      const [transactionsRes, categoryStatsRes] = await Promise.all([
+        apiService.transactions.list(user.telegram_id, {
+          start_date: start,
+          end_date: end
+        }),
+        apiService.stats.categories(user.telegram_id, {
+          start_date: start,
+          end_date: end,
+          transaction_type: 'expense'
+        })
+      ])
+
+      const transactions = transactionsRes.data || []
+      const categoryStats = categoryStatsRes.data || []
+
+      // Вычисляем общую статистику
+      let totalIncome = 0
+      let totalExpenses = 0
+
+      transactions.forEach((tx: any) => {
+        if (tx.transaction_type === 'income') {
+          totalIncome += parseFloat(tx.amount)
+        } else {
+          totalExpenses += parseFloat(tx.amount)
+        }
+      })
+
+      // Топ категории из backend
+      const topCategories = categoryStats.slice(0, 3).map((cat: any, index: number) => ({
+        name: cat.category_name || cat.name || 'Uncategorized',
+        amount: parseFloat(cat.total_amount || cat.amount || 0),
+        color: cat.color || ['bg-yellow-500', 'bg-purple-500', 'bg-blue-500'][index],
+        icon: cat.icon || ['🛒', '🎬', '🚕'][index],
+        percentage: cat.percentage || 0
+      }))
+
+      // Данные тренда (упрощенная версия - группировка по дням)
+      const trendMap = new Map<string, number>()
+      transactions
+        .filter((tx: any) => tx.transaction_type === 'expense')
+        .forEach((tx: any) => {
+          const date = tx.transaction_date || tx.created_at
+          const dayKey = format(new Date(date), 'yyyy-MM-dd')
+          trendMap.set(dayKey, (trendMap.get(dayKey) || 0) + parseFloat(tx.amount))
+        })
+
+      const trendData = Array.from(trendMap.values()).slice(-7) // Последние 7 дней
+
+      setStatsData({
+        totalIncome,
+        totalExpenses,
+        balance: totalIncome - totalExpenses,
+        topCategories,
+        trendData: trendData.length > 0 ? trendData : [0],
+        previousPeriod: {
+          income: totalIncome * 0.92, // TODO: Fetch real previous period data
+          expenses: totalExpenses * 1.08
+        }
+      })
+
+    } catch (err: any) {
+      console.error('Error loading stats:', err)
+      setError(t('stats.error_loading'))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Имитация загрузки при смене периода
-    setLoading(true)
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [period])
+    loadStats()
+  }, [period, user?.telegram_id])
 
-  // Mock данных для чартов
-  const chartData = [65, 45, 78, 32, 89, 56, 92]
-  const maxVal = Math.max(...chartData)
+  // Экспорт данных
+  const handleExport = async () => {
+    if (!user?.telegram_id) return
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const StatCard = ({ label, value, icon: Icon, color, trend }: any) => (
+    try {
+      const { start, end } = getDateRange(period)
+      const res = await apiService.transactions.list(user.telegram_id, {
+        start_date: start,
+        end_date: end
+      })
+
+      const transactions = res.data || []
+
+      // Создаем CSV
+      const headers = ['Date', 'Type', 'Amount', 'Description', 'Category']
+      const rows = transactions.map((tx: any) => [
+        tx.transaction_date || format(new Date(tx.created_at), 'yyyy-MM-dd'),
+        tx.transaction_type,
+        tx.amount,
+        tx.description,
+        tx.category_name || 'N/A'
+      ])
+
+      const csv = [
+        headers.join(','),
+        ...rows.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))
+      ].join('\n')
+
+      // Скачивание файла
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `spaarbot-stats-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      // Показываем успешное уведомление через Telegram
+      const tg = (window as any).Telegram?.WebApp
+      if (tg) {
+        tg.showAlert(t('stats.exporting_data'))
+      }
+    } catch (err) {
+      console.error('Export error:', err)
+      const tg = (window as any).Telegram?.WebApp
+      if (tg) {
+        tg.showAlert(t('stats.error_loading'))
+      }
+    }
+  }
+
+  // Вычисление трендов
+  const incomeTrend = statsData.previousPeriod.income > 0
+    ? ((statsData.totalIncome - statsData.previousPeriod.income) / statsData.previousPeriod.income * 100).toFixed(1)
+    : '0.0'
+
+  const expenseTrend = statsData.previousPeriod.expenses > 0
+    ? ((statsData.totalExpenses - statsData.previousPeriod.expenses) / statsData.previousPeriod.expenses * 100).toFixed(1)
+    : '0.0'
+
+  const maxTrendVal = Math.max(...statsData.trendData, 1)
+
+  // Компонент карточки статистики
+  const StatCard = ({
+    label,
+    value,
+    icon: Icon,
+    color,
+    trend
+  }: {
+    label: string
+    value: string
+    icon: any
+    color: string
+    trend?: string
+  }) => (
     <motion.div
       whileTap={{ scale: 0.98 }}
       className="p-5 rounded-3xl bg-neutral-900/50 border border-white/5 relative overflow-hidden"
@@ -39,10 +249,16 @@ const Stats = () => {
       ) : (
         <h3 className="text-2xl font-bold text-white mb-2">{value}</h3>
       )}
-      {trend && (
-        <div className="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/5">
-          <TrendingUp size={12} className="text-emerald-400 mr-1" />
-          <span className="text-xs text-emerald-400">{trend}</span>
+      {trend && !loading && (
+        <div className={`inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/5`}>
+          {parseFloat(trend) >= 0 ? (
+            <TrendingUp size={12} className="text-emerald-400 mr-1" />
+          ) : (
+            <TrendingDown size={12} className="text-rose-400 mr-1" />
+          )}
+          <span className={`text-xs ${parseFloat(trend) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {trend}%
+          </span>
         </div>
       )}
     </motion.div>
@@ -54,13 +270,14 @@ const Stats = () => {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
-            Analytics
+            {t('stats.title')}
           </h1>
-          <p className="text-neutral-500 text-sm">Financial overview</p>
+          <p className="text-neutral-500 text-sm">{t('stats.financial_overview')}</p>
         </div>
         <button
-          onClick={() => alert('Exporting data...')}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-colors"
+          onClick={handleExport}
+          disabled={loading}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-colors disabled:opacity-50"
         >
           <Download size={18} />
         </button>
@@ -68,101 +285,142 @@ const Stats = () => {
 
       {/* Period Selector */}
       <div className="flex bg-neutral-900/80 p-1.5 rounded-2xl mb-8 overflow-x-auto no-scrollbar">
-        {['week', 'month', '3months', 'year'].map((p) => (
+        {(['week', 'month', '3months', 'year'] as PeriodType[]).map((p) => (
           <button
             key={p}
-            onClick={() => setPeriod(p as PeriodType)}
+            onClick={() => setPeriod(p)}
+            disabled={loading}
             className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               period === p
                 ? 'bg-neutral-800 text-white shadow-lg'
                 : 'text-neutral-500 hover:text-neutral-300'
-            }`}
+            } disabled:opacity-50`}
           >
-            {t(`stats.period_${p}`) || p.charAt(0).toUpperCase() + p.slice(1)}
+            {t(`stats.period_${p}`)}
           </button>
         ))}
       </div>
+
+      {/* Error State */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3"
+        >
+          <AlertCircle className="text-rose-400" size={20} />
+          <p className="text-rose-400 text-sm">{error}</p>
+        </motion.div>
+      )}
 
       {/* Main Graph Visualization */}
       <div className="h-64 w-full bg-neutral-900/30 rounded-3xl border border-white/5 p-6 mb-6 flex flex-col justify-between relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
 
         <div className="flex justify-between text-xs text-neutral-500 mb-4 z-10">
-          <span>Expense Trend</span>
-          <span className="text-purple-400 font-bold">+12% vs last {period}</span>
+          <span>{t('stats.expense_trend')}</span>
+          {!loading && statsData.trendData.length > 0 && (
+            <span className="text-purple-400 font-bold">
+              {expenseTrend}% {t('stats.vs_last')} {t(`stats.period_${period}`).toLowerCase()}
+            </span>
+          )}
         </div>
 
         <div className="flex items-end justify-between gap-2 h-40 z-10">
-          {chartData.map((val, i) => (
-            <div key={i} className="flex-1 flex flex-col justify-end group">
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: loading ? 0 : `${(val / maxVal) * 100}%` }}
-                transition={{ delay: i * 0.1, duration: 0.6, type: 'spring' }}
-                className="w-full rounded-t-lg bg-gradient-to-t from-purple-600 to-pink-500 opacity-60 group-hover:opacity-100 transition-opacity relative"
-              >
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                  {val}€
-                </div>
-              </motion.div>
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="flex-1 bg-neutral-800/50 rounded-t-lg animate-pulse" style={{ height: '60%' }} />
+            ))
+          ) : statsData.trendData.length > 0 ? (
+            statsData.trendData.map((val, i) => (
+              <div key={i} className="flex-1 flex flex-col justify-end group">
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: `${(val / maxTrendVal) * 100}%` }}
+                  transition={{ delay: i * 0.1, duration: 0.6, type: 'spring' }}
+                  className="w-full rounded-t-lg bg-gradient-to-t from-purple-600 to-pink-500 opacity-60 group-hover:opacity-100 transition-opacity relative"
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    €{val.toFixed(0)}
+                  </div>
+                </motion.div>
+              </div>
+            ))
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-neutral-600 text-sm">
+              {t('stats.no_data')}
             </div>
-          ))}
+          )}
         </div>
       </div>
 
       {/* Stat Cards Grid */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard
-          label={t('stats.total_income') || 'Total Income'}
-          value="€ 4,250"
+          label={t('stats.total_income')}
+          value={`€ ${statsData.totalIncome.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={TrendingUp}
           color="#10b981"
-          trend="+8.2%"
+          trend={incomeTrend}
         />
         <StatCard
-          label={t('stats.total_expenses') || 'Total Expenses'}
-          value="€ 2,140"
+          label={t('stats.total_expenses')}
+          value={`€ ${statsData.totalExpenses.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={TrendingDown}
           color="#f43f5e"
-          trend="-2.4%"
+          trend={expenseTrend}
         />
       </div>
 
       {/* Top Categories */}
       <div>
-        <h3 className="text-lg font-bold text-white mb-4">Top Categories</h3>
-        <div className="space-y-3">
-          {[
-            { name: 'Groceries', amount: 450, color: 'bg-yellow-500', icon: '🛒' },
-            { name: 'Entertainment', amount: 230, color: 'bg-purple-500', icon: '🎬' },
-            { name: 'Transport', amount: 120, color: 'bg-blue-500', icon: '🚕' },
-          ].map((cat, i) => (
-            <motion.div
-              key={i}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.5 + i * 0.1 }}
-              className="flex items-center justify-between p-4 rounded-2xl bg-neutral-900/30 border border-white/5"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-xl ${cat.color} bg-opacity-20 flex items-center justify-center text-xl`}>
-                  {cat.icon}
-                </div>
-                <div>
-                  <p className="font-semibold text-white">{cat.name}</p>
-                  <div className="w-24 h-1.5 bg-neutral-800 rounded-full mt-1.5 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: loading ? 0 : '70%' }}
-                      className={`h-full ${cat.color}`}
-                    />
+        <h3 className="text-lg font-bold text-white mb-4">{t('stats.top_categories')}</h3>
+        {loading ? (
+          // Loading skeleton for categories
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-20 bg-neutral-900/30 rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : statsData.topCategories.length > 0 ? (
+          <div className="space-y-3">
+            {statsData.topCategories.map((cat, i) => (
+              <motion.div
+                key={i}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5 + i * 0.1 }}
+                className="flex items-center justify-between p-4 rounded-2xl bg-neutral-900/30 border border-white/5"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl ${cat.color} bg-opacity-20 flex items-center justify-center text-xl`}>
+                    {cat.icon}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">{cat.name}</p>
+                    <div className="w-24 h-1.5 bg-neutral-800 rounded-full mt-1.5 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(cat.percentage || 70, 100)}%` }}
+                        transition={{ delay: 0.6 + i * 0.1, duration: 0.8 }}
+                        className={`h-full ${cat.color}`}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <span className="font-bold text-white">€{cat.amount}</span>
-            </motion.div>
-          ))}
-        </div>
+                <span className="font-bold text-white">
+                  €{cat.amount.toLocaleString('de-DE', { minimumFractionDigits: 2 })}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-neutral-600">
+            <p>{t('stats.no_data')}</p>
+            <p className="text-sm mt-2">{t('stats.add_transactions_first')}</p>
+          </div>
+        )}
       </div>
     </div>
   )

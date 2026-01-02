@@ -1,28 +1,128 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Calendar } from 'lucide-react'
+import { Plus, Trash2, Calendar, Edit2, X, Check } from 'lucide-react'
+import { useLanguage } from '../contexts/LanguageContext'
+import { useUserStore } from '../store/userStore'
+import { apiService } from '../lib/api'
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO } from 'date-fns'
 
-interface Sub { id: number; name: string; cost: number; icon: string; date: string }
+interface Subscription {
+  id: number
+  name: string
+  amount: number
+  icon: string
+  next_billing_date: string
+  billing_cycle: 'monthly' | 'yearly'
+  currency: string
+  status: string
+}
+
+interface AddSubscriptionForm {
+  name: string
+  amount: string
+  icon: string
+  billing_cycle: 'monthly' | 'yearly'
+  next_billing_date: string
+}
 
 const Subscriptions = () => {
-  const [subs, setSubs] = useState<Sub[]>([
-    { id: 1, name: 'Netflix', cost: 12.99, icon: 'N', date: '2023-11-20' },
-    { id: 2, name: 'Spotify', cost: 9.99, icon: 'S', date: '2023-11-22' },
-    { id: 3, name: 'Adobe CC', cost: 24.50, icon: 'A', date: '2023-11-25' },
-  ])
+  const { t } = useLanguage()
+  const { user } = useUserStore()
+  const [subs, setSubs] = useState<Subscription[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(new Date())
 
-  const totalMonthly = subs.reduce((acc, curr) => acc + curr.cost, 0)
+  const [form, setForm] = useState<AddSubscriptionForm>({
+    name: '',
+    amount: '',
+    icon: '💳',
+    billing_cycle: 'monthly',
+    next_billing_date: format(new Date(), 'yyyy-MM-dd')
+  })
 
-  const handleDelete = (id: number) => {
-    setSubs(current => current.filter(sub => sub.id !== id))
+  const emojis = ['💳', '🎵', '🎬', '📺', '🎮', '☁️', '💪', '📱', '💻', '📚', '🍕', '🚗']
+
+  const loadSubscriptions = async () => {
+    if (!user?.telegram_id) return
+
+    setLoading(true)
+    try {
+      const res = await apiService.subscriptions.list(user.telegram_id, 'active')
+      setSubs(res.data || [])
+    } catch (err) {
+      console.error('Error loading subscriptions:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadSubscriptions()
+  }, [user?.telegram_id])
+
+  const totalMonthly = subs.reduce((acc, curr) => {
+    const amount = curr.billing_cycle === 'yearly' ? curr.amount / 12 : curr.amount
+    return acc + amount
+  }, 0)
+
+  const handleDelete = async (id: number) => {
+    if (!user?.telegram_id) return
+
+    try {
+      await apiService.subscriptions.delete(id, user.telegram_id)
+      setSubs(current => current.filter(sub => sub.id !== id))
+    } catch (err) {
+      console.error('Error deleting subscription:', err)
+    }
+  }
+
+  const handleAdd = async () => {
+    if (!user?.telegram_id || !form.name || !form.amount) return
+
+    try {
+      const res = await apiService.subscriptions.create({
+        telegram_id: user.telegram_id,
+        name: form.name,
+        icon: form.icon,
+        amount: parseFloat(form.amount),
+        currency: 'EUR',
+        billing_cycle: form.billing_cycle,
+        next_billing_date: form.next_billing_date
+      })
+
+      setSubs(current => [...current, res.data])
+      setShowAddModal(false)
+      setForm({
+        name: '',
+        amount: '',
+        icon: '💳',
+        billing_cycle: 'monthly',
+        next_billing_date: format(new Date(), 'yyyy-MM-dd')
+      })
+    } catch (err) {
+      console.error('Error adding subscription:', err)
+    }
+  }
+
+  // Календарь
+  const daysInMonth = eachDayOfInterval({
+    start: startOfMonth(currentMonth),
+    end: endOfMonth(currentMonth)
+  })
+
+  const subsOnDay = (day: Date) => {
+    const dayStr = format(day, 'yyyy-MM-dd')
+    return subs.filter(sub => sub.next_billing_date === dayStr)
   }
 
   return (
     <div className="min-h-screen bg-black text-white pb-24 px-5 pt-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Subscriptions</h1>
-        <p className="text-neutral-400 text-sm">Manage recurring payments</p>
+        <h1 className="text-3xl font-bold text-white mb-2">{t('subscriptions.title')}</h1>
+        <p className="text-neutral-400 text-sm">{t('subscriptions.manage_recurring')}</p>
       </div>
 
       {/* Summary Card */}
@@ -31,68 +131,293 @@ const Subscriptions = () => {
 
         <div className="relative z-10 flex justify-between items-center">
           <div>
-            <p className="text-neutral-500 text-xs font-bold uppercase tracking-wider mb-1">Monthly Total</p>
+            <p className="text-neutral-500 text-xs font-bold uppercase tracking-wider mb-1">
+              {t('subscriptions.per_month')}
+            </p>
             <h2 className="text-4xl font-bold text-white">€{totalMonthly.toFixed(2)}</h2>
+            <p className="text-neutral-600 text-xs mt-1">
+              {t('subscriptions.yearly_forecast')}: €{(totalMonthly * 12).toFixed(2)}
+            </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+          <button
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+          >
             <Calendar size={24} className="text-indigo-400" />
-          </div>
+          </button>
         </div>
       </div>
 
+      {/* Calendar View */}
+      <AnimatePresence>
+        {showCalendar && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 overflow-hidden"
+          >
+            <div className="bg-neutral-900/50 rounded-3xl p-5 border border-white/5">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-white">
+                  {format(currentMonth, 'MMMM yyyy')}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}
+                    className="px-3 py-1 rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition-colors"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                    className="px-3 py-1 rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition-colors"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(day => (
+                  <div key={day} className="text-center text-xs text-neutral-500 font-medium py-2">
+                    {day}
+                  </div>
+                ))}
+
+                {daysInMonth.map(day => {
+                  const subsHere = subsOnDay(day)
+                  const isCurrentDay = isToday(day)
+
+                  return (
+                    <div
+                      key={day.toString()}
+                      className={`aspect-square p-1 rounded-lg border ${
+                        isCurrentDay
+                          ? 'border-indigo-500 bg-indigo-500/10'
+                          : subsHere.length > 0
+                          ? 'border-purple-500/30 bg-purple-500/5'
+                          : 'border-white/5'
+                      } ${!isSameMonth(day, currentMonth) ? 'opacity-30' : ''}`}
+                    >
+                      <div className="text-xs text-neutral-400 mb-0.5">{format(day, 'd')}</div>
+                      {subsHere.length > 0 && (
+                        <div className="text-[8px] text-purple-400 flex flex-wrap gap-0.5">
+                          {subsHere.slice(0, 2).map(sub => (
+                            <span key={sub.id}>{sub.icon}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Action Bar */}
       <div className="flex justify-between items-center mb-6">
-        <p className="text-sm font-bold text-neutral-300">{subs.length} Active Services</p>
+        <p className="text-sm font-bold text-neutral-300">
+          {subs.length} {t('subscriptions.active')}
+        </p>
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={() => alert('Add modal would open here')}
-          className="px-4 py-2 bg-white text-black rounded-xl text-sm font-bold flex items-center gap-2"
+          onClick={() => setShowAddModal(true)}
+          className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-purple-500/25"
         >
-          <Plus size={16} /> Add New
+          <Plus size={16} /> {t('subscriptions.add_new')}
         </motion.button>
       </div>
 
       {/* Subscription List */}
-      <div className="space-y-3">
-        <AnimatePresence>
-          {subs.map((sub, i) => (
-            <motion.div
-              key={sub.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative p-4 rounded-2xl bg-neutral-900/50 border border-white/5 hover:border-indigo-500/50 transition-colors overflow-hidden"
-            >
-              <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center text-xl font-bold shadow-inner">
-                    {sub.icon}
+      {loading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-20 bg-neutral-900/50 rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      ) : subs.length > 0 ? (
+        <div className="space-y-3">
+          <AnimatePresence>
+            {subs.map((sub, i) => (
+              <motion.div
+                key={sub.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative p-4 rounded-2xl bg-neutral-900/50 border border-white/5 hover:border-indigo-500/50 transition-colors overflow-hidden"
+              >
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center text-2xl shadow-inner">
+                      {sub.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white">{sub.name}</h3>
+                      <p className="text-xs text-neutral-500 flex items-center gap-1">
+                        {format(parseISO(sub.next_billing_date), 'dd MMM yyyy')}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-white">{sub.name}</h3>
-                    <p className="text-xs text-neutral-500 flex items-center gap-1">
-                       Next: {sub.date}
+                  <div className="text-right">
+                    <p className="font-bold text-white">€{sub.amount.toFixed(2)}</p>
+                    <p className="text-[10px] text-neutral-600 uppercase">
+                      {sub.billing_cycle === 'monthly' ? t('subscriptions.monthly') : t('subscriptions.yearly')}
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                   <p className="font-bold text-white">€{sub.cost}</p>
-                   <p className="text-[10px] text-neutral-600 uppercase">Monthly</p>
-                </div>
+
+                <button
+                  onClick={() => handleDelete(sub.id)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="text-center py-12 text-neutral-600">
+          <Calendar size={48} className="mx-auto mb-4 opacity-20" />
+          <p>{t('subscriptions.no_subscriptions')}</p>
+          <p className="text-sm mt-2">{t('subscriptions.add_first')}</p>
+        </div>
+      )}
+
+      {/* Add Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddModal(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto bg-neutral-900 rounded-3xl p-6 border border-white/10"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white">{t('subscriptions.add_subscription')}</h2>
+                <button onClick={() => setShowAddModal(false)} className="text-neutral-500 hover:text-white">
+                  <X size={24} />
+                </button>
               </div>
 
-              {/* Swipe Action Simulation (Delete Button) */}
-              <button
-                onClick={() => handleDelete(sub.id)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-red-500/10 text-red-500 rounded-lg"
-              >
-                <Trash2 size={18} />
-              </button>
+              <div className="space-y-4">
+                {/* Icon Selector */}
+                <div>
+                  <label className="block text-sm text-neutral-400 mb-2">{t('subscriptions.icon')}</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {emojis.map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={() => setForm({ ...form, icon: emoji })}
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all ${
+                          form.icon === emoji
+                            ? 'bg-indigo-500 scale-110'
+                            : 'bg-neutral-800 hover:bg-neutral-700'
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label className="block text-sm text-neutral-400 mb-2">{t('subscriptions.name')}</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    placeholder="Netflix"
+                    className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Amount */}
+                <div>
+                  <label className="block text-sm text-neutral-400 mb-2">Amount (€)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={form.amount}
+                    onChange={e => setForm({ ...form, amount: e.target.value })}
+                    placeholder="12.99"
+                    className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Billing Cycle */}
+                <div>
+                  <label className="block text-sm text-neutral-400 mb-2">Billing Cycle</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setForm({ ...form, billing_cycle: 'monthly' })}
+                      className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                        form.billing_cycle === 'monthly'
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-neutral-800 text-neutral-400'
+                      }`}
+                    >
+                      {t('subscriptions.monthly')}
+                    </button>
+                    <button
+                      onClick={() => setForm({ ...form, billing_cycle: 'yearly' })}
+                      className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                        form.billing_cycle === 'yearly'
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-neutral-800 text-neutral-400'
+                      }`}
+                    >
+                      {t('subscriptions.yearly')}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Next Billing Date */}
+                <div>
+                  <label className="block text-sm text-neutral-400 mb-2">Next Billing Date</label>
+                  <input
+                    type="date"
+                    value={form.next_billing_date}
+                    onChange={e => setForm({ ...form, next_billing_date: e.target.value })}
+                    className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="flex-1 py-3 rounded-xl bg-neutral-800 text-neutral-300 font-medium hover:bg-neutral-700 transition-colors"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    onClick={handleAdd}
+                    disabled={!form.name || !form.amount}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Check size={18} />
+                    {t('common.add')}
+                  </button>
+                </div>
+              </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
