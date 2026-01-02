@@ -278,7 +278,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   ]
 
   const setTheme = (newTheme: string) => {
-    console.log('🎨 Setting theme to:', newTheme)
     setThemeState(newTheme)
     localStorage.setItem('spaarbot-theme', newTheme)
   }
@@ -286,8 +285,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const selectedTheme = availableThemes.find(t => t.id === theme)
     if (!selectedTheme) return
-
-    console.log('🎨 Applying theme:', theme)
 
     const root = document.documentElement
 
@@ -302,14 +299,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       root.style.setProperty('--gradient-from', selectedTheme.gradient.from)
       root.style.setProperty('--gradient-via', selectedTheme.gradient.via)
       root.style.setProperty('--gradient-to', selectedTheme.gradient.to)
-
-      console.log('✅ Bright gradients applied:', selectedTheme.gradient)
     }
 
     document.body.style.backgroundColor = selectedTheme.colors.bg
     document.body.style.color = selectedTheme.colors.text
-
-    console.log('✅ Theme applied!')
   }, [theme, availableThemes])
 
   return (

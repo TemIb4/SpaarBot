@@ -24,7 +24,6 @@ export const useTransactions = (telegram_id: number) => {
       })
       setTransactions(response.data)
     } catch (error) {
-      console.error('Error fetching transactions:', error)
     } finally {
       setLoading(false)
     }
@@ -35,7 +34,6 @@ export const useTransactions = (telegram_id: number) => {
       await api.post('/api/v1/transactions/', data)
       await fetchTransactions()
     } catch (error) {
-      console.error('Error adding transaction:', error)
       throw error
     }
   }

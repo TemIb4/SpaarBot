@@ -6,21 +6,17 @@ import logging
 from datetime import datetime, timedelta, date
 from typing import List
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from aiogram import Bot
 
 from app.core.celery_app import celery_app
 from app.core.config import get_settings
 from app.db.models import User, Subscription
+from app.db.database import async_session_maker
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-
-# Create async engine for tasks
-engine = create_async_engine(settings.DATABASE_URL, echo=False)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 # Initialize bot
 bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
@@ -35,7 +31,7 @@ def check_subscription_renewals():
     import asyncio
 
     async def _check_renewals():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Get subscriptions due in the next 3 days
                 today = date.today()
@@ -112,7 +108,7 @@ def detect_new_subscriptions():
     import asyncio
 
     async def _detect_subscriptions():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Get all premium users
                 result = await db.execute(
@@ -175,7 +171,7 @@ def check_premium_status():
     import asyncio
 
     async def _check_status():
-        async with AsyncSessionLocal() as db:
+        async with async_session_maker() as db:
             try:
                 # Get all users with PayPal subscriptions
                 result = await db.execute(

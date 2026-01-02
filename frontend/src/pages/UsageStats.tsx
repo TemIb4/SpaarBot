@@ -41,7 +41,6 @@ const UsageStats: React.FC = () => {
       const response = await api.get('/api/v1/users/usage-stats')
       setUsage(response.data)
     } catch (error) {
-      console.error('Error loading usage stats:', error)
       setUsage({
         ai_requests: {
           used: isPremium ? 347 : 42,

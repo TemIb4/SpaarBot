@@ -39,7 +39,6 @@ const Notifications: React.FC = () => {
       const response = await api.get('/api/v1/notifications')
       setNotifications(response.data)
     } catch (error) {
-      console.error('Error loading notifications:', error)
       // Mock data для демонстрации
       setNotifications([
         {
@@ -83,7 +82,6 @@ const Notifications: React.FC = () => {
         prev.map(n => n.id === id ? { ...n, read: true } : n)
       )
     } catch (error) {
-      console.error('Error marking as read:', error)
     }
   }
 
@@ -92,7 +90,6 @@ const Notifications: React.FC = () => {
       await api.post('/api/v1/notifications/read-all')
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     } catch (error) {
-      console.error('Error marking all as read:', error)
     }
   }
 
@@ -101,7 +98,6 @@ const Notifications: React.FC = () => {
       await api.delete(`/api/v1/notifications/${id}`)
       setNotifications(prev => prev.filter(n => n.id !== id))
     } catch (error) {
-      console.error('Error deleting notification:', error)
     }
   }
 

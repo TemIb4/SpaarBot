@@ -172,9 +172,12 @@ class Feedback(Base):
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(BigInteger, ForeignKey("users.telegram_id"), nullable=False)
 
-    rating = Column(Integer, nullable=False)  # 1-5
-    comment = Column(Text, nullable=True)
-    category = Column(String, nullable=True)  # 'bug', 'feature', 'general'
+    name = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    message = Column(Text, nullable=False)
+
+    rating = Column(Integer, nullable=True)  # 1-5 (optional)
+    category = Column(String, default='general')  # 'bug', 'feature', 'general'
 
     created_at = Column(DateTime, server_default=func.now())
 

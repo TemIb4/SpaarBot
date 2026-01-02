@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # Environment
     ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    DEBUG: bool = False  # Set to True only in .env for development
 
     model_config = SettingsConfigDict(
         env_file=".env",
