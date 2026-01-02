@@ -14,7 +14,7 @@ export const BottomNav = () => {
     { path: '/stats', icon: PieChart, label: t('nav.stats') },
     { path: '/ai-chat', icon: Sparkles, label: t('nav.ai'), highlight: true },
     { path: '/subscriptions', icon: Calendar, label: t('nav.subscriptions') },
-    { path: '/accounts', icon: Wallet, label: 'Wallet' }
+    { path: '/accounts', icon: Wallet, label: t('nav.wallet') }
   ]
 
   return (
