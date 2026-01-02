@@ -258,6 +258,7 @@
     "save": "Сохранить",
     "delete": "Удалить",
     "close": "Закрыть",
+    "remove": "Удалить",
     "add": "Добавить",
     "edit": "Редактировать",
     "back": "Назад",
@@ -461,5 +462,20 @@
     "6months": "6 месяцев",
     "year": "Год",
     "alltime": "Всё время"
+  },
+  "csv": {
+    "import_title": "Импорт CSV",
+    "import_subtitle": "Импорт банковских транзакций",
+    "click_to_upload": "Нажмите для загрузки",
+    "bank_format": "Формат банка",
+    "auto_categorize": "Авто-категоризация",
+    "ai_powered": "На основе ИИ",
+    "import_button": "Импортировать CSV",
+    "uploading": "Загрузка...",
+    "import_success": "Импорт успешен!",
+    "import_failed": "Импорт не удался",
+    "imported": "Импортировано",
+    "skipped": "Пропущено",
+    "errors": "Ошибки"
   }
 }

@@ -258,6 +258,7 @@
     "save": "Save",
     "delete": "Delete",
     "close": "Close",
+    "remove": "Remove",
     "add": "Add",
     "edit": "Edit",
     "back": "Back",
@@ -461,5 +462,20 @@
     "6months": "6 months",
     "year": "Year",
     "alltime": "All time"
+  },
+  "csv": {
+    "import_title": "Import CSV",
+    "import_subtitle": "Import bank transactions",
+    "click_to_upload": "Click to upload",
+    "bank_format": "Bank format",
+    "auto_categorize": "Auto-categorize",
+    "ai_powered": "AI-powered",
+    "import_button": "Import CSV",
+    "uploading": "Uploading...",
+    "import_success": "Import successful!",
+    "import_failed": "Import failed",
+    "imported": "Imported",
+    "skipped": "Skipped",
+    "errors": "Errors"
   }
 }

@@ -258,6 +258,7 @@
     "save": "Зберегти",
     "delete": "Видалити",
     "close": "Закрити",
+    "remove": "Видалити",
     "add": "Додати",
     "edit": "Редагувати",
     "back": "Назад",
@@ -461,5 +462,20 @@
     "6months": "6 місяців",
     "year": "Рік",
     "alltime": "Весь час"
+  },
+  "csv": {
+    "import_title": "Імпорт CSV",
+    "import_subtitle": "Імпорт банківських транзакцій",
+    "click_to_upload": "Натисніть для завантаження",
+    "bank_format": "Формат банку",
+    "auto_categorize": "Авто-категоризація",
+    "ai_powered": "На основі ШІ",
+    "import_button": "Імпортувати CSV",
+    "uploading": "Завантаження...",
+    "import_success": "Імпорт успішний!",
+    "import_failed": "Імпорт не вдався",
+    "imported": "Імпортовано",
+    "skipped": "Пропущено",
+    "errors": "Помилки"
   }
 }

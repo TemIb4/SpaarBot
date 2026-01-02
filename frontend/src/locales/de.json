@@ -258,6 +258,7 @@
     "save": "Speichern",
     "delete": "Löschen",
     "close": "Schließen",
+    "remove": "Entfernen",
     "add": "Hinzufügen",
     "edit": "Bearbeiten",
     "back": "Zurück",
@@ -461,5 +462,20 @@
     "6months": "6 Monate",
     "year": "Jahr",
     "alltime": "Alle Zeit"
+  },
+  "csv": {
+    "import_title": "CSV importieren",
+    "import_subtitle": "Banktransaktionen importieren",
+    "click_to_upload": "Klicken zum Hochladen",
+    "bank_format": "Bankformat",
+    "auto_categorize": "Auto-Kategorisierung",
+    "ai_powered": "KI-gestützt",
+    "import_button": "CSV importieren",
+    "uploading": "Wird hochgeladen...",
+    "import_success": "Import erfolgreich!",
+    "import_failed": "Import fehlgeschlagen",
+    "imported": "Importiert",
+    "skipped": "Übersprungen",
+    "errors": "Fehler"
   }
 }

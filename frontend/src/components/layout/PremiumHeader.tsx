@@ -46,47 +46,47 @@ export const PremiumHeader = () => {
         }}
       >
         <div
-          className="w-full h-[var(--header-content-height)] flex items-center justify-between pl-4"
+          className="w-full h-[var(--header-content-height)] flex items-center justify-between pl-3 pr-2"
           // Жесткий отступ справа для кнопок Telegram
           style={{ paddingRight: 'var(--telegram-right-offset)' }}
         >
-          {/* LEFT SIDE: Logo */}
+          {/* LEFT SIDE: Logo - Компактный дизайн */}
           <div
-            className="flex items-center space-x-3 cursor-pointer select-none active:opacity-70 transition-opacity"
+            className="flex items-center space-x-2 cursor-pointer select-none active:opacity-70 transition-opacity"
             onClick={() => navigate('/')}
           >
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-indigo-500/20 border border-white/10"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-base shadow-md shadow-indigo-500/20 border border-white/10"
               style={{ background: premiumDesign.colors.gradients.primary }}
             >
               💎
             </div>
-            <h1 className="text-lg font-bold tracking-tight text-white font-display">
+            <h1 className="text-base font-bold tracking-tight text-white font-display">
               SpaarBot
             </h1>
           </div>
 
-          {/* RIGHT SIDE: Actions */}
-          <div className="flex items-center space-x-2">
+          {/* RIGHT SIDE: Actions - Компактный дизайн */}
+          <div className="flex items-center space-x-1">
             <button
               onClick={() => setShowCalendar(!showCalendar)}
-              className="p-2.5 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all"
+              className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all"
             >
-              <Calendar size={22} />
+              <Calendar size={20} />
             </button>
 
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center p-1 pl-2 rounded-xl hover:bg-white/5 active:scale-95 transition-all gap-2"
+                className="flex items-center p-0.5 pl-1.5 rounded-lg hover:bg-white/5 active:scale-95 transition-all gap-1.5"
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border border-white/10 shadow-sm"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border border-white/10 shadow-sm"
                   style={{ background: premiumDesign.colors.gradients.accent, color: '#fff' }}
                 >
                   {user?.first_name?.[0] || 'U'}
                 </div>
-                <ChevronDown size={14} className={`text-neutral-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                <ChevronDown size={12} className={`text-neutral-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown Menu */}
