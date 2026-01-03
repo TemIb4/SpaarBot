@@ -25,6 +25,13 @@ from app.api.v1.endpoints import users, subscriptions
 # ✅ НОВЫЕ ENDPOINTS (AI Insights, Bank CSV)
 from app.api.v1.endpoints import ai_insights, bank
 from app.api.v1.endpoints import paypal_oauth, paypal_sync, accounts
+from app.middleware.rate_limiter import RateLimiter, RateLimitMiddleware
+from app.middleware.security import SecurityHeadersMiddleware, InputValidationMiddleware
+from app.core.cache import RedisCache, set_cache
+from app.core.monitoring import (
+    MetricsCollector, set_metrics_collector, get_metrics_collector,
+    RequestLoggingMiddleware, HealthChecker, set_health_checker, get_health_checker
+)
 
 # Configure logging
 logging.basicConfig(
@@ -47,6 +54,12 @@ FRONTEND_DIR = BASE_DIR / "frontend" / "dist"
 # Global bot and dispatcher
 bot = None
 dp = None
+
+# Global rate limiter, cache, and monitoring
+rate_limiter = None
+cache = None
+metrics_collector = None
+health_checker = None
 
 
 def get_bot_and_dispatcher():
@@ -77,9 +90,39 @@ def get_bot_and_dispatcher():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle manager for FastAPI"""
+    global rate_limiter, cache, metrics_collector, health_checker
+
     logger.info("🚀 Starting SpaarBot...")
+
+    # Initialize metrics collector
+    metrics_collector = MetricsCollector()
+    set_metrics_collector(metrics_collector)
+    logger.info("✅ Metrics collector initialized")
+
+    # Initialize health checker
+    health_checker = HealthChecker()
+    set_health_checker(health_checker)
+    logger.info("✅ Health checker initialized")
     await init_db()
     logger.info("✅ Database initialized")
+
+    # Initialize Redis cache
+    cache = RedisCache(
+        redis_url=settings.REDIS_URL,
+        default_ttl=settings.REDIS_CACHE_TTL,
+        enabled=True
+    )
+    await cache.connect()
+    set_cache(cache)  # Set global cache instance
+    logger.info("✅ Redis cache initialized")
+
+    # Initialize rate limiter
+    rate_limiter = RateLimiter(
+        redis_url=settings.REDIS_URL,
+        enabled=settings.RATE_LIMIT_ENABLED
+    )
+    await rate_limiter.connect()
+    logger.info("✅ Rate limiter initialized")
 
     bot_instance, dp_instance = get_bot_and_dispatcher()
     asyncio.create_task(dp_instance.start_polling(bot_instance))
@@ -90,6 +133,10 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down...")
     if bot_instance:
         await bot_instance.session.close()
+    if rate_limiter:
+        await rate_limiter.close()
+    if cache:
+        await cache.close()
 
 
 app = FastAPI(
@@ -106,6 +153,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Security middleware - add security headers
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Input validation middleware - protect against injection attacks
+app.add_middleware(InputValidationMiddleware, enabled=True, strict_mode=False)
+
+# Request logging and metrics middleware
+app.add_middleware(RequestLoggingMiddleware, enable_metrics=True)
+
+# Rate limiting middleware (must be added after CORS)
+@app.on_event("startup")
+async def add_rate_limit_middleware():
+    """Add rate limit middleware after app startup"""
+    global rate_limiter
+    if rate_limiter:
+        app.add_middleware(RateLimitMiddleware, rate_limiter=rate_limiter)
 
 
 class CSPMiddleware(BaseHTTPMiddleware):
@@ -237,16 +301,60 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    """
+    Basic health check endpoint
+    Returns simple status for load balancers
+    """
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "frontend_exists": FRONTEND_DIR.exists(),
-        "registered_routes": [
-            "auth", "transactions", "ai", "twa", "feedback",
-            "settings", "paypal", "users", "subscriptions",
-            "ai-insights", "bank"  # ✅ PREMIUM FEATURES
-        ]
     }
+
+
+@app.get("/health/detailed")
+async def health_check_detailed():
+    """
+    Detailed health check with component status
+    For monitoring systems and debugging
+    """
+    checker = get_health_checker()
+
+    if checker:
+        health_status = await checker.check_health()
+    else:
+        health_status = {
+            "status": "healthy",
+            "message": "Health checker not initialized",
+            "components": {}
+        }
+
+    # Add additional system info
+    collector = get_metrics_collector()
+    metrics = collector.get_metrics() if collector else {}
+
+    return {
+        **health_status,
+        "frontend_exists": FRONTEND_DIR.exists(),
+        "uptime_seconds": metrics.get("uptime_seconds", 0),
+        "requests_total": metrics.get("requests_total", 0),
+        "error_rate": metrics.get("error_rate", 0),
+    }
+
+
+@app.get("/metrics")
+async def get_metrics():
+    """
+    Application metrics endpoint
+    For Prometheus or other monitoring tools
+    """
+    collector = get_metrics_collector()
+
+    if not collector:
+        return {
+            "error": "Metrics collector not initialized"
+        }
+
+    return collector.get_metrics()
 
 
 if __name__ == "__main__":

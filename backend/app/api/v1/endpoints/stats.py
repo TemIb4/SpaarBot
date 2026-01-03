@@ -14,6 +14,7 @@ from sqlalchemy import select
 from app.db.database import get_db
 from app.db.models import Transaction, User, Subscription
 from app.db.crud import get_user_by_telegram_id
+from app.core.cache import get_cache
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -26,9 +27,19 @@ async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get dashboard statistics
+    Get dashboard statistics (cached for performance)
     """
     try:
+        # Check cache first
+        cache = get_cache()
+        cache_key = f"cache:stats:dashboard:{telegram_id}:{period}"
+
+        if cache:
+            cached_data = await cache.get(cache_key)
+            if cached_data:
+                logger.debug(f"Returning cached dashboard stats for user {telegram_id}")
+                return cached_data
+
         # Get user
         user = await get_user_by_telegram_id(db, telegram_id)
         if not user:
@@ -105,7 +116,7 @@ async def get_dashboard_stats(
         # Transactions count
         transactions_count = len(expenses) + len(incomes)
 
-        return {
+        result = {
             "total_balance": round(total_balance, 2),
             "total_expenses": round(total_expenses, 2),
             "total_income": round(total_income, 2),
@@ -117,6 +128,12 @@ async def get_dashboard_stats(
             "transactions_count": transactions_count,
             "period": period
         }
+
+        # Cache the result (2 minutes TTL for stats)
+        if cache:
+            await cache.set(cache_key, result, ttl=120)
+
+        return result
 
     except HTTPException:
         raise
