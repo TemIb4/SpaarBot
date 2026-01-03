@@ -57,22 +57,22 @@ export const BottomNav = () => {
               <motion.button
                 key={item.path}
                 whileTap={{ scale: 0.9 }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.08 }}
                 onClick={() => navigate(item.path)}
-                className="relative -top-6 mx-1 w-14 h-14 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden"
+                className="relative -top-7 mx-1.5 w-16 h-16 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden"
                 style={{
                   background: premiumDesign.colors.gradients.primary,
-                  boxShadow: '0 8px 24px rgba(99, 102, 241, 0.4), 0 0 1px rgba(255, 255, 255, 0.5) inset',
-                  border: '1.5px solid rgba(255, 255, 255, 0.3)'
+                  boxShadow: '0 10px 32px rgba(99, 102, 241, 0.5), 0 0 1px rgba(255, 255, 255, 0.6) inset',
+                  border: '2px solid rgba(255, 255, 255, 0.4)'
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/25 to-transparent opacity-60" />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
                 <Icon
-                  size={24}
+                  size={28}
                   className="text-white relative z-10"
                   style={{
-                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
+                    filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4))'
                   }}
                 />
               </motion.button>

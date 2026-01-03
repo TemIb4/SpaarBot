@@ -248,8 +248,8 @@ const AIChat = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 bg-black/90 backdrop-blur-xl border-t border-white/10">
+      {/* Input Area - с отступом снизу для навигации */}
+      <div className="p-4 bg-black/90 backdrop-blur-xl border-t border-white/10" style={{ paddingBottom: 'calc(var(--bottom-nav-height) + 1rem)' }}>
         <div className="flex items-end gap-2">
           <div className="flex-1 bg-neutral-900 border border-white/10 rounded-2xl focus-within:border-purple-500/50 transition-colors overflow-hidden">
             <textarea
