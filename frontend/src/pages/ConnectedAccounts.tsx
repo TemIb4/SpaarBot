@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, RefreshCw, ShieldCheck, ExternalLink, Trash2, Check, Loader2, AlertCircle } from 'lucide-react'
+import { Plus, RefreshCw, ShieldCheck, ExternalLink, Check, Loader2, AlertCircle } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useUserStore } from '../store/userStore'
 import { apiService } from '../lib/api'

@@ -2,7 +2,6 @@ import axios, { AxiosInstance, AxiosError } from 'axios'
 
 // Определяем базовый URL из переменных окружения
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api/v1'
 
 // Создаем экземпляр axios с базовой конфигурацией
 export const api: AxiosInstance = axios.create({
