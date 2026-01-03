@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Calendar, Edit2, X, Check } from 'lucide-react'
+import { Plus, Trash2, Calendar, X, Check } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useUserStore } from '../store/userStore'
 import { apiService } from '../lib/api'

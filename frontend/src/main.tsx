@@ -19,7 +19,8 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     return { hasError: true, error: error.toString() };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(_error: any, _errorInfo: any) {
+    // Error is already logged in getDerivedStateFromError
   }
 
   render() {
