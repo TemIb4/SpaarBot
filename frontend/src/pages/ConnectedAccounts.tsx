@@ -1,7 +1,41 @@
 import { motion } from 'framer-motion'
 import { Plus, RefreshCw, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
+import { useUserStore } from '../store/userStore'
+import { apiService } from '../lib/api'
 
 const ConnectedAccounts = () => {
+  const { user } = useUserStore()
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleConnectPayPal = async () => {
+    if (!user?.telegram_id) {
+      setError('User not authenticated')
+      return
+    }
+
+    setIsConnecting(true)
+    setError(null)
+
+    try {
+      // Get PayPal authorization URL
+      const response = await apiService.paypal.getAuthUrl(user.telegram_id)
+      const authUrl = response.data.auth_url
+
+      if (authUrl) {
+        // Open PayPal authorization in new window
+        window.open(authUrl, '_blank', 'width=600,height=700')
+      } else {
+        setError('Failed to get PayPal authorization URL')
+      }
+    } catch (err: any) {
+      console.error('PayPal connection error:', err)
+      setError('Failed to connect to PayPal. Please try again.')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Card = ({ type, balance, number, color }: any) => (
     <motion.div
@@ -60,12 +94,21 @@ const ConnectedAccounts = () => {
         />
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Add New Button */}
       <motion.button
         whileTap={{ scale: 0.98 }}
-        className="w-full py-4 mt-4 rounded-2xl border-2 border-dashed border-neutral-800 text-neutral-500 font-bold flex items-center justify-center gap-2 hover:bg-neutral-900/50 hover:text-white transition-colors"
+        onClick={handleConnectPayPal}
+        disabled={isConnecting}
+        className="w-full py-4 mt-4 rounded-2xl border-2 border-dashed border-neutral-800 text-neutral-500 font-bold flex items-center justify-center gap-2 hover:bg-neutral-900/50 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <Plus size={20} /> Connect New Account
+        <Plus size={20} /> {isConnecting ? 'Connecting...' : 'Connect New Account'}
       </motion.button>
 
       <div className="mt-8 p-4 bg-neutral-900/50 rounded-2xl border border-white/5">
