@@ -297,15 +297,15 @@ const Subscriptions = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAddModal(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[65]"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md max-h-[85vh] mx-auto bg-neutral-900 rounded-3xl p-6 border border-white/10 overflow-y-auto"
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[70] max-w-md mx-auto bg-neutral-900 rounded-3xl p-6 border border-white/10 overflow-y-auto"
               style={{
-                maxHeight: 'calc(100vh - 120px)',
+                maxHeight: 'calc(100vh - 200px)',
               }}
             >
               <div className="flex justify-between items-center mb-6">

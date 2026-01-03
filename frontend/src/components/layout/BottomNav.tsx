@@ -22,8 +22,8 @@ export const BottomNav = () => {
     <div
       className="fixed left-0 right-0 z-[60] flex justify-center px-4 pointer-events-none"
       style={{
-        // Отступ снизу: 1.5rem (24px) + Safe Area Bottom
-        bottom: 'calc(1.5rem + var(--sab))',
+        // Отступ снизу: 0.75rem (12px) + Safe Area Bottom - ниже для лучшей видимости
+        bottom: 'calc(0.75rem + var(--sab))',
       }}
     >
       <motion.nav
@@ -59,7 +59,7 @@ export const BottomNav = () => {
                 whileTap={{ scale: 0.9 }}
                 whileHover={{ scale: 1.08 }}
                 onClick={() => navigate(item.path)}
-                className="relative -top-7 mx-1.5 w-16 h-16 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden"
+                className="relative -top-5 mx-1.5 w-16 h-16 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden"
                 style={{
                   background: premiumDesign.colors.gradients.primary,
                   boxShadow: '0 10px 32px rgba(99, 102, 241, 0.5), 0 0 1px rgba(255, 255, 255, 0.6) inset',
