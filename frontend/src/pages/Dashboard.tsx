@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Plus, ArrowUpRight, ArrowDownRight, Wallet,
+  ArrowUpRight, ArrowDownRight, Wallet,
   Zap, Target, ChevronRight
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -60,11 +60,7 @@ const Dashboard = () => {
 
   const displayTransactions = useMemo(() => {
     if (transactions && transactions.length > 0) return transactions.slice(0, 3)
-    return [
-      { id: 1, description: 'Netflix', amount: -12.99, type: 'expense', category: 'Entertainment', date: new Date().toISOString() },
-      { id: 2, description: 'Salary', amount: 3200.00, type: 'income', category: 'Salary', date: new Date().toISOString() },
-      { id: 3, description: 'Rewe Market', amount: -45.50, type: 'expense', category: 'Groceries', date: new Date().toISOString() },
-    ]
+    return []
   }, [transactions])
 
   // --- Components ---
@@ -136,7 +132,7 @@ const Dashboard = () => {
               <ArrowUpRight size={16} className="text-emerald-400" />
             </div>
             <div className="flex flex-col">
-               <span className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Income</span>
+               <span className="text-white/40 text-[10px] uppercase font-bold tracking-wider">{t('dashboard.income') || 'Income'}</span>
                <span className="text-emerald-100 text-sm font-bold">
                  {statsLoading ? '...' : `€ ${(stats?.total_income || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`}
                </span>
@@ -147,7 +143,7 @@ const Dashboard = () => {
               <ArrowDownRight size={16} className="text-rose-400" />
             </div>
             <div className="flex flex-col">
-               <span className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Expense</span>
+               <span className="text-white/40 text-[10px] uppercase font-bold tracking-wider">{t('dashboard.expenses') || 'Expenses'}</span>
                <span className="text-rose-100 text-sm font-bold">
                  {statsLoading ? '...' : `€ ${(stats?.total_expenses || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`}
                </span>
@@ -164,18 +160,17 @@ const Dashboard = () => {
 
       <HeroCard />
 
-      <div className="grid grid-cols-4 gap-4 mb-10 px-1">
-        <ActionButton icon={Plus} label={t('common.add') || 'Neu'} color="#818cf8" path="/add" />
-        <ActionButton icon={Target} label={t('nav.stats') || 'Ziele'} color="#f472b6" path="/stats" />
+      <div className="grid grid-cols-3 gap-4 mb-10 px-1">
+        <ActionButton icon={Target} label={t('nav.stats') || 'Stats'} color="#f472b6" path="/stats" />
         <ActionButton icon={Zap} label="AI" color="#fbbf24" path="/ai-chat" />
-        <ActionButton icon={Wallet} label="Karten" color="#2dd4bf" path="/accounts" />
+        <ActionButton icon={Wallet} label={t('nav.wallet') || 'Wallet'} color="#2dd4bf" path="/accounts" />
       </div>
 
       <div className="mb-6">
         <div className="flex items-center justify-between mb-5 px-1">
-          <h3 className="text-lg font-bold text-white">Aktivität</h3>
+          <h3 className="text-lg font-bold text-white">{t('dashboard.activity') || 'Activity'}</h3>
           <button onClick={() => navigate('/stats')} className="text-indigo-400 text-sm font-semibold flex items-center hover:opacity-80">
-            Alle <ChevronRight size={16} />
+            {t('common.view_all') || 'View All'} <ChevronRight size={16} />
           </button>
         </div>
 
@@ -184,7 +179,7 @@ const Dashboard = () => {
             [1, 2, 3].map(i => (
               <div key={i} className="h-[72px] rounded-3xl bg-neutral-900/50 animate-pulse border border-white/5" />
             ))
-          ) : (
+          ) : displayTransactions.length > 0 ? (
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             displayTransactions.map((tx: any, i: number) => (
                <div key={tx.id || i} className="flex items-center justify-between p-4 rounded-3xl bg-[#151515] border border-white/5 active:bg-neutral-800/50 transition-colors cursor-pointer">
@@ -204,33 +199,49 @@ const Dashboard = () => {
                 </span>
              </div>
             ))
+          ) : (
+            <div className="text-center py-12 px-4">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-900 flex items-center justify-center">
+                <Wallet size={32} className="text-neutral-600" />
+              </div>
+              <p className="text-neutral-500 text-sm">
+                {t('dashboard.no_transactions') || 'No transactions yet'}
+              </p>
+              <p className="text-neutral-600 text-xs mt-2">
+                {t('dashboard.connect_account') || 'Connect your bank account to get started'}
+              </p>
+            </div>
           )}
         </div>
       </div>
 
-      {/* AI Insight Pill */}
-      <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.8, type: 'spring' }}
-        className="fixed bottom-28 left-4 right-4 z-30"
-      >
-        <div
-          onClick={() => navigate('/ai-chat')}
-          className="bg-[#1A1A1A]/95 backdrop-blur-xl border border-indigo-500/30 p-4 rounded-2xl shadow-2xl shadow-indigo-500/10 flex items-center gap-4 cursor-pointer active:scale-98 transition-transform"
+      {/* AI Insight - Scrollable */}
+      {transactions && transactions.length > 3 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mt-8 mb-4"
         >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/40">
-            <Zap size={20} className="text-white fill-white animate-pulse" />
+          <div
+            onClick={() => navigate('/ai-chat')}
+            className="bg-[#1A1A1A]/95 backdrop-blur-xl border border-indigo-500/30 p-4 rounded-2xl shadow-xl shadow-indigo-500/10 flex items-center gap-4 cursor-pointer active:scale-98 transition-transform"
+          >
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/40">
+              <Zap size={20} className="text-white fill-white animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-indigo-300 font-bold tracking-wider mb-0.5 uppercase">
+                {t('dashboard.ai_insight') || 'AI Insight'}
+              </p>
+              <p className="text-xs text-white font-medium leading-relaxed">
+                {t('dashboard.ai_insight_message') || 'Ask AI about your spending patterns'}
+              </p>
+            </div>
+            <ChevronRight size={18} className="text-neutral-500" />
           </div>
-          <div className="flex-1">
-            <p className="text-[10px] text-indigo-300 font-bold tracking-wider mb-0.5 uppercase">AI Insight</p>
-            <p className="text-xs text-white font-medium leading-relaxed">
-              Deine Ausgaben für Lebensmittel sind um 15% gesunken! 🎉
-            </p>
-          </div>
-          <ChevronRight size={18} className="text-neutral-500" />
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
     </div>
   )
