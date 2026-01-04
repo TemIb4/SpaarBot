@@ -8,7 +8,7 @@ import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date
 import { CSVImport } from '../components/CSVImport'
 
 // Типы для фильтров
-type PeriodType = 'week' | 'month' | '3months' | 'year'
+type PeriodType = 'day' | 'week' | 'month' | '6months' | 'year' | 'all'
 
 interface StatsData {
   totalIncome: number
@@ -51,17 +51,23 @@ const Stats = () => {
     let start: Date
 
     switch (selectedPeriod) {
+      case 'day':
+        start = startOfDay(subDays(now, 1))
+        break
       case 'week':
         start = startOfDay(subDays(now, 7))
         break
       case 'month':
         start = startOfDay(subMonths(now, 1))
         break
-      case '3months':
-        start = startOfDay(subMonths(now, 3))
+      case '6months':
+        start = startOfDay(subMonths(now, 6))
         break
       case 'year':
         start = startOfDay(subYears(now, 1))
+        break
+      case 'all':
+        start = startOfDay(subYears(now, 10)) // 10 years back
         break
       default:
         start = startOfDay(subMonths(now, 1))
@@ -298,7 +304,7 @@ const Stats = () => {
 
       {/* Period Selector */}
       <div className="flex bg-neutral-900/80 p-1.5 rounded-2xl mb-8 overflow-x-auto no-scrollbar">
-        {(['week', 'month', '3months', 'year'] as PeriodType[]).map((p) => (
+        {(['day', 'week', 'month', '6months', 'year', 'all'] as PeriodType[]).map((p) => (
           <button
             key={p}
             onClick={() => setPeriod(p)}
