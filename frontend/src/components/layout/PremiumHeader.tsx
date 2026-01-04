@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Settings, Bell, Calendar, User, LogOut, CreditCard,
+  Settings, Bell, User, LogOut, CreditCard,
   Shield, ChevronDown, TrendingUp, Sparkles
 } from 'lucide-react'
 import { premiumDesign } from '../../config/premiumDesign'
 import { useUserStore } from '../../store/userStore'
 import { useNavigate } from 'react-router-dom'
-import { CalendarPopup } from './CalendarPopup'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 export const PremiumHeader = () => {
@@ -16,7 +15,6 @@ export const PremiumHeader = () => {
   const { t } = useLanguage()
 
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showCalendar, setShowCalendar] = useState(false)
   const [unreadNotifications] = useState(3)
 
   const menuItems = [
@@ -50,43 +48,36 @@ export const PremiumHeader = () => {
           // Жесткий отступ справа для кнопок Telegram
           style={{ paddingRight: 'var(--telegram-right-offset)' }}
         >
-          {/* LEFT SIDE: Logo - Ультра компактный дизайн */}
+          {/* LEFT SIDE: Logo */}
           <div
-            className="flex items-center space-x-1.5 cursor-pointer select-none active:opacity-70 transition-opacity"
+            className="flex items-center space-x-3 cursor-pointer select-none active:opacity-70 transition-opacity"
             onClick={() => navigate('/')}
           >
             <div
-              className="w-6 h-6 rounded-lg flex items-center justify-center text-sm shadow-md shadow-indigo-500/20 border border-white/10"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/20 border border-white/10"
               style={{ background: premiumDesign.colors.gradients.primary }}
             >
               💎
             </div>
-            <h1 className="text-sm font-bold tracking-tight text-white font-display">
+            <h1 className="text-xl font-bold tracking-tight text-white font-display">
               SpaarBot
             </h1>
           </div>
 
-          {/* RIGHT SIDE: Actions - Ультра компактный дизайн */}
-          <div className="flex items-center space-x-0.5">
-            <button
-              onClick={() => setShowCalendar(!showCalendar)}
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all"
-            >
-              <Calendar size={18} />
-            </button>
-
+          {/* RIGHT SIDE: Actions */}
+          <div className="flex items-center space-x-2">
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center p-0.5 pl-1 rounded-lg hover:bg-white/5 active:scale-95 transition-all gap-1"
+                className="flex items-center p-2 pl-3 rounded-xl hover:bg-white/5 active:scale-95 transition-all gap-2"
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-white/10 shadow-sm"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border border-white/10 shadow-sm"
                   style={{ background: premiumDesign.colors.gradients.accent, color: '#fff' }}
                 >
                   {user?.first_name?.[0] || 'U'}
                 </div>
-                <ChevronDown size={11} className={`text-neutral-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                <ChevronDown size={16} className={`text-neutral-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown Menu */}
@@ -127,10 +118,6 @@ export const PremiumHeader = () => {
           </div>
         </div>
       </motion.header>
-
-      <AnimatePresence>
-        {showCalendar && <CalendarPopup onDateSelect={() => setShowCalendar(false)} />}
-      </AnimatePresence>
     </>
   )
 }
