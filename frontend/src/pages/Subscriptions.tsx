@@ -139,12 +139,26 @@ const Subscriptions = () => {
               {t('subscriptions.yearly_forecast')}: €{(totalMonthly * 12).toFixed(2)}
             </p>
           </div>
-          <button
+          <motion.button
             onClick={() => setShowCalendar(!showCalendar)}
+            animate={{
+              scale: [1, 1.05, 1],
+              boxShadow: [
+                '0 0 0 0 rgba(99, 102, 241, 0)',
+                '0 0 0 8px rgba(99, 102, 241, 0.3)',
+                '0 0 0 0 rgba(99, 102, 241, 0)'
+              ]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+            whileTap={{ scale: 0.95 }}
             className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
           >
             <Calendar size={24} className="text-indigo-400" />
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -300,13 +314,14 @@ const Subscriptions = () => {
               className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[110] max-w-md mx-auto bg-neutral-900 rounded-3xl p-6 border border-white/10 overflow-y-auto"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] w-[calc(100%-2rem)] max-w-md bg-neutral-900 rounded-3xl p-6 border border-white/10 overflow-y-auto shadow-2xl"
               style={{
-                maxHeight: 'calc(100vh - 200px)',
+                maxHeight: 'calc(100vh - var(--header-total-height) - var(--bottom-nav-height) - 2rem)',
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-white">{t('subscriptions.add_subscription')}</h2>
