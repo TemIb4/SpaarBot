@@ -16,7 +16,7 @@
   --telegram-right-offset: 60px;
 
   /* Heights */
-  --header-content-height: 70px;
+  --header-content-height: 60px;
   --header-total-height: calc(var(--sat) + var(--header-content-height));
   --bottom-nav-height: 80px;
 }
