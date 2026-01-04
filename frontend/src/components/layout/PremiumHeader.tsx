@@ -45,21 +45,21 @@ export const PremiumHeader = () => {
       >
         <div
           className="w-full h-[var(--header-content-height)] flex items-center justify-between pl-3 pr-2"
-          // Жесткий отступ справа для кнопок Telegram
-          style={{ paddingRight: 'var(--telegram-right-offset)' }}
+          // Больше отступа справа для кнопок Telegram
+          style={{ paddingRight: '80px' }}
         >
           {/* LEFT SIDE: Logo */}
           <div
-            className="flex items-center space-x-3 cursor-pointer select-none active:opacity-70 transition-opacity"
+            className="flex items-center space-x-2 cursor-pointer select-none active:opacity-70 transition-opacity"
             onClick={() => navigate('/')}
           >
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/20 border border-white/10"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-lg shadow-lg shadow-indigo-500/20 border border-white/10"
               style={{ background: premiumDesign.colors.gradients.primary }}
             >
               💎
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white font-display">
+            <h1 className="text-base font-bold tracking-tight text-white font-display">
               SpaarBot
             </h1>
           </div>
@@ -69,15 +69,15 @@ export const PremiumHeader = () => {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center p-2 pl-3 rounded-xl hover:bg-white/5 active:scale-95 transition-all gap-2"
+                className="flex items-center p-1.5 pl-2.5 rounded-xl hover:bg-white/5 active:scale-95 transition-all gap-1.5"
               >
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border border-white/10 shadow-sm"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border border-white/10 shadow-sm"
                   style={{ background: premiumDesign.colors.gradients.accent, color: '#fff' }}
                 >
                   {user?.first_name?.[0] || 'U'}
                 </div>
-                <ChevronDown size={16} className={`text-neutral-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                <ChevronDown size={14} className={`text-neutral-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown Menu */}

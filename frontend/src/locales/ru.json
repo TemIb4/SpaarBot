@@ -53,7 +53,11 @@
     "no_transactions": "Нет транзакций",
     "add_first": "Добавьте вашу первую транзакцию!",
     "new_transaction": "Новая транзакция",
-    "view_stats": "Посмотреть статистику"
+    "view_stats": "Посмотреть статистику",
+    "activity": "Активность",
+    "connect_account": "Подключить счет",
+    "ai_insight": "AI Инсайт",
+    "ai_insight_message": "Спроси AI о своих тратах"
   },
   "stats": {
     "title": "Статистика",
@@ -259,6 +263,7 @@
     "success": "Успех",
     "cancel": "Отмена",
     "save": "Сохранить",
+    "view_all": "Показать все",
     "delete": "Удалить",
     "close": "Закрыть",
     "remove": "Удалить",

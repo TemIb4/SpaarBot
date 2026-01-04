@@ -53,7 +53,11 @@
     "no_transactions": "No transactions",
     "add_first": "Add your first transaction!",
     "new_transaction": "New transaction",
-    "view_stats": "View stats"
+    "view_stats": "View stats",
+    "activity": "Activity",
+    "connect_account": "Connect account",
+    "ai_insight": "AI Insight",
+    "ai_insight_message": "Ask AI about your spending patterns"
   },
   "stats": {
     "title": "Statistics",
@@ -259,6 +263,7 @@
     "success": "Success",
     "cancel": "Cancel",
     "save": "Save",
+    "view_all": "View All",
     "delete": "Delete",
     "close": "Close",
     "remove": "Remove",

@@ -53,7 +53,11 @@
     "no_transactions": "Keine Transaktionen",
     "add_first": "Füge deine erste Transaktion hinzu!",
     "new_transaction": "Neue Transaktion",
-    "view_stats": "Statistiken"
+    "view_stats": "Statistiken",
+    "activity": "Aktivität",
+    "connect_account": "Konto verbinden",
+    "ai_insight": "KI Einblick",
+    "ai_insight_message": "Frage die KI nach deinen Ausgabegewohnheiten"
   },
   "stats": {
     "title": "Statistiken",
@@ -264,6 +268,7 @@
     "remove": "Entfernen",
     "add": "Hinzufügen",
     "edit": "Bearbeiten",
+    "view_all": "Alle anzeigen",
     "back": "Zurück",
     "next": "Weiter",
     "done": "Fertig",

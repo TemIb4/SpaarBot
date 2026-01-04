@@ -106,7 +106,14 @@ const Dashboard = () => {
               {t('dashboard.total_balance') || 'Gesamtguthaben'}
             </p>
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setBalanceHidden(!balanceHidden)}>
-              <h2 className="text-4xl font-bold text-white tracking-tight font-mono-numbers">
+              <motion.h2
+                key={balanceHidden ? 'hidden' : 'visible'}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="text-4xl font-bold text-white tracking-tight font-mono-numbers"
+              >
                 {statsLoading ? (
                   <span className="text-white/40">Loading...</span>
                 ) : balanceHidden ? (
@@ -114,7 +121,7 @@ const Dashboard = () => {
                 ) : (
                   `€ ${(stats?.total_balance || 0).toFixed(2).replace('.', ',')}`
                 )}
-              </h2>
+              </motion.h2>
             </div>
           </div>
           <div onClick={() => navigate('/accounts')} className="p-3 bg-white/5 rounded-2xl backdrop-blur-md border border-white/10 text-white cursor-pointer active:scale-95 transition-transform">
