@@ -22,8 +22,8 @@ export const BottomNav = () => {
     <div
       className="fixed left-0 right-0 z-[60] flex justify-center px-4 pointer-events-none"
       style={{
-        // Отступ снизу: 0.75rem (12px) + Safe Area Bottom
-        bottom: 'calc(0.75rem + var(--sab))',
+        // Отступ снизу: 1.5rem (24px) + Safe Area Bottom
+        bottom: 'calc(1.5rem + var(--sab))',
       }}
     >
       <motion.nav
@@ -48,7 +48,7 @@ export const BottomNav = () => {
                 key={item.path}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => navigate(item.path)}
-                className="relative -top-5 mx-1 w-16 h-16 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden border border-white/20"
+                className="relative -top-6 mx-1 w-14 h-14 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden border border-white/20"
                 style={{
                   // ИСПОЛЬЗУЕМ premiumDesign для градиента и тени
                   background: premiumDesign.colors.gradients.primary,
@@ -56,7 +56,7 @@ export const BottomNav = () => {
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50" />
-                <Icon size={26} className="text-white relative z-10" />
+                <Icon size={24} className="text-white relative z-10" />
               </motion.button>
             )
           }
