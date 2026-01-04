@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Download, AlertCircle, Upload } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TrendingUp, TrendingDown, Download, AlertCircle, Upload, Wallet, ChevronDown, ChevronUp } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useUserStore } from '../store/userStore'
+import { useNavigate } from 'react-router-dom'
 import { apiService } from '../lib/api'
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date-fns'
 import { CSVImport } from '../components/CSVImport'
@@ -31,10 +32,13 @@ interface StatsData {
 const Stats = () => {
   const { t } = useLanguage()
   const { user } = useUserStore()
+  const navigate = useNavigate()
   const [period, setPeriod] = useState<PeriodType>('month')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCSVImport, setShowCSVImport] = useState(false)
+  const [hasConnectedAccounts, setHasConnectedAccounts] = useState(false)
+  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false)
   const [statsData, setStatsData] = useState<StatsData>({
     totalIncome: 0,
     totalExpenses: 0,
@@ -67,7 +71,7 @@ const Stats = () => {
         start = startOfDay(subYears(now, 1))
         break
       case 'all':
-        start = startOfDay(subYears(now, 10)) // 10 years back
+        start = startOfDay(subYears(now, 10))
         break
       default:
         start = startOfDay(subMonths(now, 1))
@@ -79,10 +83,22 @@ const Stats = () => {
     }
   }
 
+  // Проверка наличия подключенных аккаунтов
+  const checkAccounts = async () => {
+    if (!user?.telegram_id) return false
+
+    try {
+      const response = await apiService.accounts.list(user.telegram_id)
+      const accounts = response.data?.accounts || []
+      return accounts.length > 0
+    } catch (err) {
+      return false
+    }
+  }
+
   // Загрузка данных
   const loadStats = async () => {
     if (!user?.telegram_id) {
-      setError(t('stats.error_loading'))
       setLoading(false)
       return
     }
@@ -91,6 +107,28 @@ const Stats = () => {
     setError(null)
 
     try {
+      // Проверяем наличие аккаунтов
+      const hasAccounts = await checkAccounts()
+      setHasConnectedAccounts(hasAccounts)
+
+      // Если нет аккаунтов, показываем демо-данные
+      if (!hasAccounts) {
+        setStatsData({
+          totalIncome: 2500,
+          totalExpenses: 1800,
+          balance: 700,
+          topCategories: [
+            { name: t('categories.food'), amount: 450, color: '#fbbf24', icon: '🍕', percentage: 25 },
+            { name: t('categories.transport'), amount: 320, color: '#3b82f6', icon: '🚗', percentage: 18 },
+            { name: t('categories.entertainment'), amount: 280, color: '#ec4899', icon: '🎬', percentage: 15.6 }
+          ],
+          trendData: [120, 150, 180, 145, 210, 190, 230],
+          previousPeriod: { income: 2300, expenses: 1650 }
+        })
+        setLoading(false)
+        return
+      }
+
       const { start, end } = getDateRange(period)
 
       // Параллельная загрузка всех данных
@@ -121,16 +159,16 @@ const Stats = () => {
         }
       })
 
-      // Топ категории из backend
-      const topCategories = categoryStats.slice(0, 3).map((cat: any, index: number) => ({
-        name: cat.category_name || cat.name || 'Uncategorized',
+      // Топ категории
+      const topCategories = categoryStats.slice(0, 5).map((cat: any, index: number) => ({
+        name: cat.category_name || cat.name || t('categories.other'),
         amount: parseFloat(cat.total_amount || cat.amount || 0),
-        color: cat.color || ['bg-yellow-500', 'bg-purple-500', 'bg-blue-500'][index],
-        icon: cat.icon || ['🛒', '🎬', '🚕'][index],
+        color: ['#fbbf24', '#3b82f6', '#ec4899', '#10b981', '#8b5cf6'][index],
+        icon: ['🍕', '🚗', '🎬', '💳', '🏠'][index],
         percentage: cat.percentage || 0
       }))
 
-      // Данные тренда (упрощенная версия - группировка по дням)
+      // Данные тренда
       const trendMap = new Map<string, number>()
       transactions
         .filter((tx: any) => tx.transaction_type === 'expense')
@@ -140,7 +178,7 @@ const Stats = () => {
           trendMap.set(dayKey, (trendMap.get(dayKey) || 0) + parseFloat(tx.amount))
         })
 
-      const trendData = Array.from(trendMap.values()).slice(-7) // Последние 7 дней
+      const trendData = Array.from(trendMap.values()).slice(-7)
 
       setStatsData({
         totalIncome,
@@ -149,14 +187,16 @@ const Stats = () => {
         topCategories,
         trendData: trendData.length > 0 ? trendData : [0],
         previousPeriod: {
-          income: totalIncome * 0.92, // TODO: Fetch real previous period data
+          income: totalIncome * 0.92,
           expenses: totalExpenses * 1.08
         }
       })
 
     } catch (err: any) {
       console.error('Error loading stats:', err)
-      setError(t('stats.error_loading'))
+      if (hasConnectedAccounts) {
+        setError(t('stats.error_loading'))
+      }
     } finally {
       setLoading(false)
     }
@@ -178,8 +218,6 @@ const Stats = () => {
       })
 
       const transactions = res.data || []
-
-      // Создаем CSV
       const headers = ['Date', 'Type', 'Amount', 'Description', 'Category']
       const rows = transactions.map((tx: any) => [
         tx.transaction_date || format(new Date(tx.created_at), 'yyyy-MM-dd'),
@@ -194,7 +232,6 @@ const Stats = () => {
         ...rows.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))
       ].join('\n')
 
-      // Скачивание файла
       const blob = new Blob([csv], { type: 'text/csv' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -204,22 +241,11 @@ const Stats = () => {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-
-      // Показываем успешное уведомление через Telegram
-      const tg = (window as any).Telegram?.WebApp
-      if (tg) {
-        tg.showAlert(t('stats.exporting_data'))
-      }
     } catch (err) {
       console.error('Export error:', err)
-      const tg = (window as any).Telegram?.WebApp
-      if (tg) {
-        tg.showAlert(t('stats.error_loading'))
-      }
     }
   }
 
-  // Вычисление трендов
   const incomeTrend = statsData.previousPeriod.income > 0
     ? ((statsData.totalIncome - statsData.previousPeriod.income) / statsData.previousPeriod.income * 100).toFixed(1)
     : '0.0'
@@ -230,7 +256,6 @@ const Stats = () => {
 
   const maxTrendVal = Math.max(...statsData.trendData, 1)
 
-  // Компонент карточки статистики
   const StatCard = ({
     label,
     value,
@@ -287,7 +312,6 @@ const Stats = () => {
             onClick={() => setShowCSVImport(true)}
             disabled={loading}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-indigo-400 hover:border-indigo-500/50 transition-all disabled:opacity-50"
-            title={t('csv.import_title')}
           >
             <Upload size={18} />
           </button>
@@ -295,33 +319,56 @@ const Stats = () => {
             onClick={handleExport}
             disabled={loading}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-colors disabled:opacity-50"
-            title={t('stats.exporting_data')}
           >
             <Download size={18} />
           </button>
         </div>
       </div>
 
-      {/* Period Selector */}
-      <div className="flex bg-neutral-900/80 p-1.5 rounded-2xl mb-8 overflow-x-auto no-scrollbar">
-        {(['day', 'week', 'month', '6months', 'year', 'all'] as PeriodType[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            disabled={loading}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              period === p
-                ? 'bg-neutral-800 text-white shadow-lg'
-                : 'text-neutral-500 hover:text-neutral-300'
-            } disabled:opacity-50`}
-          >
-            {t(`stats.period_${p}`)}
-          </button>
-        ))}
+      {/* Period Dropdown */}
+      <div className="mb-8 relative">
+        <button
+          onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
+          className="w-full p-4 bg-neutral-900/80 rounded-2xl flex items-center justify-between border border-neutral-800 hover:border-neutral-700 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-neutral-500 text-sm">Период:</span>
+            <span className="text-white font-semibold">{t(`stats.period_${period}`)}</span>
+          </div>
+          {showPeriodDropdown ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
+
+        <AnimatePresence>
+          {showPeriodDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-full mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden z-50 shadow-2xl"
+            >
+              {(['day', 'week', 'month', '6months', 'year', 'all'] as PeriodType[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => {
+                    setPeriod(p)
+                    setShowPeriodDropdown(false)
+                  }}
+                  className={`w-full px-4 py-3 text-left transition-all ${
+                    period === p
+                      ? 'bg-indigo-600/20 text-white border-l-4 border-indigo-500'
+                      : 'text-neutral-400 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  {t(`stats.period_${p}`)}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Error State */}
-      {error && (
+      {/* Error State (only when has accounts but failed to load) */}
+      {error && hasConnectedAccounts && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -332,7 +379,29 @@ const Stats = () => {
         </motion.div>
       )}
 
-      {/* Main Graph Visualization */}
+      {/* No Accounts State */}
+      {!hasConnectedAccounts && !loading && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-6 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col items-center gap-3 text-center"
+        >
+          <Wallet size={40} className="text-indigo-400" />
+          <div>
+            <p className="text-white font-semibold mb-1">{t('wallet.no_accounts')}</p>
+            <p className="text-indigo-300 text-sm mb-4">{t('stats.add_transactions_first')}</p>
+          </div>
+          <button
+            onClick={() => navigate('/accounts')}
+            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-white font-semibold transition-all"
+          >
+            {t('wallet.connect_account')}
+          </button>
+          <p className="text-neutral-500 text-xs mt-2">Данные ниже - демонстрационные</p>
+        </motion.div>
+      )}
+
+      {/* Main Graph */}
       <div className="h-64 w-full bg-neutral-900/30 rounded-3xl border border-white/5 p-6 mb-6 flex flex-col justify-between relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
 
@@ -340,14 +409,13 @@ const Stats = () => {
           <span>{t('stats.expense_trend')}</span>
           {!loading && statsData.trendData.length > 0 && (
             <span className="text-purple-400 font-bold">
-              {expenseTrend}% {t('stats.vs_last')} {t(`stats.period_${period}`).toLowerCase()}
+              {expenseTrend}% {t('stats.vs_last')}
             </span>
           )}
         </div>
 
         <div className="flex items-end justify-between gap-2 h-40 z-10">
           {loading ? (
-            // Loading skeleton
             Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="flex-1 bg-neutral-800/50 rounded-t-lg animate-pulse" style={{ height: '60%' }} />
             ))
@@ -358,7 +426,7 @@ const Stats = () => {
                   initial={{ height: 0 }}
                   animate={{ height: `${(val / maxTrendVal) * 100}%` }}
                   transition={{ delay: i * 0.1, duration: 0.6, type: 'spring' }}
-                  className="w-full rounded-t-lg bg-gradient-to-t from-purple-600 to-pink-500 opacity-60 group-hover:opacity-100 transition-opacity relative"
+                  className="w-full rounded-t-lg bg-gradient-to-t from-purple-600 to-pink-500 opacity-60 group-hover:opacity-100 transition-opacity relative min-h-[20px]"
                 >
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                     €{val.toFixed(0)}
@@ -366,15 +434,11 @@ const Stats = () => {
                 </motion.div>
               </div>
             ))
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-neutral-600 text-sm">
-              {t('stats.no_data')}
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {/* Stat Cards Grid */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard
           label={t('stats.total_income')}
@@ -396,61 +460,51 @@ const Stats = () => {
       <div>
         <h3 className="text-lg font-bold text-white mb-4">{t('stats.top_categories')}</h3>
         {loading ? (
-          // Loading skeleton for categories
           <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-20 bg-neutral-900/30 rounded-2xl animate-pulse" />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 bg-neutral-900/50 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : statsData.topCategories.length > 0 ? (
           <div className="space-y-3">
-            {statsData.topCategories.map((cat, i) => (
+            {statsData.topCategories.map((cat, index) => (
               <motion.div
-                key={i}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-                className="flex items-center justify-between p-4 rounded-2xl bg-neutral-900/30 border border-white/5"
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-4 bg-neutral-900/50 rounded-2xl border border-white/5 flex items-center justify-between"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl ${cat.color} bg-opacity-20 flex items-center justify-center text-xl`}>
-                    {cat.icon}
-                  </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">{cat.icon}</div>
                   <div>
-                    <p className="font-semibold text-white">{cat.name}</p>
-                    <div className="w-24 h-1.5 bg-neutral-800 rounded-full mt-1.5 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(cat.percentage || 70, 100)}%` }}
-                        transition={{ delay: 0.6 + i * 0.1, duration: 0.8 }}
-                        className={`h-full ${cat.color}`}
-                      />
-                    </div>
+                    <p className="text-white font-semibold text-sm">{cat.name}</p>
+                    <p className="text-neutral-500 text-xs">{cat.percentage.toFixed(1)}% {t('stats.of_expenses')}</p>
                   </div>
                 </div>
-                <span className="font-bold text-white">
-                  €{cat.amount.toLocaleString('de-DE', { minimumFractionDigits: 2 })}
-                </span>
+                <p className="text-white font-bold">€{cat.amount.toFixed(2)}</p>
               </motion.div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-neutral-600">
-            <p>{t('stats.no_data')}</p>
-            <p className="text-sm mt-2">{t('stats.add_transactions_first')}</p>
+          <div className="text-center py-8 text-neutral-600">
+            {t('stats.no_categories')}
           </div>
         )}
       </div>
 
       {/* CSV Import Modal */}
-      {showCSVImport && (
-        <CSVImport
-          onClose={() => setShowCSVImport(false)}
-          onSuccess={() => {
-            loadStats() // Reload stats after successful import
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {showCSVImport && (
+          <CSVImport
+            onClose={() => setShowCSVImport(false)}
+            onImportComplete={() => {
+              setShowCSVImport(false)
+              loadStats()
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

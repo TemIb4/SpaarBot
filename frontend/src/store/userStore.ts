@@ -128,17 +128,21 @@ export const useUserStore = create<UserState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('spaarbot-user-storage')
-        localStorage.removeItem('spaarbot-language')
-        localStorage.removeItem('spaarbot-theme')
-        localStorage.removeItem('spaarbot-ui-mode')
-
+        // Очищаем только пользователя, но не удаляем storage полностью
         set({
           user: null,
           error: null,
           isPremium: false,
           isLoading: false
         })
+
+        // Через небольшую задержку пытаемся снова инициализировать из Telegram
+        setTimeout(() => {
+          const tg = (window as any).Telegram?.WebApp
+          if (tg?.initDataUnsafe?.user) {
+            get().fetchOrCreateUser(tg.initDataUnsafe.user.id, tg.initDataUnsafe.user)
+          }
+        }, 500)
       },
 
       initialize: async () => {
