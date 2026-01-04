@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Download, AlertCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Download, AlertCircle, Upload } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useUserStore } from '../store/userStore'
 import { apiService } from '../lib/api'
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date-fns'
+import { CSVImport } from '../components/CSVImport'
 
 // Типы для фильтров
 type PeriodType = 'week' | 'month' | '3months' | 'year'
@@ -33,6 +34,7 @@ const Stats = () => {
   const [period, setPeriod] = useState<PeriodType>('month')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showCSVImport, setShowCSVImport] = useState(false)
   const [statsData, setStatsData] = useState<StatsData>({
     totalIncome: 0,
     totalExpenses: 0,
@@ -274,13 +276,24 @@ const Stats = () => {
           </h1>
           <p className="text-neutral-500 text-sm">{t('stats.financial_overview')}</p>
         </div>
-        <button
-          onClick={handleExport}
-          disabled={loading}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-colors disabled:opacity-50"
-        >
-          <Download size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCSVImport(true)}
+            disabled={loading}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-indigo-400 hover:border-indigo-500/50 transition-all disabled:opacity-50"
+            title={t('csv.import_title')}
+          >
+            <Upload size={18} />
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={loading}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-colors disabled:opacity-50"
+            title={t('stats.exporting_data')}
+          >
+            <Download size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Period Selector */}
@@ -422,6 +435,16 @@ const Stats = () => {
           </div>
         )}
       </div>
+
+      {/* CSV Import Modal */}
+      {showCSVImport && (
+        <CSVImport
+          onClose={() => setShowCSVImport(false)}
+          onSuccess={() => {
+            loadStats() // Reload stats after successful import
+          }}
+        />
+      )}
     </div>
   )
 }

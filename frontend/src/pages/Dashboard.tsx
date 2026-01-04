@@ -10,14 +10,23 @@ import { premiumDesign } from '../config/premiumDesign'
 import { format } from 'date-fns'
 import { de, enUS, ru, uk } from 'date-fns/locale'
 import { useLanguage } from '../contexts/LanguageContext'
+import { apiService } from '../lib/api'
 
 const SPARKLINE_DATA = [40, 35, 55, 45, 60, 55, 75, 65, 85, 80, 95]
+
+interface DashboardStats {
+  total_balance: number
+  total_income: number
+  total_expenses: number
+}
 
 const Dashboard = () => {
   const navigate = useNavigate()
   const { t, language } = useLanguage()
   const { transactions, loading: txLoading, fetchTransactions } = useTransactionStore()
   const [balanceHidden, setBalanceHidden] = useState(false)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
 
   const localeMap = useMemo(() => ({ de, en: enUS, ru, uk }), [language])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +34,29 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTransactions?.()
+    loadStats()
   }, [fetchTransactions])
+
+  const loadStats = async () => {
+    try {
+      setStatsLoading(true)
+      const tg = (window as any).Telegram?.WebApp
+      const userId = tg?.initDataUnsafe?.user?.id
+
+      if (!userId) {
+        console.error('No Telegram user ID')
+        setStatsLoading(false)
+        return
+      }
+
+      const response = await apiService.stats.dashboard(userId, 'month')
+      setStats(response.data)
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
 
   const displayTransactions = useMemo(() => {
     if (transactions && transactions.length > 0) return transactions.slice(0, 3)
@@ -80,7 +111,13 @@ const Dashboard = () => {
             </p>
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setBalanceHidden(!balanceHidden)}>
               <h2 className="text-4xl font-bold text-white tracking-tight font-mono-numbers">
-                {balanceHidden ? '••••••' : '€ 12,450.00'}
+                {statsLoading ? (
+                  <span className="text-white/40">Loading...</span>
+                ) : balanceHidden ? (
+                  '••••••'
+                ) : (
+                  `€ ${(stats?.total_balance || 0).toFixed(2).replace('.', ',')}`
+                )}
               </h2>
             </div>
           </div>
@@ -100,7 +137,9 @@ const Dashboard = () => {
             </div>
             <div className="flex flex-col">
                <span className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Income</span>
-               <span className="text-emerald-100 text-sm font-bold">€ 3,200</span>
+               <span className="text-emerald-100 text-sm font-bold">
+                 {statsLoading ? '...' : `€ ${(stats?.total_income || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`}
+               </span>
             </div>
           </div>
           <div className="flex-1 flex items-center gap-3 bg-white/5 p-3 rounded-2xl backdrop-blur-sm border border-white/5">
@@ -109,7 +148,9 @@ const Dashboard = () => {
             </div>
             <div className="flex flex-col">
                <span className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Expense</span>
-               <span className="text-rose-100 text-sm font-bold">€ 1,840</span>
+               <span className="text-rose-100 text-sm font-bold">
+                 {statsLoading ? '...' : `€ ${(stats?.total_expenses || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`}
+               </span>
             </div>
           </div>
         </div>

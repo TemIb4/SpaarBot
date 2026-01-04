@@ -2,7 +2,6 @@ import axios, { AxiosInstance, AxiosError } from 'axios'
 
 // Определяем базовый URL из переменных окружения
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api/v1'
 
 // Создаем экземпляр axios с базовой конфигурацией
 export const api: AxiosInstance = axios.create({
@@ -125,6 +124,11 @@ export const apiService = {
   // STATISTICS
   // =========================
   stats: {
+    dashboard: (telegram_id: number, period?: 'day' | 'week' | 'month' | '3months' | 'year') =>
+      api.get('/api/v1/stats/dashboard', {
+        params: { telegram_id, period: period || 'month' }
+      }),
+
     overview: (telegram_id: number, period?: 'week' | 'month' | '3months' | 'year') =>
       api.get('/api/v1/stats/overview', {
         params: { telegram_id, period }

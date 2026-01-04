@@ -15,10 +15,10 @@
   /* Hardcoded offset for Telegram's top-right buttons (X, ...) */
   --telegram-right-offset: 60px;
 
-  /* Heights */
-  --header-content-height: 60px;
+  /* Heights - Optimized for more content space */
+  --header-content-height: 48px;
   --header-total-height: calc(var(--sat) + var(--header-content-height));
-  --bottom-nav-height: 80px;
+  --bottom-nav-height: 96px;
 }
 
 * {

@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 
+    # Redis for Caching & Rate Limiting
+    REDIS_URL: str = "redis://localhost:6379/1"
+    REDIS_CACHE_TTL: int = 300  # 5 minutes default cache TTL
+
+    # Rate Limiting
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_PER_HOUR: int = 1000
+
     # Open Banking (GoCardless)
     GOCARDLESS_SECRET_ID: str = ""
     GOCARDLESS_SECRET_KEY: str = ""

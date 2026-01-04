@@ -31,6 +31,52 @@ class PayPalConnectResponse(BaseModel):
     authorization_url: str
 
 
+@router.get("/auth-url", response_model=PayPalConnectResponse)
+async def get_auth_url(
+        telegram_id: int = Query(...),
+        db: AsyncSession = Depends(get_db)
+):
+    """
+    Get PayPal OAuth authorization URL
+
+    This is a simpler GET endpoint that returns the OAuth URL
+    Frontend calls this to initiate PayPal connection
+    """
+    try:
+        user = await get_user_by_telegram_id(db, telegram_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        client_id = getattr(settings, 'PAYPAL_CLIENT_ID', None)
+        if not client_id:
+            raise HTTPException(status_code=500, detail="PayPal not configured")
+
+        client_id = client_id.strip()
+        base_url = settings.TELEGRAM_WEBHOOK_URL.replace('/webhook', '')
+        redirect_uri = f"{base_url}/api/v1/paypal/callback"
+        paypal_mode = getattr(settings, 'PAYPAL_MODE', 'sandbox')
+
+        oauth_base = "https://www.sandbox.paypal.com" if paypal_mode == "sandbox" else "https://www.paypal.com"
+
+        params = {
+            "client_id": client_id,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "redirect_uri": redirect_uri,
+            "state": str(telegram_id),
+        }
+
+        authorization_url = f"{oauth_base}/connect?{urlencode(params)}"
+        logger.info(f"✅ PayPal OAuth URL created for user {telegram_id}")
+        return PayPalConnectResponse(authorization_url=authorization_url)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error creating auth URL: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/connect", response_model=PayPalConnectResponse)
 async def connect_paypal(
         request: PayPalConnectRequest,
