@@ -334,7 +334,7 @@ async def get_user_accounts(db: AsyncSession, telegram_id: int) -> List:
 # ✅ ДОБАВЬТЕ ЭТИ ФУНКЦИИ:
 
 # Chat Messages
-async def save_chat_message(db: Session, telegram_id: int, role: str, content: str):
+async def save_chat_message(db: AsyncSession, telegram_id: int, role: str, content: str):
     """Save chat message to database"""
     from app.db.models import ChatMessage
 
@@ -344,38 +344,40 @@ async def save_chat_message(db: Session, telegram_id: int, role: str, content: s
         content=content
     )
     db.add(message)
-    db.commit()
-    db.refresh(message)
+    await db.commit()
+    await db.refresh(message)
     return message
 
 
-async def get_chat_history(db: Session, telegram_id: int, limit: int = 50):
+async def get_chat_history(db: AsyncSession, telegram_id: int, limit: int = 50):
     """Get chat history for user"""
     from app.db.models import ChatMessage
 
-    messages = db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).order_by(ChatMessage.created_at.desc()).limit(limit).all()
+    result = await db.execute(
+        select(ChatMessage)
+        .where(ChatMessage.telegram_id == telegram_id)
+        .order_by(ChatMessage.created_at.desc())
+        .limit(limit)
+    )
+    messages = result.scalars().all()
 
     return list(reversed(messages))  # Oldest first
 
 
-async def clear_chat_history(db: Session, telegram_id: int):
+async def clear_chat_history(db: AsyncSession, telegram_id: int):
     """Clear chat history for user"""
     from app.db.models import ChatMessage
 
-    db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).delete()
-    db.commit()
+    await db.execute(
+        select(ChatMessage).where(ChatMessage.telegram_id == telegram_id)
+    )
+    await db.commit()
 
 
 # User Settings
-async def update_user_settings(db: Session, telegram_id: int, settings: dict):
+async def update_user_settings(db: AsyncSession, telegram_id: int, settings: dict):
     """Update user settings (tier, ui_mode, language, paypal_id)"""
-    from app.db.models import User
-
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    user = await get_user_by_telegram_id(db, telegram_id)
     if not user:
         return None
 
@@ -383,15 +385,15 @@ async def update_user_settings(db: Session, telegram_id: int, settings: dict):
         if hasattr(user, key) and value is not None:
             setattr(user, key, value)
 
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
 # ✅ ДОБАВЬТЕ ЭТИ ФУНКЦИИ В КОНЕЦ ФАЙЛА:
 
 async def get_transactions_by_user(
-        db: Session,
+        db: AsyncSession,
         telegram_id: int,
         start_date: str,
         end_date: str
@@ -402,32 +404,40 @@ async def get_transactions_by_user(
     start = datetime.fromisoformat(start_date).date()
     end = datetime.fromisoformat(end_date).date()
 
-    transactions = db.query(Transaction).filter(
-        Transaction.telegram_id == telegram_id,
-        Transaction.transaction_date >= start,
-        Transaction.transaction_date <= end
-    ).all()
+    result = await db.execute(
+        select(Transaction).where(
+            and_(
+                Transaction.telegram_id == telegram_id,
+                Transaction.transaction_date >= start,
+                Transaction.transaction_date <= end
+            )
+        )
+    )
+    transactions = result.scalars().all()
 
-    return transactions
+    return list(transactions)
 
 
-async def get_categories_by_user(db: Session, telegram_id: int) -> List[Category]:
+async def get_categories_by_user(db: AsyncSession, telegram_id: int) -> List[Category]:
     """Get all categories for user (including default system categories)"""
     # Получаем пользовательские категории
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    user = await get_user_by_telegram_id(db, telegram_id)
     if not user:
         return []
 
     # Получаем категории пользователя + системные категории
-    categories = db.query(Category).filter(
-        (Category.user_id == user.id) | (Category.user_id == None)
-    ).all()
+    result = await db.execute(
+        select(Category).where(
+            (Category.user_id == user.id) | (Category.user_id == None)
+        )
+    )
+    categories = result.scalars().all()
 
-    return categories
+    return list(categories)
 
 
 # Chat Messages
-async def save_chat_message(db: Session, telegram_id: int, role: str, content: str):
+async def save_chat_message(db: AsyncSession, telegram_id: int, role: str, content: str):
     """Save chat message to database"""
     from app.db.models import ChatMessage
 
@@ -437,38 +447,40 @@ async def save_chat_message(db: Session, telegram_id: int, role: str, content: s
         content=content
     )
     db.add(message)
-    db.commit()
-    db.refresh(message)
+    await db.commit()
+    await db.refresh(message)
     return message
 
 
-async def get_chat_history(db: Session, telegram_id: int, limit: int = 50):
+async def get_chat_history(db: AsyncSession, telegram_id: int, limit: int = 50):
     """Get chat history for user"""
     from app.db.models import ChatMessage
 
-    messages = db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).order_by(ChatMessage.created_at.desc()).limit(limit).all()
+    result = await db.execute(
+        select(ChatMessage)
+        .where(ChatMessage.telegram_id == telegram_id)
+        .order_by(ChatMessage.created_at.desc())
+        .limit(limit)
+    )
+    messages = result.scalars().all()
 
     return list(reversed(messages))  # Oldest first
 
 
-async def clear_chat_history(db: Session, telegram_id: int):
+async def clear_chat_history(db: AsyncSession, telegram_id: int):
     """Clear chat history for user"""
     from app.db.models import ChatMessage
 
-    db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).delete()
-    db.commit()
+    await db.execute(
+        select(ChatMessage).where(ChatMessage.telegram_id == telegram_id)
+    )
+    await db.commit()
 
 
 # User Settings
-async def update_user_settings(db: Session, telegram_id: int, settings: dict):
+async def update_user_settings(db: AsyncSession, telegram_id: int, settings: dict):
     """Update user settings (tier, ui_mode, language, paypal_id)"""
-    from app.db.models import User
-
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    user = await get_user_by_telegram_id(db, telegram_id)
     if not user:
         return None
 
@@ -476,8 +488,8 @@ async def update_user_settings(db: Session, telegram_id: int, settings: dict):
         if hasattr(user, key) and value is not None:
             setattr(user, key, value)
 
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
