@@ -498,7 +498,7 @@ const Stats = () => {
         {showCSVImport && (
           <CSVImport
             onClose={() => setShowCSVImport(false)}
-            onImportComplete={() => {
+            onSuccess={() => {
               setShowCSVImport(false)
               loadStats()
             }}
