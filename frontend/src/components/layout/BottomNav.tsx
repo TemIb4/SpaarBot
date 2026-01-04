@@ -59,20 +59,20 @@ export const BottomNav = () => {
                 whileTap={{ scale: 0.9 }}
                 whileHover={{ scale: 1.08 }}
                 onClick={() => navigate(item.path)}
-                className="relative -top-5 mx-1.5 w-16 h-16 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden"
+                className="relative -top-7 mx-2 w-20 h-20 rounded-full flex items-center justify-center z-50 cursor-pointer overflow-hidden shadow-2xl"
                 style={{
                   background: premiumDesign.colors.gradients.primary,
-                  boxShadow: '0 10px 32px rgba(99, 102, 241, 0.5), 0 0 1px rgba(255, 255, 255, 0.6) inset',
-                  border: '2px solid rgba(255, 255, 255, 0.4)'
+                  boxShadow: '0 12px 40px rgba(99, 102, 241, 0.6), 0 0 2px rgba(255, 255, 255, 0.7) inset',
+                  border: '3px solid rgba(255, 255, 255, 0.5)'
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/25 to-transparent opacity-60" />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
                 <Icon
-                  size={28}
+                  size={32}
                   className="text-white relative z-10"
                   style={{
-                    filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4))'
+                    filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
                   }}
                 />
               </motion.button>
