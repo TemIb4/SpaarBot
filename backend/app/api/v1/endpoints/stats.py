@@ -95,7 +95,15 @@ async def get_dashboard_stats(
         )
         subscription_result = await db.execute(subscription_query)
         subscriptions = subscription_result.scalars().all()
-        monthly_subscriptions = sum(float(s.amount) for s in subscriptions)
+
+        # Calculate monthly cost (convert yearly to monthly)
+        monthly_subscriptions = 0
+        for s in subscriptions:
+            amount = abs(float(s.amount))  # Use absolute value to handle negative amounts
+            if s.billing_cycle == 'yearly':
+                monthly_subscriptions += amount / 12
+            else:  # monthly
+                monthly_subscriptions += amount
 
         # Calculate daily average
         days_in_period = (now - start_date).days if start_date else 30
@@ -187,4 +195,65 @@ async def get_stats_summary(
         raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
     except Exception as e:
         logger.error(f"Error getting stats summary: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/categories")
+async def get_category_stats(
+    telegram_id: int = Query(..., description="Telegram user ID"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    transaction_type: str = Query("expense", description="Transaction type: expense or income"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get statistics grouped by category
+    """
+    try:
+        # Parse dates
+        start = datetime.fromisoformat(start_date) if start_date else None
+        end = datetime.fromisoformat(end_date) if end_date else datetime.now()
+
+        # Build query
+        query = select(Transaction).where(
+            Transaction.telegram_id == telegram_id,
+            Transaction.transaction_type == transaction_type
+        )
+        if start:
+            query = query.where(Transaction.transaction_date >= start.date())
+        if end:
+            query = query.where(Transaction.transaction_date <= end.date())
+
+        result = await db.execute(query)
+        transactions = result.scalars().all()
+
+        # Group by category
+        categories = {}
+        for t in transactions:
+            category = t.category or "Uncategorized"
+            if category not in categories:
+                categories[category] = {
+                    "category": category,
+                    "total": 0,
+                    "count": 0,
+                    "percentage": 0
+                }
+            categories[category]["total"] += float(t.amount)
+            categories[category]["count"] += 1
+
+        # Calculate percentages
+        total_amount = sum(c["total"] for c in categories.values())
+        for category_data in categories.values():
+            if total_amount > 0:
+                category_data["percentage"] = round((category_data["total"] / total_amount) * 100, 1)
+            category_data["total"] = round(category_data["total"], 2)
+
+        # Convert to list and sort by total
+        result_list = sorted(categories.values(), key=lambda x: x["total"], reverse=True)
+
+        return result_list
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error getting category stats: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

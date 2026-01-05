@@ -233,7 +233,7 @@ logger.info("  ✅ PayPal OAuth router registered")
 app.include_router(accounts.router, prefix=f"{settings.API_V1_PREFIX}/accounts", tags=["accounts"])
 logger.info("  ✅ Accounts router registered")
 
-app.include_router(paypal_sync.router, prefix=f"{settings.API_V1_PREFIX}/paypal/sync", tags=["paypal-sync"])
+app.include_router(paypal_sync.router, prefix=f"{settings.API_V1_PREFIX}/paypal", tags=["paypal-sync"])
 logger.info("  ✅ PayPal Sync router registered")
 
 # ============================================

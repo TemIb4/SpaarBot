@@ -10,7 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from app.db.database import get_db
 from app.db.models import Subscription
@@ -25,20 +25,38 @@ class SubscriptionCreate(BaseModel):
     telegram_id: int
     name: str
     icon: str = "💳"
-    amount: float
+    amount: float = Field(..., gt=0, description="Subscription amount (must be positive)")
     billing_cycle: str = "monthly"  # monthly, yearly
     next_billing_date: Optional[datetime] = None
     status: str = "active"
+
+    @field_validator('amount')
+    @classmethod
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError('Subscription amount must be positive')
+        if v > 1000000:
+            raise ValueError('Subscription amount is too large (max: 1,000,000)')
+        return v
 
 
 class SubscriptionUpdate(BaseModel):
     """Schema for updating subscription"""
     name: Optional[str] = None
     icon: Optional[str] = None
-    amount: Optional[float] = None
+    amount: Optional[float] = Field(None, gt=0, description="Subscription amount (must be positive)")
     billing_cycle: Optional[str] = None
     next_billing_date: Optional[datetime] = None
     status: Optional[str] = None
+
+    @field_validator('amount')
+    @classmethod
+    def validate_amount(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError('Subscription amount must be positive')
+        if v is not None and v > 1000000:
+            raise ValueError('Subscription amount is too large (max: 1,000,000)')
+        return v
 
 
 class SubscriptionResponse(BaseModel):
