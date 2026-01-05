@@ -311,18 +311,15 @@ const Subscriptions = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAddModal(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-[110] max-w-md mx-auto bg-neutral-900 rounded-3xl p-6 border border-white/10 overflow-y-auto shadow-2xl"
-              style={{
-                maxHeight: '80vh',
-              }}
-              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md bg-neutral-900 rounded-3xl p-6 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto"
+              >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-white">{t('subscriptions.add_subscription')}</h2>
                 <button onClick={() => setShowAddModal(false)} className="text-neutral-500 hover:text-white">
@@ -432,6 +429,7 @@ const Subscriptions = () => {
                   </button>
                 </div>
               </div>
+              </motion.div>
             </motion.div>
           </>
         )}

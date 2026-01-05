@@ -4,6 +4,7 @@ import { Send, Bot, Sparkles, AlertCircle } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useUserStore } from '../store/userStore'
 import { apiService } from '../lib/api'
+import { logger } from '../utils/logger'
 
 interface Message {
   id: string
@@ -83,13 +84,17 @@ const AIChat = () => {
 
     if (!textToSend) return
 
+    logger.info('[AIChat] Sending message', { user: user?.telegram_id, message: textToSend })
+
     if (!user?.telegram_id) {
+      logger.error('[AIChat] User not authenticated')
       setError('User not authenticated')
       return
     }
 
     // Проверка безопасности промпта
     if (!isPromptSafe(textToSend)) {
+      logger.warn('[AIChat] Unsafe prompt detected', { message: textToSend })
       setError('This type of question is not appropriate for financial advice')
       return
     }
@@ -107,12 +112,16 @@ const AIChat = () => {
     setIsTyping(true)
 
     try {
+      logger.info('[AIChat] Calling AI API', { telegram_id: user.telegram_id, language })
+
       // Отправляем запрос к AI API
       const response = await apiService.ai.query({
         telegram_id: user.telegram_id,
         message: textToSend,
         language: language
       })
+
+      logger.info('[AIChat] AI response received', { response: response.data })
 
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -123,7 +132,11 @@ const AIChat = () => {
 
       setMessages(prev => [...prev, aiMsg])
     } catch (err: any) {
-      console.error('AI Error:', err)
+      logger.error('[AIChat] AI Error', {
+        error: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      })
       setError(t('ai.error_sending'))
 
       // Убираем сообщение пользователя при ошибке

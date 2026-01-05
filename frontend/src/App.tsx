@@ -16,6 +16,7 @@ import Security from './pages/Security'
 import Notifications from './pages/Notifications'
 import Upgrade from './pages/Upgrade'
 import UsageStats from './pages/UsageStats'
+import Logs from './pages/Logs'
 
 function App() {
   const navigate = useNavigate()
@@ -74,6 +75,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/upgrade" element={<Upgrade />} />
         <Route path="/usage-stats" element={<UsageStats />} />
+        <Route path="/logs" element={<Logs />} />
 
         {/* Обработка "хвостов" и старых ссылок */}
         <Route path="/app" element={<Dashboard />} />

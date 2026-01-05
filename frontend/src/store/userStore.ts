@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from '../types'
 import { api } from '../lib/api'
+import { logger } from '../utils/logger'
 
 interface UserState {
   user: User | null
@@ -30,6 +31,7 @@ export const useUserStore = create<UserState>()(
 
       setUser: (user) => {
         const isPremium = user?.tier === 'premium' || user?.is_premium === true
+        logger.info('[UserStore] setUser called', { user, isPremium })
         set({
           user,
           error: null,
@@ -57,18 +59,18 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true, error: null })
 
         try {
-          console.log('[UserStore] Fetching user:', telegram_id)
+          logger.info('[UserStore] Fetching user', { telegram_id, userData })
 
           // Пытаемся получить существующего пользователя
           try {
             const response = await api.get(`/api/v1/users/${telegram_id}`)
             if (response.data) {
-              console.log('[UserStore] Found existing user:', response.data)
+              logger.info('[UserStore] Found existing user', response.data)
               get().setUser(response.data)
               return
             }
           } catch (error: any) {
-            console.log('[UserStore] User not found, creating new user')
+            logger.warn('[UserStore] User not found, will create new user', { status: error.response?.status })
             if (error.response?.status !== 404) {
               throw error
             }
@@ -83,21 +85,21 @@ export const useUserStore = create<UserState>()(
             language_code: userData.language_code || 'de',
           }
 
-          console.log('[UserStore] Creating new user with data:', newUserData)
+          logger.info('[UserStore] Creating new user', newUserData)
           const createResponse = await api.post('/api/v1/users', newUserData)
 
           if (createResponse.data) {
-            console.log('[UserStore] User created successfully:', createResponse.data)
+            logger.info('[UserStore] User created successfully', createResponse.data)
 
             // Убедимся что пользователь правильно сохраняется
-            const userData = {
+            const finalUserData = {
               ...createResponse.data,
               telegram_id: createResponse.data.telegram_id,
               tier: createResponse.data.tier || 'free',
               is_premium: createResponse.data.is_premium || false
             }
 
-            get().setUser(userData)
+            get().setUser(finalUserData)
 
             // Устанавливаем язык из Telegram
             if (newUserData.language_code) {
@@ -106,16 +108,25 @@ export const useUserStore = create<UserState>()(
               if (supportedLangs.includes(userLang)) {
                 localStorage.setItem('spaarbot-language', userLang)
                 document.documentElement.lang = userLang
+                logger.info('[UserStore] Language set', { userLang })
               }
             }
 
-            console.log('[UserStore] User state updated:', get().user)
+            logger.info('[UserStore] User state updated', get().user)
           } else {
-            console.error('[UserStore] No data returned from create API')
+            logger.error('[UserStore] No data returned from create API')
+            set({
+              error: 'No data returned from server',
+              isLoading: false
+            })
           }
 
         } catch (error: any) {
-          console.error('[UserStore] Error fetching/creating user:', error)
+          logger.error('[UserStore] Error fetching/creating user', {
+            error: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+          })
           set({
             error: 'Fehler beim Laden des Benutzers. Bitte versuche es später erneut.',
             isLoading: false
@@ -166,49 +177,64 @@ export const useUserStore = create<UserState>()(
       },
 
       initialize: async () => {
+        logger.info('[UserStore] Initializing app')
+
+        const tg = (window as any).Telegram?.WebApp
+        logger.info('[UserStore] Telegram WebApp available', { available: !!tg })
+
         // Проверяем биометрическую аутентификацию
         const biometricEnabled = localStorage.getItem('spaarbot-biometric-enabled') === 'true'
-        const tg = (window as any).Telegram?.WebApp
+        logger.info('[UserStore] Biometric status', { biometricEnabled })
 
         if (biometricEnabled && tg?.BiometricManager) {
           const biometricManager = tg.BiometricManager
+          logger.info('[UserStore] BiometricManager available', {
+            available: biometricManager.isBiometricAvailable,
+            type: biometricManager.biometricType
+          })
 
           // Проверяем доступность биометрии
           if (biometricManager.isBiometricAvailable) {
             try {
+              logger.info('[UserStore] Requesting biometric authentication')
               // Запрашиваем биометрическую аутентификацию
-              await new Promise<boolean>((resolve) => {
+              const authenticated = await new Promise<boolean>((resolve) => {
                 biometricManager.authenticate({
                   reason: 'Please authenticate to access SpaarBot'
-                }, (authenticated: boolean) => {
-                  resolve(authenticated)
+                }, (success: boolean) => {
+                  logger.info('[UserStore] Biometric result', { success })
+                  resolve(success)
                 })
-              }).then((authenticated) => {
-                if (!authenticated) {
-                  set({
-                    error: 'Biometric authentication failed',
-                    isLoading: false
-                  })
-                  return
-                }
               })
+
+              if (!authenticated) {
+                logger.error('[UserStore] Biometric authentication failed')
+                set({
+                  error: 'Biometric authentication failed',
+                  isLoading: false
+                })
+                return
+              }
             } catch (error) {
-              console.error('Biometric authentication error:', error)
+              logger.error('[UserStore] Biometric error', error)
             }
           }
         }
 
         // Проверяем сохраненного пользователя
         const savedUser = get().user
+        logger.info('[UserStore] Saved user', { savedUser })
 
         if (savedUser?.telegram_id) {
           // Обновляем данные с сервера в фоне
+          logger.info('[UserStore] Refreshing saved user from server')
           get().fetchOrCreateUser(savedUser.telegram_id, savedUser)
           return
         }
 
         // Проверяем Telegram WebApp
         if (!tg?.initDataUnsafe?.user) {
+          logger.error('[UserStore] No Telegram user data available')
           set({
             error: 'Telegram Benutzerdaten nicht verfügbar. Bitte öffne die App über Telegram.',
             isLoading: false
@@ -217,6 +243,7 @@ export const useUserStore = create<UserState>()(
         }
 
         const telegramUser = tg.initDataUnsafe.user
+        logger.info('[UserStore] Telegram user from WebApp', telegramUser)
 
         // Загружаем или создаем пользователя
         await get().fetchOrCreateUser(telegramUser.id, telegramUser)

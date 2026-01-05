@@ -1,7 +1,7 @@
 // Settings.tsx - БЕЗ АНИМАЦИЙ И UI MODE
 
 import { motion } from 'framer-motion'
-import { Globe, Palette, Check } from 'lucide-react'
+import { Globe, Palette, Check, FileText } from 'lucide-react'
 import { premiumDesign } from '../config/premiumDesign'
 import { useUserStore } from '../store/userStore'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -208,6 +208,40 @@ const Settings = () => {
               )
             })}
           </div>
+        </motion.div>
+
+        {/* Logs Button */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="rounded-3xl overflow-hidden mt-6"
+          style={{
+            background: premiumDesign.colors.neutral[900],
+            border: `1px solid ${premiumDesign.colors.neutral[800]}`,
+          }}
+        >
+          <button
+            onClick={() => navigate('/logs')}
+            className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-all"
+          >
+            <div className="flex items-center space-x-3">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{
+                  background: `${premiumDesign.colors.accent[500]}20`,
+                  border: `1px solid ${premiumDesign.colors.accent[500]}40`,
+                }}
+              >
+                <FileText size={24} className="text-accent-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-lg font-bold text-white">Просмотр логов</h3>
+                <p className="text-sm text-neutral-400">Отладка и диагностика</p>
+              </div>
+            </div>
+            <div className="text-2xl text-neutral-600">→</div>
+          </button>
         </motion.div>
       </motion.div>
     </div>
