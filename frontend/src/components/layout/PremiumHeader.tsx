@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Settings, Bell, User, LogOut, CreditCard,
+  Settings, Bell, User, CreditCard,
   Shield, ChevronDown, TrendingUp, Sparkles
 } from 'lucide-react'
 import { premiumDesign } from '../../config/premiumDesign'
@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 export const PremiumHeader = () => {
-  const { user, isPremium, logout } = useUserStore()
+  const { user, isPremium } = useUserStore()
   const navigate = useNavigate()
   const { t } = useLanguage()
 
@@ -24,8 +24,7 @@ export const PremiumHeader = () => {
     { icon: Bell, label: t('menu.notifications'), action: () => navigate('/notifications'), badge: unreadNotifications > 0 ? unreadNotifications : null },
     { icon: CreditCard, label: t('menu.payment_methods'), action: () => navigate('/payment-methods') },
     { icon: Shield, label: t('menu.security'), action: () => navigate('/security') },
-    { icon: TrendingUp, label: t('menu.usage_stats'), action: () => navigate('/usage-stats') },
-    { icon: LogOut, label: t('menu.logout'), action: () => { if (window.confirm(t('menu.logout_confirm'))) { logout(); navigate('/'); } }, danger: true, separator: true }
+    { icon: TrendingUp, label: t('menu.usage_stats'), action: () => navigate('/usage-stats') }
   ]
 
   return (
@@ -93,21 +92,19 @@ export const PremiumHeader = () => {
                     >
                       <div className="p-2 space-y-1">
                         {menuItems.map((item, index) => (
-                          <div key={index}>
-                            {item.separator && <div className="my-1.5 mx-2 h-px bg-white/10" />}
-                            <button
-                              onClick={() => { item.action(); setShowUserMenu(false); }}
-                              className={`w-full px-3 py-3 flex items-center justify-between rounded-xl transition-all active:scale-[0.98] ${
-                                item.highlight ? 'bg-indigo-600/10' : 'hover:bg-white/5'
-                              }`}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <item.icon size={18} className={item.danger ? "text-red-400" : item.highlight ? "text-indigo-400" : "text-neutral-400"} />
-                                <span className={`text-sm font-medium ${item.danger ? "text-red-400" : "text-neutral-200"}`}>{item.label}</span>
-                              </div>
-                              {item.badge && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500 text-white">{item.badge}</span>}
-                            </button>
-                          </div>
+                          <button
+                            key={index}
+                            onClick={() => { item.action(); setShowUserMenu(false); }}
+                            className={`w-full px-3 py-3 flex items-center justify-between rounded-xl transition-all active:scale-[0.98] ${
+                              item.highlight ? 'bg-indigo-600/10' : 'hover:bg-white/5'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <item.icon size={18} className={item.highlight ? "text-indigo-400" : "text-neutral-400"} />
+                              <span className={`text-sm font-medium text-neutral-200`}>{item.label}</span>
+                            </div>
+                            {item.badge && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500 text-white">{item.badge}</span>}
+                          </button>
                         ))}
                       </div>
                     </motion.div>

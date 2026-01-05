@@ -54,10 +54,14 @@ const AIChat = () => {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBottom()
   }, [messages, isTyping])
 
   // Обновляем приветствие при смене языка
@@ -135,9 +139,12 @@ const AIChat = () => {
   }
 
   return (
-    <div className="h-[calc(100dvh-8rem)] flex flex-col relative bg-black">
-      {/* Header */}
-      <div className="pt-6 pb-4 px-5 bg-gradient-to-b from-black via-black/95 to-transparent backdrop-blur-md sticky top-0 z-20 border-b border-white/5">
+    <div className="fixed inset-0 bg-black flex flex-col" style={{
+      paddingTop: 'var(--header-total-height)',
+      paddingBottom: 'var(--bottom-nav-height)'
+    }}>
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 pt-4 pb-3 px-5 bg-gradient-to-b from-black via-black to-transparent backdrop-blur-md border-b border-white/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center relative">
@@ -156,8 +163,8 @@ const AIChat = () => {
         </div>
       </div>
 
-      {/* Quick Prompts */}
-      <div className="px-5 py-3 bg-black/50 border-b border-white/5">
+      {/* Quick Prompts - Fixed */}
+      <div className="flex-shrink-0 px-5 py-3 bg-black/50 border-b border-white/5">
         <p className="text-xs text-neutral-400 mb-2 uppercase tracking-wider">{t('ai.suggestions')}</p>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           {QUICK_PROMPTS.map((prompt) => (
@@ -175,14 +182,14 @@ const AIChat = () => {
         </div>
       </div>
 
-      {/* Error Banner */}
+      {/* Error Banner - Fixed */}
       <AnimatePresence>
         {error && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mx-5 mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-2"
+            className="flex-shrink-0 mx-5 mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-2"
           >
             <AlertCircle className="text-rose-400 flex-shrink-0" size={16} />
             <p className="text-rose-400 text-xs">{error}</p>
@@ -196,60 +203,62 @@ const AIChat = () => {
         )}
       </AnimatePresence>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4 pb-4">
-        {messages.map((msg, index) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed ${
-                msg.role === 'user'
-                  ? 'bg-neutral-800 text-white rounded-tr-md'
-                  : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tl-md shadow-lg shadow-purple-500/20'
-              }`}
-            >
-              {msg.role === 'assistant' && (
-                <div className="flex items-center gap-2 mb-2 opacity-70">
-                  <Sparkles size={14} />
-                  <span className="text-xs">AI Assistant</span>
-                </div>
-              )}
-              <div className="whitespace-pre-wrap">{msg.content}</div>
-              <div className={`mt-2 text-[10px] ${msg.role === 'user' ? 'text-neutral-500' : 'text-white/50'}`}>
-                {msg.timestamp.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })}
-              </div>
-            </div>
-          </motion.div>
-        ))}
-
-        {/* Typing Indicator */}
-        <AnimatePresence>
-          {isTyping && (
+      {/* Messages - Scrollable */}
+      <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="space-y-4 pb-4">
+          {messages.map((msg, index) => (
             <motion.div
+              key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex justify-start"
+              transition={{ delay: index * 0.05 }}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className="flex gap-1 px-4 py-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl rounded-tl-md shadow-lg shadow-purple-500/20">
-                <span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <div
+                className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'bg-neutral-800 text-white rounded-tr-md'
+                    : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tl-md shadow-lg shadow-purple-500/20'
+                }`}
+              >
+                {msg.role === 'assistant' && (
+                  <div className="flex items-center gap-2 mb-2 opacity-70">
+                    <Sparkles size={14} />
+                    <span className="text-xs">AI Assistant</span>
+                  </div>
+                )}
+                <div className="whitespace-pre-wrap">{msg.content}</div>
+                <div className={`mt-2 text-[10px] ${msg.role === 'user' ? 'text-neutral-500' : 'text-white/50'}`}>
+                  {msg.timestamp.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          ))}
 
-        <div ref={scrollRef} />
+          {/* Typing Indicator */}
+          <AnimatePresence>
+            {isTyping && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex justify-start"
+              >
+                <div className="flex gap-1 px-4 py-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl rounded-tl-md shadow-lg shadow-purple-500/20">
+                  <span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" />
+                  <span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <span className="w-2 h-2 bg-white/70 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input Area - с отступом снизу для навигации */}
-      <div className="p-4 bg-black/90 backdrop-blur-xl border-t border-white/10" style={{ paddingBottom: 'calc(var(--bottom-nav-height) + 1rem)' }}>
+      {/* Input Area - Fixed */}
+      <div className="flex-shrink-0 p-4 bg-black/90 backdrop-blur-xl border-t border-white/10">
         <div className="flex items-end gap-2">
           <div className="flex-1 bg-neutral-900 border border-white/10 rounded-2xl focus-within:border-purple-500/50 transition-colors overflow-hidden">
             <textarea
@@ -264,10 +273,10 @@ const AIChat = () => {
               placeholder={t('ai.placeholder')}
               disabled={isTyping}
               rows={1}
-              className="w-full bg-transparent text-white px-5 py-3 focus:outline-none resize-none max-h-32 disabled:opacity-50"
+              className="w-full bg-transparent text-white px-5 py-3 focus:outline-none resize-none disabled:opacity-50"
               style={{
                 minHeight: '48px',
-                maxHeight: '128px',
+                maxHeight: '120px',
               }}
             />
           </div>

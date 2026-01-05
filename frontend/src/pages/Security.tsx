@@ -7,7 +7,9 @@ import { useLanguage } from '../contexts/LanguageContext'
 const Security: React.FC = () => {
   const { t } = useLanguage()
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
-  const [biometricEnabled, setBiometricEnabled] = useState(false)
+  const [biometricEnabled, setBiometricEnabled] = useState(
+    localStorage.getItem('spaarbot-biometric-enabled') === 'true'
+  )
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -55,11 +57,53 @@ const Security: React.FC = () => {
   const toggleBiometric = async () => {
     setLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      setBiometricEnabled(!biometricEnabled)
+      const tg = (window as any).Telegram?.WebApp
+      const biometricManager = tg?.BiometricManager
+
+      if (!biometricManager) {
+        alert('Biometric authentication is not available on this device')
+        setLoading(false)
+        return
+      }
+
+      // Проверяем доступность биометрии
+      if (!biometricManager.isInited) {
+        await new Promise<void>((resolve) => {
+          biometricManager.init(() => {
+            resolve()
+          })
+        })
+      }
+
+      if (!biometricManager.isBiometricAvailable) {
+        alert('Biometric authentication is not supported on this device')
+        setLoading(false)
+        return
+      }
+
+      if (!biometricEnabled) {
+        // Включаем биометрию
+        biometricManager.requestAccess({
+          reason: 'Enable biometric authentication for secure access'
+        }, (granted: boolean) => {
+          if (granted) {
+            setBiometricEnabled(true)
+            localStorage.setItem('spaarbot-biometric-enabled', 'true')
+            alert('Biometric authentication enabled successfully')
+          } else {
+            alert('Biometric access was denied')
+          }
+          setLoading(false)
+        })
+      } else {
+        // Выключаем биометрию
+        setBiometricEnabled(false)
+        localStorage.removeItem('spaarbot-biometric-enabled')
+        setLoading(false)
+      }
     } catch (error) {
+      console.error('Biometric toggle error:', error)
       alert(t('security.error_toggling_biometric'))
-    } finally {
       setLoading(false)
     }
   }

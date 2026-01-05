@@ -317,9 +317,9 @@ const Subscriptions = () => {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] w-[calc(100%-2rem)] max-w-md bg-neutral-900 rounded-3xl p-6 border border-white/10 overflow-y-auto shadow-2xl"
+              className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-[110] max-w-md mx-auto bg-neutral-900 rounded-3xl p-6 border border-white/10 overflow-y-auto shadow-2xl"
               style={{
-                maxHeight: 'calc(100vh - var(--header-total-height) - var(--bottom-nav-height) - 2rem)',
+                maxHeight: '80vh',
               }}
               onClick={(e) => e.stopPropagation()}
             >

@@ -57,14 +57,18 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true, error: null })
 
         try {
+          console.log('[UserStore] Fetching user:', telegram_id)
+
           // Пытаемся получить существующего пользователя
           try {
             const response = await api.get(`/api/v1/users/${telegram_id}`)
             if (response.data) {
+              console.log('[UserStore] Found existing user:', response.data)
               get().setUser(response.data)
               return
             }
           } catch (error: any) {
+            console.log('[UserStore] User not found, creating new user')
             if (error.response?.status !== 404) {
               throw error
             }
@@ -79,23 +83,39 @@ export const useUserStore = create<UserState>()(
             language_code: userData.language_code || 'de',
           }
 
+          console.log('[UserStore] Creating new user with data:', newUserData)
           const createResponse = await api.post('/api/v1/users', newUserData)
 
           if (createResponse.data) {
-            get().setUser(createResponse.data)
+            console.log('[UserStore] User created successfully:', createResponse.data)
+
+            // Убедимся что пользователь правильно сохраняется
+            const userData = {
+              ...createResponse.data,
+              telegram_id: createResponse.data.telegram_id,
+              tier: createResponse.data.tier || 'free',
+              is_premium: createResponse.data.is_premium || false
+            }
+
+            get().setUser(userData)
 
             // Устанавливаем язык из Telegram
-            if (userData.language_code) {
+            if (newUserData.language_code) {
               const supportedLangs = ['de', 'en', 'ru', 'uk']
-              const userLang = userData.language_code.toLowerCase()
+              const userLang = newUserData.language_code.toLowerCase()
               if (supportedLangs.includes(userLang)) {
                 localStorage.setItem('spaarbot-language', userLang)
                 document.documentElement.lang = userLang
               }
             }
+
+            console.log('[UserStore] User state updated:', get().user)
+          } else {
+            console.error('[UserStore] No data returned from create API')
           }
 
         } catch (error: any) {
+          console.error('[UserStore] Error fetching/creating user:', error)
           set({
             error: 'Fehler beim Laden des Benutzers. Bitte versuche es später erneut.',
             isLoading: false
@@ -146,6 +166,38 @@ export const useUserStore = create<UserState>()(
       },
 
       initialize: async () => {
+        // Проверяем биометрическую аутентификацию
+        const biometricEnabled = localStorage.getItem('spaarbot-biometric-enabled') === 'true'
+        const tg = (window as any).Telegram?.WebApp
+
+        if (biometricEnabled && tg?.BiometricManager) {
+          const biometricManager = tg.BiometricManager
+
+          // Проверяем доступность биометрии
+          if (biometricManager.isBiometricAvailable) {
+            try {
+              // Запрашиваем биометрическую аутентификацию
+              await new Promise<boolean>((resolve) => {
+                biometricManager.authenticate({
+                  reason: 'Please authenticate to access SpaarBot'
+                }, (authenticated: boolean) => {
+                  resolve(authenticated)
+                })
+              }).then((authenticated) => {
+                if (!authenticated) {
+                  set({
+                    error: 'Biometric authentication failed',
+                    isLoading: false
+                  })
+                  return
+                }
+              })
+            } catch (error) {
+              console.error('Biometric authentication error:', error)
+            }
+          }
+        }
+
         // Проверяем сохраненного пользователя
         const savedUser = get().user
 
@@ -156,8 +208,6 @@ export const useUserStore = create<UserState>()(
         }
 
         // Проверяем Telegram WebApp
-        const tg = (window as any).Telegram?.WebApp
-
         if (!tg?.initDataUnsafe?.user) {
           set({
             error: 'Telegram Benutzerdaten nicht verfügbar. Bitte öffne die App über Telegram.',

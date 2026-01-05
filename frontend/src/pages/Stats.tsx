@@ -7,6 +7,10 @@ import { useNavigate } from 'react-router-dom'
 import { apiService } from '../lib/api'
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date-fns'
 import { CSVImport } from '../components/CSVImport'
+import { CategoryPieChart } from '../components/charts/CategoryPieChart'
+import { ExpenseChart } from '../components/charts/ExpenseChart'
+import { MonthlyComparisonChart } from '../components/charts/MonthlyComparisonChart'
+import { WeeklyTrendChart } from '../components/charts/WeeklyTrendChart'
 
 // Типы для фильтров
 type PeriodType = 'day' | 'week' | 'month' | '6months' | 'year' | 'all'
@@ -47,6 +51,7 @@ const Stats = () => {
     trendData: [],
     previousPeriod: { income: 0, expenses: 0 }
   })
+  const [transactions, setTransactions] = useState<any[]>([])
 
   // Получение дат для выбранного периода
   const getDateRange = (selectedPeriod: PeriodType) => {
@@ -146,6 +151,9 @@ const Stats = () => {
 
       const transactions = transactionsRes.data || []
       const categoryStats = categoryStatsRes.data || []
+
+      // Сохраняем transactions для charts
+      setTransactions(transactions)
 
       // Вычисляем общую статистику
       let totalIncome = 0
@@ -492,6 +500,43 @@ const Stats = () => {
           </div>
         )}
       </div>
+
+      {/* Charts Section */}
+      {!loading && transactions.length > 0 && (
+        <div className="mt-8 space-y-8">
+          {/* Category Pie Chart */}
+          <div className="bg-neutral-900/30 rounded-3xl border border-white/5 p-6">
+            <h3 className="text-lg font-bold text-white mb-6">
+              Ausgaben nach Kategorien
+            </h3>
+            <CategoryPieChart transactions={transactions} />
+          </div>
+
+          {/* Expense Chart */}
+          <div className="bg-neutral-900/30 rounded-3xl border border-white/5 p-6">
+            <h3 className="text-lg font-bold text-white mb-6">
+              Einnahmen & Ausgaben Verlauf
+            </h3>
+            <ExpenseChart transactions={transactions} />
+          </div>
+
+          {/* Monthly Comparison Chart */}
+          <div className="bg-neutral-900/30 rounded-3xl border border-white/5 p-6">
+            <h3 className="text-lg font-bold text-white mb-6">
+              Monatsvergleich (6 Monate)
+            </h3>
+            <MonthlyComparisonChart transactions={transactions} />
+          </div>
+
+          {/* Weekly Trend Chart */}
+          <div className="bg-neutral-900/30 rounded-3xl border border-white/5 p-6">
+            <h3 className="text-lg font-bold text-white mb-6">
+              Wochenübersicht
+            </h3>
+            <WeeklyTrendChart transactions={transactions} />
+          </div>
+        </div>
+      )}
 
       {/* CSV Import Modal */}
       <AnimatePresence>
