@@ -18,9 +18,9 @@ aiosqlite==0.21.0
 # For PostgreSQL production: asyncpg==0.29.0
 
 # Configuration & Validation
-pydantic==2.12.4
+pydantic==2.11.0
 pydantic-settings==2.11.0
-pydantic-core== 2.41.5
+pydantic-core==2.33.0
 python-dotenv==1.2.1
 email-validator==2.3.0
 
@@ -41,13 +41,13 @@ requests==2.32.5
 
 # Celery & Background Tasks
 celery[redis]==5.6.0b1
-redis==7.0.1
+redis==5.2.1
 
 # File Handling
-aiofiles==25.1.0
+aiofiles==23.2.1
 
 # Development & Testing (optional)
-pytest==9.0.0
+pytest==8.3.4
 pytest-asyncio==1.2.0
 black
 flake8

@@ -331,306 +331,38 @@ async def get_user_accounts(db: AsyncSession, telegram_id: int) -> List:
     return accounts
 
 
-# ✅ ДОБАВЬТЕ ЭТИ ФУНКЦИИ:
-
-# Chat Messages
-async def save_chat_message(db: Session, telegram_id: int, role: str, content: str):
-    """Save chat message to database"""
-    from app.db.models import ChatMessage
-
-    message = ChatMessage(
-        telegram_id=telegram_id,
-        role=role,
-        content=content
-    )
-    db.add(message)
-    db.commit()
-    db.refresh(message)
-    return message
 
 
-async def get_chat_history(db: Session, telegram_id: int, limit: int = 50):
-    """Get chat history for user"""
-    from app.db.models import ChatMessage
+# ====================STUB IMPLEMENTATIONS FOR MISSING FUNCTIONS ====================
+# TODO: Implement these functions properly
 
-    messages = db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).order_by(ChatMessage.created_at.desc()).limit(limit).all()
-
-    return list(reversed(messages))  # Oldest first
-
-
-async def clear_chat_history(db: Session, telegram_id: int):
-    """Clear chat history for user"""
-    from app.db.models import ChatMessage
-
-    db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).delete()
-    db.commit()
-
-
-# User Settings
-async def update_user_settings(db: Session, telegram_id: int, settings: dict):
-    """Update user settings (tier, ui_mode, language, paypal_id)"""
-    from app.db.models import User
-
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
-    if not user:
-        return None
-
-    for key, value in settings.items():
-        if hasattr(user, key) and value is not None:
-            setattr(user, key, value)
-
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-# ✅ ДОБАВЬТЕ ЭТИ ФУНКЦИИ В КОНЕЦ ФАЙЛА:
-
-async def get_transactions_by_user(
-        db: Session,
-        telegram_id: int,
-        start_date: str,
-        end_date: str
-) -> List[Transaction]:
-    """Get transactions for user within date range"""
-    from datetime import datetime
-
-    start = datetime.fromisoformat(start_date).date()
-    end = datetime.fromisoformat(end_date).date()
-
-    transactions = db.query(Transaction).filter(
-        Transaction.telegram_id == telegram_id,
-        Transaction.transaction_date >= start,
-        Transaction.transaction_date <= end
-    ).all()
-
-    return transactions
-
-
-async def get_categories_by_user(db: Session, telegram_id: int) -> List[Category]:
-    """Get all categories for user (including default system categories)"""
-    # Получаем пользовательские категории
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
-    if not user:
-        return []
-
-    # Получаем категории пользователя + системные категории
-    categories = db.query(Category).filter(
-        (Category.user_id == user.id) | (Category.user_id == None)
-    ).all()
-
-    return categories
-
-
-# Chat Messages
-async def save_chat_message(db: Session, telegram_id: int, role: str, content: str):
-    """Save chat message to database"""
-    from app.db.models import ChatMessage
-
-    message = ChatMessage(
-        telegram_id=telegram_id,
-        role=role,
-        content=content
-    )
-    db.add(message)
-    db.commit()
-    db.refresh(message)
-    return message
-
-
-async def get_chat_history(db: Session, telegram_id: int, limit: int = 50):
-    """Get chat history for user"""
-    from app.db.models import ChatMessage
-
-    messages = db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).order_by(ChatMessage.created_at.desc()).limit(limit).all()
-
-    return list(reversed(messages))  # Oldest first
-
-
-async def clear_chat_history(db: Session, telegram_id: int):
-    """Clear chat history for user"""
-    from app.db.models import ChatMessage
-
-    db.query(ChatMessage).filter(
-        ChatMessage.telegram_id == telegram_id
-    ).delete()
-    db.commit()
-
-
-# User Settings
-async def update_user_settings(db: Session, telegram_id: int, settings: dict):
-    """Update user settings (tier, ui_mode, language, paypal_id)"""
-    from app.db.models import User
-
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
-    if not user:
-        return None
-
-    for key, value in settings.items():
-        if hasattr(user, key) and value is not None:
-            setattr(user, key, value)
-
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-# === ДОБАВИТЬ ЭТИ ФУНКЦИИ В КОНЕЦ crud.py ===
-
-async def get_user_by_paypal_subscription(
-        db: AsyncSession,
-        subscription_id: str
-) -> Optional[User]:
-    """Получить пользователя по PayPal subscription ID"""
-    from sqlalchemy import select
-    from app.db.models import User
-
-    result = await db.execute(
-        select(User).where(User.paypal_subscription_id == subscription_id)
-    )
-    return result.scalar_one_or_none()
-
-
-async def create_unconfirmed_subscription(
-        db: AsyncSession,
-        user_id: int,
-        name: str,
-        amount: float,
-        icon: str
-) -> "Subscription":
-    """Создать неподтвержденную подписку для проверки пользователем"""
-    from app.db.models import Subscription
-    from datetime import datetime, timedelta
-
-    # Проверить, не существует ли уже такая подписка
-    from sqlalchemy import select
-    result = await db.execute(
-        select(Subscription).where(
-            Subscription.user_id == user_id,
-            Subscription.name == name,
-            Subscription.confirmed == False
-        )
-    )
-    existing = result.scalar_one_or_none()
-
-    if existing:
-        return existing  # Не создавать дубликаты
-
-    subscription = Subscription(
-        user_id=user_id,
-        name=name,
-        amount=amount,
-        icon=icon,
-        billing_cycle='monthly',
-        next_billing_date=datetime.utcnow() + timedelta(days=30),
-        confirmed=False,
-        auto_detected=True
-    )
-
-    db.add(subscription)
-    await db.commit()
-    await db.refresh(subscription)
-
-    return subscription
-
-
-async def get_user_transactions(
-        db: AsyncSession,
-        telegram_id: int,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        transaction_type: Optional[str] = None,
-        category_id: Optional[int] = None,
-        limit: int = 100,
-        offset: int = 0
-) -> List["Transaction"]:
-    """
-    Получить транзакции пользователя с фильтрами
-
-    Args:
-        db: Database session
-        telegram_id: Telegram ID пользователя
-        start_date: Начальная дата (опционально)
-        end_date: Конечная дата (опционально)
-        transaction_type: Тип транзакции: 'expense' или 'income' (опционально)
-        category_id: ID категории (опционально)
-        limit: Максимум результатов
-        offset: Смещение для пагинации
-
-    Returns:
-        Список транзакций
-    """
-    from sqlalchemy import select, and_
-    from app.db.models import Transaction
-
-    # Базовый запрос
-    query = select(Transaction).where(Transaction.telegram_id == telegram_id)
-
-    # Фильтр по датам
-    if start_date:
-        query = query.where(Transaction.transaction_date >= start_date)
-    if end_date:
-        query = query.where(Transaction.transaction_date <= end_date)
-
-    # Фильтр по типу
-    if transaction_type:
-        query = query.where(Transaction.transaction_type == transaction_type)
-
-    # Фильтр по категории
-    if category_id:
-        query = query.where(Transaction.category_id == category_id)
-
-    # Сортировка и лимиты
-    query = query.order_by(Transaction.transaction_date.desc())
-    query = query.limit(limit).offset(offset)
-
-    result = await db.execute(query)
-    return list(result.scalars().all())
-
-# Feedback
-async def create_feedback(
-        db: AsyncSession,
-        telegram_id: int,
-        name: str,
-        email: str,
-        message: str,
-        rating: int = None,
-        category: str = 'general'
-):
-    """
-    Create new feedback entry in database
-
-    Args:
-        db: Database session
-        telegram_id: Telegram ID пользователя
-        name: Name of the user
-        email: Email of the user
-        message: Feedback message
-        rating: Rating from 1-5 (optional)
-        category: Category of feedback (bug, feature, general)
-
-    Returns:
-        Created Feedback object
-    """
+async def create_feedback(db: AsyncSession, telegram_id: int, message: str, rating: int = None, category: str = None):
+    """Create feedback - STUB IMPLEMENTATION"""
     from app.db.models import Feedback
-
     feedback = Feedback(
         telegram_id=telegram_id,
-        name=name,
-        email=email,
         message=message,
         rating=rating,
         category=category
     )
-
+    
     db.add(feedback)
     await db.commit()
     await db.refresh(feedback)
-
+    
     return feedback
+
+
+async def update_user_settings(db: AsyncSession, telegram_id: int, settings: dict):
+    """Update user settings - STUB IMPLEMENTATION"""
+    user = await get_user_by_telegram_id(db, telegram_id)
+    if not user:
+        return None
+    
+    for key, value in settings.items():
+        if hasattr(user, key) and value is not None:
+            setattr(user, key, value)
+    
+    await db.commit()
+    await db.refresh(user)
+    return user

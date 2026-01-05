@@ -17,8 +17,7 @@ from app.db.crud import (
     get_user_by_telegram_id,
     create_transaction,
     get_category_by_name,
-    get_default_categories,
-    create_unconfirmed_subscription
+    get_default_categories
 )
 from app.schemas.transaction import (
     TransactionCreate,
