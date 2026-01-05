@@ -48,11 +48,18 @@ async def get_auth_url(
             raise HTTPException(status_code=404, detail="User not found")
 
         client_id = getattr(settings, 'PAYPAL_CLIENT_ID', None)
-        if not client_id:
-            raise HTTPException(status_code=500, detail="PayPal not configured")
+        webhook_url = getattr(settings, 'TELEGRAM_WEBHOOK_URL', '')
+
+        # ✅ ПРОВЕРКА КОНФИГУРАЦИИ - Если не настроено, возвращаем понятную ошибку
+        if not client_id or not webhook_url or client_id.strip() in ['', 'your_paypal_client_id_here'] or 'yourdomain.com' in webhook_url:
+            logger.error("❌ PayPal not configured properly. Please set PAYPAL_CLIENT_ID and TELEGRAM_WEBHOOK_URL in .env")
+            raise HTTPException(
+                status_code=503,
+                detail="PayPal integration is not configured. Please contact support."
+            )
 
         client_id = client_id.strip()
-        base_url = settings.TELEGRAM_WEBHOOK_URL.replace('/webhook', '')
+        base_url = webhook_url.replace('/webhook', '')
         redirect_uri = f"{base_url}/api/v1/paypal/callback"
         paypal_mode = getattr(settings, 'PAYPAL_MODE', 'sandbox')
 

@@ -318,7 +318,8 @@ const Subscriptions = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md bg-neutral-900 rounded-3xl p-6 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-md bg-neutral-900 rounded-3xl p-6 pb-8 border border-white/10 shadow-2xl max-h-[70vh] overflow-y-auto"
+                style={{ marginBottom: '80px' }}
               >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-white">{t('subscriptions.add_subscription')}</h2>

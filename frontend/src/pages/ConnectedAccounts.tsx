@@ -101,7 +101,18 @@ const ConnectedAccounts = () => {
       }
     } catch (err: any) {
       console.error('Connect PayPal error:', err)
-      setError(t('wallet.connect_error'))
+
+      // Если статус 503 - PayPal не настроен
+      if (err.response?.status === 503) {
+        setError('PayPal integration is not available yet. Please try again later.')
+      } else {
+        setError(t('wallet.connect_error'))
+      }
+
+      const tg = (window as any).Telegram?.WebApp
+      if (tg) {
+        tg.showAlert(err.response?.data?.detail || 'PayPal connection is not configured. Please contact support.')
+      }
     } finally {
       setConnecting(false)
     }
