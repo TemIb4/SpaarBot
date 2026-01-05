@@ -1,7 +1,10 @@
 import axios, { AxiosInstance, AxiosError } from 'axios'
+import { logger } from '../utils/logger'
 
 // Определяем базовый URL из переменных окружения
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+logger.info('[API] Initializing with base URL', { API_URL })
 
 // Создаем экземпляр axios с базовой конфигурацией
 export const api: AxiosInstance = axios.create({
@@ -15,6 +18,15 @@ export const api: AxiosInstance = axios.create({
 // Добавляем перехватчик запросов для добавления Telegram данных
 api.interceptors.request.use(
   (config) => {
+    logger.debug('[API] Request', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+      params: config.params,
+      data: config.data
+    })
+
     // Добавляем telegram_id если доступен
     const tg = (window as any).Telegram?.WebApp
     if (tg?.initDataUnsafe?.user?.id) {
@@ -25,11 +37,19 @@ api.interceptors.request.use(
       if (tg.initData) {
         config.headers['X-Telegram-Init-Data'] = tg.initData
       }
+
+      logger.debug('[API] Added Telegram headers', {
+        userId: tg.initDataUnsafe.user.id,
+        hasInitData: !!tg.initData
+      })
+    } else {
+      logger.warn('[API] No Telegram user data available')
     }
 
     return config
   },
   (error) => {
+    logger.error('[API] Request error', { error: error.message })
     return Promise.reject(error)
   }
 )
@@ -37,28 +57,46 @@ api.interceptors.request.use(
 // Добавляем перехватчик ответов для обработки ошибок
 api.interceptors.response.use(
   (response) => {
+    logger.debug('[API] Response', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data
+    })
     return response
   },
   (error: AxiosError) => {
     // Логируем ошибку
-    console.error('API Error:', {
+    logger.error('[API] Response error', {
       url: error.config?.url,
       method: error.config?.method,
+      baseURL: error.config?.baseURL,
+      fullURL: error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url,
       status: error.response?.status,
       message: error.message,
       data: error.response?.data,
+      code: error.code
     })
 
     // Обработка специфичных ошибок
     if (error.response?.status === 401) {
       // Unauthorized - редирект на логин или показ ошибки
-      console.error('Unauthorized - Telegram authentication required')
+      logger.error('[API] Unauthorized - Telegram authentication required')
     } else if (error.response?.status === 403) {
-      console.error('Forbidden - Access denied')
+      logger.error('[API] Forbidden - Access denied')
     } else if (error.response?.status === 404) {
-      console.error('Not found')
+      logger.warn('[API] Not found')
     } else if (error.response?.status === 500) {
-      console.error('Server error - please try again later')
+      logger.error('[API] Server error - please try again later')
+    } else if (error.code === 'ERR_NETWORK') {
+      logger.error('[API] Network error - cannot connect to server', {
+        baseURL: API_URL,
+        possibleCauses: [
+          'Backend not running',
+          'Wrong API URL',
+          'CORS issue',
+          'Network connectivity'
+        ]
+      })
     }
 
     return Promise.reject(error)
