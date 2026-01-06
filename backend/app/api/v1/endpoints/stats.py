@@ -86,7 +86,14 @@ async def get_dashboard_stats(
         # Calculate totals
         total_expenses = sum(float(t.amount) for t in expenses)
         total_income = sum(float(t.amount) for t in incomes)
-        total_balance = total_income - total_expenses
+
+        # Use PayPal balance if available, otherwise calculate from transactions
+        if user.paypal_id and user.balance is not None:
+            total_balance = float(user.balance)
+            logger.info(f"💰 Using PayPal balance: {total_balance} {user.currency}")
+        else:
+            total_balance = total_income - total_expenses
+            logger.info(f"💰 Calculated balance from transactions: {total_balance}")
 
         # Get active subscriptions - ИСПРАВЛЕНО: использую telegram_id вместо user_id
         subscription_query = select(Subscription).where(

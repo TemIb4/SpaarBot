@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, RefreshCw, ShieldCheck, ExternalLink, Check, Loader2, AlertCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useUserStore } from '../store/userStore'
 import { apiService } from '../lib/api'
@@ -18,6 +19,7 @@ interface ConnectedAccount {
 const ConnectedAccounts = () => {
   const { t } = useLanguage()
   const { user } = useUserStore()
+  const navigate = useNavigate()
 
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,20 +58,35 @@ const ConnectedAccounts = () => {
     setError(null)
 
     try {
+      let syncResult
       if (accountType === 'paypal') {
-        await apiService.paypal.sync(user.telegram_id)
+        syncResult = await apiService.paypal.sync(user.telegram_id)
       } else {
-        await apiService.accounts.sync(parseInt(accountId), user.telegram_id)
+        syncResult = await apiService.accounts.sync(parseInt(accountId), user.telegram_id)
       }
 
-      // Показываем успех
+      // Показываем успех с информацией о балансе
       const tg = (window as any).Telegram?.WebApp
-      if (tg) {
-        tg.showAlert(t('wallet.sync_success'))
+      if (tg && syncResult?.data) {
+        const { balance, transactions_count } = syncResult.data
+        const balanceInfo = balance ? `${balance.available} ${balance.currency}` : ''
+        const message = balanceInfo
+          ? `✅ ${t('wallet.sync_success')}\n💰 ${balanceInfo}\n📊 ${transactions_count || 0} transactions`
+          : t('wallet.sync_success')
+
+        tg.showAlert(message)
       }
 
       // Обновляем список
       await loadAccounts()
+
+      // Триггерим событие для обновления Dashboard
+      window.dispatchEvent(new CustomEvent('paypal-sync-complete'))
+
+      // Перенаправляем на Dashboard через 1 секунду
+      setTimeout(() => {
+        navigate('/')
+      }, 1000)
     } catch (err: any) {
       console.error('Sync error:', err)
       setError(t('wallet.sync_error'))

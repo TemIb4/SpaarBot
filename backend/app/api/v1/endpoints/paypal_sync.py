@@ -112,7 +112,7 @@ async def sync_paypal_data(
                 "Content-Type": "application/json"
             }
 
-            # 1. Получить баланс
+            # 1. Получить баланс и сохранить в БД
             try:
                 balance_response = await client.get(
                     f"{api_base}/v1/reporting/balances",
@@ -129,7 +129,14 @@ async def sync_paypal_data(
                             available=float(primary_balance.get("total_balance", {}).get("value", 0)),
                             pending=float(primary_balance.get("available_balance", {}).get("value", 0))
                         )
-                        logger.info(f"✅ Balance: {balance_data.available} {balance_data.currency}")
+
+                        # СОХРАНИТЬ БАЛАНС В БД
+                        user.balance = balance_data.available
+                        user.currency = balance_data.currency
+                        user.balance_updated_at = datetime.now()
+                        await db.commit()
+
+                        logger.info(f"✅ Balance saved to DB: {balance_data.available} {balance_data.currency}")
             except Exception as e:
                 logger.error(f"Error fetching balance: {e}")
 

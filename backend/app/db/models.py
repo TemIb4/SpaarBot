@@ -32,6 +32,11 @@ class User(Base):
     paypal_subscription_id = Column(String, nullable=True, unique=True)
     premium_since = Column(DateTime, nullable=True)
 
+    # PayPal Balance
+    balance = Column(Float, default=0.0)  # Current balance
+    currency = Column(String, default="EUR")  # Balance currency
+    balance_updated_at = Column(DateTime, nullable=True)  # Last sync time
+
     # Legacy fields (для совместимости)
     stripe_customer_id = Column(String, nullable=True)
     paypal_id = Column(String, nullable=True)  # PayPal email/ID

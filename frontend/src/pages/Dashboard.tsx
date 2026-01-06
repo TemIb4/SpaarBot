@@ -35,6 +35,16 @@ const Dashboard = () => {
   useEffect(() => {
     fetchTransactions?.()
     loadStats()
+
+    // Listen for PayPal sync completion
+    const handleSyncComplete = () => {
+      console.log('🔄 PayPal sync detected, reloading dashboard...')
+      loadStats()
+      fetchTransactions?.()
+    }
+
+    window.addEventListener('paypal-sync-complete', handleSyncComplete)
+    return () => window.removeEventListener('paypal-sync-complete', handleSyncComplete)
   }, [fetchTransactions])
 
   const loadStats = async () => {
