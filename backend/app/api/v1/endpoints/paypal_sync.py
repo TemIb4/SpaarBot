@@ -7,7 +7,7 @@ import logging
 import base64
 from datetime import datetime, timedelta, date
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -87,7 +87,7 @@ async def get_paypal_access_token() -> str:
 
 @router.post("/sync", response_model=SyncResponse)
 async def sync_paypal_data(
-        telegram_id: int = Query(..., description="Telegram user ID"),
+        telegram_id: int = Body(..., embed=True),
         db: AsyncSession = Depends(get_db)
 ):
     """
