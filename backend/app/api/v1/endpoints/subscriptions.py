@@ -153,11 +153,30 @@ async def create_subscription(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class SubscriptionUpdateRequest(BaseModel):
+    """Schema for update request with telegram_id"""
+    telegram_id: int
+    name: Optional[str] = None
+    icon: Optional[str] = None
+    amount: Optional[float] = Field(None, gt=0, description="Subscription amount (must be positive)")
+    billing_cycle: Optional[str] = None
+    next_billing_date: Optional[datetime] = None
+    status: Optional[str] = None
+
+    @field_validator('amount')
+    @classmethod
+    def validate_amount(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError('Subscription amount must be positive')
+        if v is not None and v > 1000000:
+            raise ValueError('Subscription amount is too large (max: 1,000,000)')
+        return v
+
+
 @router.put("/{subscription_id}", response_model=SubscriptionResponse)
 async def update_subscription(
     subscription_id: int,
-    telegram_id: int = Query(..., description="Telegram user ID for verification"),
-    updates: SubscriptionUpdate = Body(...),
+    request: SubscriptionUpdateRequest = Body(...),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -167,7 +186,7 @@ async def update_subscription(
         # Найти подписку
         query = select(Subscription).where(
             Subscription.id == subscription_id,
-            Subscription.telegram_id == telegram_id
+            Subscription.telegram_id == request.telegram_id
         )
         result = await db.execute(query)
         subscription = result.scalar_one_or_none()
@@ -179,7 +198,7 @@ async def update_subscription(
             )
 
         # Обновить поля
-        update_data = updates.dict(exclude_unset=True)
+        update_data = request.dict(exclude_unset=True, exclude={'telegram_id'})
         for field, value in update_data.items():
             setattr(subscription, field, value)
             # Обновить совместимые поля

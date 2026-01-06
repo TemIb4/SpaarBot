@@ -4,7 +4,7 @@ import { Plus, Trash2, Calendar, X, Check, Edit2 } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useUserStore } from '../store/userStore'
 import { apiService } from '../lib/api'
-import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO } from 'date-fns'
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, getDay } from 'date-fns'
 
 interface Subscription {
   id: number
@@ -84,6 +84,17 @@ const Subscriptions = () => {
     const num = parseFloat(value)
     return !isNaN(num) && num > 0 && num <= 100000
   }
+
+  // Get translated abbreviated day names
+  const getDayNames = () => [
+    t('dates.mon'),
+    t('dates.tue'),
+    t('dates.wed'),
+    t('dates.thu'),
+    t('dates.fri'),
+    t('dates.sat'),
+    t('dates.sun')
+  ]
 
   const handleDelete = async (id: number) => {
     if (!user?.telegram_id) return
@@ -173,9 +184,49 @@ const Subscriptions = () => {
     end: endOfMonth(currentMonth)
   })
 
+  // Get subscriptions on a specific day (with recurring logic)
   const subsOnDay = (day: Date) => {
-    const dayStr = format(day, 'yyyy-MM-dd')
-    return subs.filter(sub => format(parseISO(sub.next_billing_date), 'yyyy-MM-dd') === dayStr)
+    return subs.filter(sub => {
+      const billingDate = parseISO(sub.next_billing_date)
+      const billingDay = billingDate.getDate() // Day of month (1-31)
+      const checkDay = day.getDate()
+
+      // Check if the day of month matches
+      if (billingDay === checkDay) {
+        // For monthly subscriptions, any month after the billing date
+        if (sub.billing_cycle === 'monthly') {
+          return day >= billingDate
+        }
+
+        // For yearly subscriptions, check if same month and day
+        if (sub.billing_cycle === 'yearly') {
+          const billingMonth = billingDate.getMonth()
+          const checkMonth = day.getMonth()
+          if (billingMonth === checkMonth && day >= billingDate) {
+            return true
+          }
+        }
+      }
+
+      // Handle edge case: if subscription is on 31st but current month has fewer days
+      if (billingDay > checkDay) {
+        const lastDayOfMonth = endOfMonth(day).getDate()
+        if (checkDay === lastDayOfMonth && billingDay > lastDayOfMonth) {
+          if (sub.billing_cycle === 'monthly') {
+            return day >= billingDate
+          }
+          if (sub.billing_cycle === 'yearly') {
+            const billingMonth = billingDate.getMonth()
+            const checkMonth = day.getMonth()
+            if (billingMonth === checkMonth && day >= billingDate) {
+              return true
+            }
+          }
+        }
+      }
+
+      return false
+    })
   }
 
   const handleDayClick = (day: Date) => {
@@ -262,10 +313,15 @@ const Subscriptions = () => {
               </div>
 
               <div className="grid grid-cols-7 gap-1">
-                {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(day => (
+                {getDayNames().map(day => (
                   <div key={day} className="text-center text-xs text-neutral-500 font-medium py-2">
                     {day}
                   </div>
+                ))}
+
+                {/* Empty cells before the first day of month */}
+                {Array.from({ length: (getDay(startOfMonth(currentMonth)) + 6) % 7 }).map((_, i) => (
+                  <div key={`empty-${i}`} className="aspect-square" />
                 ))}
 
                 {daysInMonth.map(day => {
@@ -433,7 +489,7 @@ const Subscriptions = () => {
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-white">{format(selectedDay, 'MMMM d, yyyy')}</h2>
-                  <p className="text-sm text-neutral-400 mt-1">{subsOnDay(selectedDay).length} subscriptions due</p>
+                  <p className="text-sm text-neutral-400 mt-1">{t('subscriptions.subscriptions_due')}: {subsOnDay(selectedDay).length}</p>
                 </div>
                 <button onClick={() => setShowDayModal(false)} className="text-neutral-500 hover:text-white">
                   <X size={24} />
@@ -449,7 +505,7 @@ const Subscriptions = () => {
                       </div>
                       <div>
                         <h3 className="font-bold text-white text-sm">{sub.name}</h3>
-                        <p className="text-xs text-neutral-500">{sub.billing_cycle === 'monthly' ? 'Monthly' : 'Yearly'}</p>
+                        <p className="text-xs text-neutral-500">{sub.billing_cycle === 'monthly' ? t('subscriptions.monthly') : t('subscriptions.yearly')}</p>
                       </div>
                     </div>
                     <p className="font-bold text-white">€{sub.amount.toFixed(2)}</p>
@@ -615,7 +671,7 @@ const Subscriptions = () => {
               style={{ marginBottom: '80px' }}
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-white">Edit Subscription</h2>
+                <h2 className="text-xl font-bold text-white">{t('subscriptions.edit_subscription')}</h2>
                 <button onClick={() => setShowEditModal(false)} className="text-neutral-500 hover:text-white">
                   <X size={24} />
                 </button>
@@ -624,7 +680,7 @@ const Subscriptions = () => {
               <div className="space-y-4">
                 {/* Icon Selector */}
                 <div>
-                  <label className="block text-sm text-neutral-400 mb-2">Icon</label>
+                  <label className="block text-sm text-neutral-400 mb-2">{t('subscriptions.icon')}</label>
                   <div className="flex gap-2 flex-wrap">
                     {emojis.map(emoji => (
                       <button
@@ -644,7 +700,7 @@ const Subscriptions = () => {
 
                 {/* Name */}
                 <div>
-                  <label className="block text-sm text-neutral-400 mb-2">Name</label>
+                  <label className="block text-sm text-neutral-400 mb-2">{t('subscriptions.subscription_name')}</label>
                   <input
                     type="text"
                     value={editForm.name}
@@ -655,7 +711,7 @@ const Subscriptions = () => {
 
                 {/* Amount */}
                 <div>
-                  <label className="block text-sm text-neutral-400 mb-2">Amount (€)</label>
+                  <label className="block text-sm text-neutral-400 mb-2">{t('subscriptions.amount')} (€)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -665,12 +721,12 @@ const Subscriptions = () => {
                     onChange={e => setEditForm({ ...editForm, amount: e.target.value })}
                     className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                   />
-                  <p className="text-xs text-neutral-500 mt-1">Maximum: €100,000</p>
+                  <p className="text-xs text-neutral-500 mt-1">{t('subscriptions.valid_amount')}</p>
                 </div>
 
                 {/* Billing Cycle */}
                 <div>
-                  <label className="block text-sm text-neutral-400 mb-2">Billing Cycle</label>
+                  <label className="block text-sm text-neutral-400 mb-2">{t('subscriptions.billing_cycle')}</label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setEditForm({ ...editForm, billing_cycle: 'monthly' })}
@@ -680,7 +736,7 @@ const Subscriptions = () => {
                           : 'bg-neutral-800 text-neutral-400'
                       }`}
                     >
-                      Monthly
+                      {t('subscriptions.monthly')}
                     </button>
                     <button
                       onClick={() => setEditForm({ ...editForm, billing_cycle: 'yearly' })}
@@ -690,14 +746,14 @@ const Subscriptions = () => {
                           : 'bg-neutral-800 text-neutral-400'
                       }`}
                     >
-                      Yearly
+                      {t('subscriptions.yearly')}
                     </button>
                   </div>
                 </div>
 
                 {/* Next Billing Date */}
                 <div>
-                  <label className="block text-sm text-neutral-400 mb-2">Next Billing Date</label>
+                  <label className="block text-sm text-neutral-400 mb-2">{t('subscriptions.next_payment')}</label>
                   <input
                     type="date"
                     value={editForm.next_billing_date}
@@ -712,7 +768,7 @@ const Subscriptions = () => {
                     onClick={() => setShowEditModal(false)}
                     className="flex-1 py-3 rounded-xl bg-neutral-800 text-neutral-300 font-medium hover:bg-neutral-700 transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={handleEdit}
@@ -720,7 +776,7 @@ const Subscriptions = () => {
                     className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Check size={18} />
-                    Save
+                    {t('common.save')}
                   </button>
                 </div>
               </div>
